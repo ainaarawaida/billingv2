@@ -1,8 +1,9 @@
 <?php
 
 use App\Livewire\Home;
-use App\Livewire\Post\Show as PostShow;
+use Spatie\LaravelPdf\Facades\Pdf;
 use Illuminate\Support\Facades\Route;
+use App\Livewire\Post\Show as PostShow;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,3 +18,16 @@ use Illuminate\Support\Facades\Route;
 
 // Route::get('/', Home::class)->name('home');
 Route::get('/article/{post:slug}', PostShow::class)->name('post.show');
+
+
+// Route::get('/mydownload', function () {
+//     return Pdf::view('pdf', [])
+//     ->format('a4')
+//     ->noSandbox()
+//     ->save('invoice.pdf');
+// });
+
+
+Route::get('/quotationpdf/{id}', function ($id) {
+    return view('pdf.quotation', ['id' => $id]); // View name 'about'
+  })->name('pdf.quotation');

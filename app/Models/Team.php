@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Post;
 use App\Models\Product;
+use App\Models\Customer;
 use App\Models\Quotation;
 use App\Models\CustomMedia;
 use Illuminate\Database\Eloquent\Model;
@@ -39,6 +40,16 @@ class Team extends Model
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);
+    }
+
+    public function customers(): HasMany
+    {
+        return $this->hasMany(Customer::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
     }
 
    

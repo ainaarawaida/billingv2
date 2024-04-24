@@ -24,7 +24,7 @@ class Quotation extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class, 'shop_customer_id');
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
     public function items()

@@ -2,14 +2,30 @@
 
 namespace App\Filament\App\Resources;
 
+use stdClass;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Product;
+use App\Models\Customer;
 use Filament\Forms\Form;
 use App\Models\Quotation;
 use Filament\Tables\Table;
+use App\Mail\QuotationEmail;
+use Filament\Facades\Filament;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Resources\Resource;
+use Illuminate\Support\HtmlString;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Blade;
+use Filament\Tables\Contracts\HasTable;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\RichEditor;
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Actions\Action;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -23,6 +39,7 @@ class QuotationResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $navigationGroup = 'Document';
+    protected static ?int $navigationSort = 4;
 
     // protected static ?string $tenantOwnershipRelationshipName = 'teams';
 
@@ -36,7 +53,7 @@ class QuotationResource extends Resource
     //                         Forms\Components\Section::make()
     //                             ->schema([
 
-    //                                 Forms\Components\Select::make('shop_customer_id')
+    //                                 Forms\Components\Select::make('customer_id')
     //                                     ->relationship('customer', 'name')
     //                                     ->searchable()
     //                                     ->required()
@@ -278,46 +295,35 @@ class QuotationResource extends Resource
                         Forms\Components\Section::make()
                             ->schema([
 
-                                Forms\Components\Select::make('shop_customer_id')
-                                    ->relationship('customer', 'name')
+                                Forms\Components\Select::make('customer_id')
+                                ->relationship('customer', 'name', modifyQueryUsing: fn (Builder $query) => $query->whereBelongsTo(Filament::getTenant(), 'teams'))
                                     ->searchable()
                                     ->required()
                                     ->preload()
                                     ->live(onBlur: true)
                                 
                                     ->createOptionForm([
-                                        Forms\Components\TextInput::make('name')
-                                            ->required()
-                                            ->maxLength(255),
-                
-                                        Forms\Components\TextInput::make('email')
-                                            ->label('Email address')
-                                            ->required()
-                                            ->email()
-                                            ->maxLength(255)
-                                            ->unique(),
-                
-                                        Forms\Components\TextInput::make('phone')
-                                            ->maxLength(255),
-                
-                                        Forms\Components\Select::make('gender')
-                                            ->placeholder('Select gender')
-                                            ->options([
-                                                'male' => 'Male',
-                                                'female' => 'Female',
-                                            ])
-                                            ->required()
-                                            ->native(false),
+                                        self::customerForm(),
                                     ])
                                     ->createOptionAction(function (Action $action) {
+                                        $action->mutateFormDataUsing(function ($data) {
+                                            $data['team_id'] = Filament::getTenant()->id;
+                                    
+                                            return $data;
+                                        });
+
                                         return $action
                                             ->modalHeading('Create customer')
                                             ->modalSubmitActionLabel('Create customer')
-                                            ->modalWidth('lg');
-                                    }),
+                                            ->modalWidth('7xl');
+                                    })
+                                    ->native(false),
 
                                 Forms\Components\ViewField::make('detail_customer')
+                                    ->dehydrated(false)
                                     ->view('filament.detail_customer'),
+                                // Forms\Components\Placeholder::make('detail_customer2')
+                                // ->content(fn ($record) => new HtmlString('<b>asma</b>')),
                             
                             ])
 
@@ -355,6 +361,24 @@ class QuotationResource extends Resource
                                 ->required()
                                 ->columnSpan(2),
 
+                            Forms\Components\TextInput::make('numbering')
+                            ->hiddenLabel()
+                            ->readOnly()
+                            ->dehydrated(false)
+                            ->prefix('#Q')
+                            // ->visible(fn (string $operation): bool => $operation === 'edit')
+                            ->formatStateUsing(function(?string $state, $operation, $record): ?string {
+                                if($operation === 'create'){
+                                    $tenant_id = Filament::getTenant()->id ;
+                                    $lastid = Quotation::where('team_id', $tenant_id)->count('id') + 1 ;
+                                    return str_pad($lastid, 6, "0", STR_PAD_LEFT) ;
+
+                                }else{
+                                    return $record->numbering ;
+                                }
+                            })
+                            ->columnSpan(2),
+
 
                         ])->columns(2)
                         
@@ -383,7 +407,7 @@ class QuotationResource extends Resource
                                     ->required()
                                     ->columnSpan(2),
                                 Forms\Components\Select::make('product_id')
-                                    ->relationship('product','title')
+                                    ->relationship('product', 'title', modifyQueryUsing: fn (Builder $query) => $query->whereBelongsTo(Filament::getTenant(), 'teams'))
                                     ->searchable()
                                     ->preload()
                                     ->distinct()
@@ -407,6 +431,12 @@ class QuotationResource extends Resource
                                             ->formatStateUsing(fn (?string $state): ?string => number_format($state, 2))
                                     ])
                                     ->createOptionAction(function (Action $action) {
+                                        $action->mutateFormDataUsing(function ($data) {
+                                            $data['team_id'] = Filament::getTenant()->id;
+                                    
+                                            return $data;
+                                        });
+                                        
                                         return $action
                                             // ->modalHeading('Create customer')
                                             // ->modalSubmitActionLabel('Create customer')
@@ -494,6 +524,7 @@ class QuotationResource extends Resource
                             Forms\Components\TextInput::make('percentage_tax')
                                 ->prefix('%')
                                 ->live(onBlur: true)
+                                ->formatStateUsing(fn ( $state)  => (int)$state)
                                 ->integer()
                                 ->default(0),
                             Forms\Components\TextInput::make('delivery')
@@ -547,33 +578,91 @@ class QuotationResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('index')
+                    ->label('#')
+                    ->state(
+                        static function (HasTable $livewire, stdClass $rowLoop): string {
+                            return (string) (
+                                $rowLoop->iteration +
+                                ($livewire->getTableRecordsPerPage() * (
+                                    $livewire->getTablePage() - 1
+                                ))
+                            );
+                        }
+                    )
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('numbering')
+                    ->label('No.')
+                    ->formatStateUsing(function(string $state, $record): string {
+                            $newDate = date("d M, Y", strtotime($record->quotation_date));
+                            return __("<b class=''>#Q{$state}</b><br>{$newDate}");
+
+                        } 
+                    )
+                    ->html()
+                    ->color('primary')
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('valid_days')
+                    ->label(__('Valid Days'))
+                    ->wrapHeader()
+                    ->width('1%')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('title')
+                    ->label(__('Title'))
+                    ->sortable()
+                    ->searchable()
+                    ->formatStateUsing(function(string $state, $record): string {
+                            // dd($record->items()->count());
+                            return __("{$state}<br><i>({$record->items()->count()} items)</i>");
+
+                        } 
+                    )
+                    ->html(),
                 Tables\Columns\TextColumn::make('customer.name')
+                    ->label(__('Customer'))
                     ->formatStateUsing(fn (string $state): string => __("<b>{$state}</b>"))
-                    ->markdown()
+                    ->html()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('quotation_date')
                     ->date()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('valid_days')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('quote_status')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+          
+
+                Tables\Columns\SelectColumn::make('quote_status')
+                    ->label('Status')
+                    ->options([
+                        'draft' => 'Draft',
+                        'new' => 'New',
+                        'process' => 'Process',
+                        'done' => 'Done',
+                        'expired' => 'Expired',
+                        'cancelled' => 'Cancelled',
+
+                    ])
+                    ->selectablePlaceholder(false)
                     ->searchable(),
-                Tables\Columns\TextColumn::make('title')
-                    ->searchable(),
+              
                 Tables\Columns\TextColumn::make('sub_total')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('taxes')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('percentage_tax')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('delivery')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('final_amount')
+                    ->label(__("Amount"))
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
@@ -587,11 +676,104 @@ class QuotationResource extends Resource
             ])
             ->filters([
                 //
-            ])
+                SelectFilter::make('quote_status')
+                ->label('Status')
+                ->multiple()
+                ->options([
+                    'draft' => 'Draft',
+                    'new' => 'New',
+                    'process' => 'Process',
+                    'done' => 'Done',
+                    'expired' => 'Expired',
+                    'cancelled' => 'Cancelled',
+                ])
+                ->indicator('Status'),
+                Filter::make('numbering_f')
+                    ->form([
+                        TextInput::make('numbering')
+                        ->label('No' )
+                        ->prefix('#Q'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['numbering'],
+                                fn (Builder $query, $data): Builder => $query->where('numbering', 'LIKE', '%' . $data . '%'),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): ?string {
+                        if (! $data['numbering']) {
+                            return null;
+                        }
+                 
+                        return 'No %'.$data['numbering'] . '%';
+                    }),
+                Filter::make('customer_name_f')
+                    ->form([
+                        TextInput::make('customer_name')
+                        ->label('Customer Name' ),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['customer_name'],
+                                fn (Builder $query, $data): Builder =>  $query->whereHas('customer', function (Builder $query) use ($data) {
+                                    $query->where('customers.name', 'LIKE', '%' . $data . '%');
+                                }),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): ?string {
+                        if (! $data['customer_name']) {
+                            return null;
+                        }
+                 
+                        return 'Customer Name %'.$data['customer_name'] . '%';
+                    }),
+            ], layout: FiltersLayout::AboveContentCollapsible)
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\Action::make('pdf') 
+                        ->label('PDF')
+                        ->color('success')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->url(fn ($record): ?string => url('quotationpdf')."/".base64_encode("luqmanahmadnordin".$record->id))
+                        ->openUrlInNewTab(),
+                        // ->action(function (Model $record) {
+                        //     return response()->streamDownload(function () use ($record) {
+                        //         echo Pdf::loadHtml(
+                        //             Blade::render('pdf', ['record' => $record])
+                        //         )
+                        //         ->setBasePath(public_path())
+                        //         ->stream();
+                        //     }, str_pad($record->id, 6, "0", STR_PAD_LEFT)  . '.pdf');
+                        // }), 
+                    Tables\Actions\Action::make('sendEmail')
+                        ->label('Send Email')
+                        ->color('warning')
+                        ->icon('heroicon-o-envelope')
+                        // ->form([
+                        //     TextInput::make('subject')->required(),
+                        //     RichEditor::make('body')->required(),
+                        // ])
+                        ->action(function (Model $record) {
+                            $customer = Customer::where('id', $record->customer_id)->first();
+                            Mail::to($customer->email)
+                            ->send(new QuotationEmail($record, $customer));
+
+
+                            Notification::make()
+                              ->title('Email Send successfully')
+                              ->success()
+                              ->send()
+                              ->sendToDatabase(auth()->user());
+                        }),
+                       
+                       
+                        
+                       
                 ])
             ])
             ->bulkActions([
@@ -614,7 +796,89 @@ class QuotationResource extends Resource
             'index' => Pages\ListQuotations::route('/'),
             'create' => Pages\CreateQuotation::route('/create'),
             'edit' => Pages\EditQuotation::route('/{record}/edit'),
+            'view' => Pages\ViewQuotation::route('/{record}'),
             'test' => Pages\Tests::route('/test'),
         ];
+    }
+
+
+    public static function customerForm(){
+        return  Forms\Components\Group::make()
+        ->schema([
+            Forms\Components\Section::make('Info')
+            ->schema([
+                Forms\Components\Group::make()
+                ->schema([
+                    Forms\Components\TextInput::make('name')
+                        ->required()
+                        ->maxLength(255),
+                    
+                ])
+                ->columns(1),
+                Forms\Components\Group::make()
+                ->schema([
+                    Forms\Components\TextInput::make('email')
+                        ->email()
+                        ->required()
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('phone')
+                        ->tel()
+                        ->required()
+                        ->maxLength(255),
+                   
+                    
+                ])
+                ->columns(2),
+         
+                
+                Forms\Components\Group::make()
+                    ->schema([
+                        Forms\Components\TextInput::make('company')
+                            ->maxLength(255)
+                            ->columnSpan(2),
+                        Forms\Components\TextInput::make('ssm')
+                            ->label('SSM No.')
+                            ->maxLength(255),
+                        
+                    ])
+                    ->columns(3),
+            ]),
+            Forms\Components\Section::make('Address')
+                ->schema([
+                    Forms\Components\TextInput::make('address')
+                        ->maxLength(255)
+                        ->columnSpan(3),
+                    Forms\Components\TextInput::make('poscode')
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('city')
+                        ->maxLength(255),
+                    Forms\Components\Select::make('state')
+                                ->options([
+                                    'JHR' => 'Johor',
+                                    'KDH' => 'Kedah',
+                                    'KTN' => 'Kelantan',
+                                    'MLK' => 'Melaka',
+                                    'NSN' => 'Negeri Sembilan',
+                                    'PHG' => 'Pahang',
+                                    'PRK' => 'Perak',
+                                    'PLS' => 'Perlis',
+                                    'PNG' => 'Pulau Pinang',
+                                    'SBH' => 'Sabah',
+                                    'SWK' => 'Sarawak',
+                                    'SGR' => 'Selangor',
+                                    'TRG' => 'Terengganu',
+                                    'KUL' => 'W.P. Kuala Lumpur',
+                                    'LBN' => 'W.P. Labuan',
+                                    'PJY' => 'W.P. Putrajaya'
+                                ])
+                                ->searchable()
+                                ->preload()
+
+                        
+            ])
+            ->columns(3)
+           
+            
+        ]);
     }
 }

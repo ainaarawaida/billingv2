@@ -3,7 +3,7 @@
     $data = $this->form->getRawState();
 
     
-    $customer = App\Models\Customer::where('id', $data['shop_customer_id'])?->first();
+    $customer = App\Models\Customer::where('id', $data['customer_id'])?->first();
  
 
 
@@ -16,7 +16,7 @@
 
 <div class="text-xl">
   <span class="text-primary-500 font-medium">
-  @if ($data['shop_customer_id'] == null)
+  @if ($data['customer_id'] == null)
 
     No Customer Selected
 

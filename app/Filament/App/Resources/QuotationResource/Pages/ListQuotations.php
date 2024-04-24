@@ -10,6 +10,8 @@ class ListQuotations extends ListRecords
 {
     protected static string $resource = QuotationResource::class;
 
+
+
     protected function getHeaderActions(): array
     {
         return [

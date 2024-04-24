@@ -37,7 +37,15 @@ class AppServiceProvider extends ServiceProvider
             $switch
                 ->locales(['ms','en'])
                 ->visible(outsidePanels: true)
-                ->outsidePanelPlacement(Placement::TopRight); // also accepts a closure
+                ->outsidePanelPlacement(Placement::TopRight)
+                ->outsidePanelRoutes([
+                    'auth.login',
+                    'auth.profile',
+                    'auth.register',
+                    'tenant.registration',
+                    'filament.app.auth.password-reset.request'
+                    // Additional custom routes where the switcher should be visible outside panels
+                ]); // also accepts a closure
         });
     }
 }

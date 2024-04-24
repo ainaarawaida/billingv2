@@ -7,6 +7,7 @@ use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Illuminate\Support\Str;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Select;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Tenancy\EditTenantProfile;
@@ -21,15 +22,59 @@ class EditTeamProfile extends EditTenantProfile
       public function form(Form $form): Form
       {
             return $form
-                  ->schema([
-                        TextInput::make('name')
+            ->schema([
+                  TextInput::make('name')
+                        ->label('Name / Company Name')
                         ->required()
                         ->live(onBlur:true)
                         ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state))),
-                        TextInput::make('slug')
+                  TextInput::make('slug')
                         ->required()
-                        ->unique(Team::class, 'slug', fn ($record) => $record),
-                  ]);
+                        ->unique(Team::class, 'slug'),
+                  TextInput::make('email')
+                        ->email()
+                        // ->required()
+                        ->maxLength(255),
+                  TextInput::make('phone')
+                        ->tel()
+                        // ->required()
+                        ->maxLength(255),
+                
+                    TextInput::make('ssm')
+                        ->label('SSM No.')
+                        ->maxLength(255),
+                        TextInput::make('address')
+                        ->maxLength(255)
+                        ->columnSpan(2),
+                    TextInput::make('poscode')
+                        ->maxLength(255),
+                    TextInput::make('city')
+                        ->maxLength(255),
+                    Select::make('state')
+                                ->options([
+                                    'JHR' => 'Johor',
+                                    'KDH' => 'Kedah',
+                                    'KTN' => 'Kelantan',
+                                    'MLK' => 'Melaka',
+                                    'NSN' => 'Negeri Sembilan',
+                                    'PHG' => 'Pahang',
+                                    'PRK' => 'Perak',
+                                    'PLS' => 'Perlis',
+                                    'PNG' => 'Pulau Pinang',
+                                    'SBH' => 'Sabah',
+                                    'SWK' => 'Sarawak',
+                                    'SGR' => 'Selangor',
+                                    'TRG' => 'Terengganu',
+                                    'KUL' => 'W.P. Kuala Lumpur',
+                                    'LBN' => 'W.P. Labuan',
+                                    'PJY' => 'W.P. Putrajaya'
+                                ])
+                                ->searchable()
+                                ->preload()
+
+         
+
+            ])->columns(2);
       }
 
       public function getRedirectUrl(): string

@@ -2,18 +2,22 @@
 
 namespace App\Filament\Auth;
 
+use Filament\Forms\Form;
+
+use Filament\Actions\Action;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Pages\Auth\Login as BaseAuth;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Validation\ValidationException;
+use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 
 class Login extends BaseAuth
 {
     /**
      * Get the form for the resource.
      */
+
     public function form(Form $form): Form
     {
         return $form
@@ -35,6 +39,7 @@ class Login extends BaseAuth
             ->required()
             ->autocomplete()
             ->autofocus()
+            ->default('admin@admin.test')
             ->extraInputAttributes(['tabindex' => 1]);
     }
 
@@ -63,5 +68,23 @@ class Login extends BaseAuth
                 'data.username' => __('filament-panels::pages/auth/login.messages.failed'),
             ]);
         }
+    }
+
+
+
+
+    public function hasLogo(): bool
+    {
+        return false;
+    }
+
+    
+    protected function getFormActions(): array
+    {
+        return [
+            Action::make('Back')
+            ->url('/'),
+            $this->getAuthenticateFormAction(),
+        ];
     }
 }
