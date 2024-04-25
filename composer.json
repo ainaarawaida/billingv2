@@ -17,7 +17,7 @@
     "bezhansalleh/filament-exceptions": "^2.0",
     "bezhansalleh/filament-language-switch": "^3.1",
     "croustibat/filament-jobs-monitor": "^2.1",
-    "diglactic/laravel-breadcrumbs": "^8.1",
+    "diglactic/laravel-breadcrumbs": "^9.0",
     "filament/filament": "^3.1",
     "guzzlehttp/guzzle": "^7.2",
     "hasnayeen/themes": "^3.0",
