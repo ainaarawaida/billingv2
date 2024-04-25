@@ -31,3 +31,7 @@ Route::get('/article/{post:slug}', PostShow::class)->name('post.show');
 Route::get('/quotationpdf/{id}', function ($id) {
     return view('pdf.quotation', ['id' => $id]); // View name 'about'
   })->name('pdf.quotation');
+  Route::get('/invoicepdf/{id}', function ($id) {
+    return view('pdf.invoice', ['id' => $id]); // View name 'about'
+  })->name('pdf.invoice');
+  

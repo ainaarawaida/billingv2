@@ -4,23 +4,25 @@ use App\Models\Item;
 use App\Models\Team;
 use App\Models\Product;
 use App\Models\Customer;
-use App\Models\Quotation;
+use App\Models\Invoice;
 
 if(!isset($record)){
   $id = str_replace('luqmanahmadnordin', "", base64_decode($id)) ;
-  $record = Quotation::where('id',$id)->first();
+  $record = Invoice::where('id',$id)->first();
   $team = Team::where('id', $record->team_id)->first();
-  $item = Item::with('product')->where('quotation_id', $record->id)->get();
+  $item = Item::with('product')->where('invoice_id', $record->id)->get();
   $customer = Customer::where('id', $record->customer_id)->first();
   // dd($customer);
 }elseif(isset($record)){
   $id = $record->id ;
-  $record = Quotation::where('id',$id)->first();
+  $record = Invoice::where('id',$id)->first();
   $team = Team::where('id', $record->team_id)->first();
-  $item = Item::with('product')->where('quotation_id', $record->id)->get();
+  $item = Item::with('product')->where('invoice_id', $record->id)->get();
   $customer = Customer::where('id', $record->customer_id)->first();
   
 }
+
+// dd($record);
 
 ?>
 
@@ -43,7 +45,7 @@ if(!isset($record)){
       <div class="col">
   
         <div class="invoice-title d-flex justify-content-end align-items-start p-2 rounded-3 border-3 border-bottom border-success mb-3">
-          <h2 class="text-right">Quotation </h2>
+          <h2 class="text-right">Invoice </h2>
         </div>
   
         <div class="row">
@@ -68,10 +70,9 @@ if(!isset($record)){
             </div>
           </div>
           <div class="col d-flex flex-column justify-content-start align-items-end">
-            <p class="h3">#Q{{ $record->numbering }} </p>
-            <div>Issue Date: {{ date("j F, Y", strtotime($record->quotation_date) ) }}</div>
-            <?php $validday = '+ '.$record->valid_days. ' days' ; ?>
-            <div>Due Date: {{ date("j F, Y", strtotime($validday , strtotime($record->quotation_date)) ) }}</div>
+            <p class="h3">#I{{ $record->numbering }} </p>
+            <div>Invoice Date: {{ date("j F, Y", strtotime($record->invoice_date) ) }}</div>
+            <div>Pay Before: {{ date("j F, Y", strtotime($record->pay_before) ) }}</div>
           </div>
         </div>
   

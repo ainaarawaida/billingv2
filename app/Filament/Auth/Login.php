@@ -5,8 +5,11 @@ namespace App\Filament\Auth;
 use Filament\Forms\Form;
 
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Illuminate\Support\Facades\Mail;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\RichEditor;
 use Filament\Pages\Auth\Login as BaseAuth;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Validation\ValidationException;
@@ -82,9 +85,17 @@ class Login extends BaseAuth
     protected function getFormActions(): array
     {
         return [
+           
             Action::make('Back')
-            ->url('/'),
-            $this->getAuthenticateFormAction(),
+            ->url('/')
+            ->extraAttributes(['style' => 'width:30%;','class' => 'bg-gray-400']),    
+            $this->getAuthenticateFormAction()
+            ->extraAttributes(['style' => 'width:60%;']),   
         ];
+    }
+
+    protected function hasFullWidthFormActions(): bool
+    {
+        return false;
     }
 }

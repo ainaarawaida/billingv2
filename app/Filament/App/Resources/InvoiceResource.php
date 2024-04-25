@@ -9,6 +9,7 @@ use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\Customer;
 use Filament\Forms\Form;
+use App\Mail\InvoiceEmail;
 use Filament\Tables\Table;
 use App\Mail\QuotationEmail;
 use Filament\Facades\Filament;
@@ -499,7 +500,7 @@ class InvoiceResource extends Resource
                         ->label('PDF')
                         ->color('success')
                         ->icon('heroicon-o-arrow-down-tray')
-                        ->url(fn ($record): ?string => url('quotationpdf')."/".base64_encode("luqmanahmadnordin".$record->id))
+                        ->url(fn ($record): ?string => url('invoicepdf')."/".base64_encode("luqmanahmadnordin".$record->id))
                         ->openUrlInNewTab(),
                         // ->action(function (Model $record) {
                         //     return response()->streamDownload(function () use ($record) {
@@ -521,7 +522,7 @@ class InvoiceResource extends Resource
                         ->action(function (Model $record) {
                             $customer = Customer::where('id', $record->customer_id)->first();
                             Mail::to($customer->email)
-                            ->send(new QuotationEmail($record, $customer));
+                            ->send(new InvoiceEmail($record, $customer));
 
 
                             Notification::make()
