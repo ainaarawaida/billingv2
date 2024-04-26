@@ -7,5 +7,5 @@
 </x-filament-panels::page>
 
 <script>
-    document.querySelector("div.fi-tenant-menu").style.display = 'none';
+    // document.querySelector("div.fi-tenant-menu").style.display = 'none';
 </script>

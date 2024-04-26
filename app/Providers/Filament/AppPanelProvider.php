@@ -52,6 +52,7 @@ class AppPanelProvider extends PanelProvider
             ->tenantRegistration(RegisterTeam::class)
             ->tenantProfile(EditTeamProfile::class)
             ->tenant(Team::class, ownershipRelationship: 'teams', slugAttribute: 'slug')
+            ->tenantMenu(request()->path() == 'app/company-1/choose-company' ? false : true)
             ->login(Login::class)
             ->registration()
             ->passwordReset()
