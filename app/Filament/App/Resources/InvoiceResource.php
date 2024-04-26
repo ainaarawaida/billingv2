@@ -145,117 +145,126 @@ class InvoiceResource extends Resource
                     ]),
 
                 Forms\Components\Section::make()
-                    ->schema([
-                        Forms\Components\Repeater::make('items')
-                            ->live(onBlur: true)
-                            ->minItems(1)
-                            ->collapsible()
-                            ->relationship('items')
-                            ->schema([
-                                Forms\Components\Textarea::make('title')
-                                    ->required()
-                                    ->columnSpan(2),
-                                Forms\Components\Select::make('product_id')
+                ->schema([
+                    Forms\Components\Repeater::make('items')
+                        ->live(onBlur: true)
+                        ->minItems(1)
+                        ->collapsible()
+                        ->relationship('items')
+                        ->schema([
+                            Forms\Components\Textarea::make('title')
+                                ->required()
+                                ->columnSpan(2),
+                            Forms\Components\Select::make('product_id')
                                 ->relationship('product', 'title', modifyQueryUsing: fn (Builder $query) => $query->whereBelongsTo(Filament::getTenant(), 'teams'))
-                                    ->searchable()
-                                    ->preload()
-                                    ->distinct()
-                                    ->disableOptionsWhenSelectedInSiblingRepeaterItems()
-                                    ->createOptionForm([
-                                        Forms\Components\Textarea::make('title')
-                                            ->maxLength(65535)
-                                            ->columnSpanFull(),
-                                        Forms\Components\Checkbox::make('tax')
-                                            // ->live(onBlur: true)
-                                            ->inline(false),
+                                ->searchable()
+                                ->preload()
+                                ->distinct()
+                                ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                                ->createOptionForm([
+                                    Forms\Components\Textarea::make('title')
+                                        ->maxLength(65535)
+                                        ->columnSpanFull(),
+                                    Forms\Components\Checkbox::make('tax')
+                                        // ->live(onBlur: true)
+                                        ->inline(false),
 
-                                        Forms\Components\TextInput::make('quantity')
-                                            ->required()
-                                            ->numeric()
-                                            ->default(0),
-                                        Forms\Components\TextInput::make('price')
-                                            ->required()
-                                            ->numeric()
-                                            ->prefix('RM')
-                                            ->formatStateUsing(fn (?string $state): ?string => number_format($state, 2))
-                                    ])
-                                    ->createOptionAction(function (Action $action) {
-                                        $action->mutateFormDataUsing(function ($data) {
-                                            $data['team_id'] = Filament::getTenant()->id;
+                                    Forms\Components\TextInput::make('quantity')
+                                        ->required()
+                                        ->numeric()
+                                        ->default(0),
+                                    Forms\Components\TextInput::make('price')
+                                        ->required()
+                                        ->numeric()
+                                        ->prefix('RM')
+                                        ->formatStateUsing(fn (?string $state): ?string => number_format($state, 2))
+                                        ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
+                                ])
+                                ->createOptionAction(function (Action $action) {
+                                    $action->mutateFormDataUsing(function ($data) {
+                                        $data['team_id'] = Filament::getTenant()->id;
+                                
+                                        return $data;
+                                    });
                                     
-                                            return $data;
-                                        });
-                                        
-                                        return $action
-                                            // ->modalHeading('Create customer')
-                                            // ->modalSubmitActionLabel('Create customer')
-                                            ->modalWidth('Screen');
-                                    })
-                                    ->afterStateUpdated(function ($state, $set, $get ){
-                                        $product = Product::find($state);
-                                        $set('price', number_format($product->price, 2));
-                                        $set('tax', (bool)$product->tax);
-                                        $set('quantity', (int)$product->quantity);
-                                        $set('total', number_format((int)$product->quantity*$get('price'), 2)  );
-                                       
-                                    })
-                                    // ->live(onBlur: true)
-                                    ->columnSpan(3),
-                                Forms\Components\TextInput::make('price')
-                                    ->required()
-                                    ->prefix('RM')
-                                    ->formatStateUsing(fn (string $state): string => number_format($state, 2))
+                                    return $action
+                                        // ->modalHeading('Create customer')
+                                        // ->modalSubmitActionLabel('Create customer')
+                                        ->modalWidth('Screen');
+                                })
+                                ->afterStateUpdated(function ($state, $set, $get ){
+                                    
+                                    $product = Product::find($state);
+                                    $set('price', number_format((float)$product?->price, 2));
+                                    $set('tax', (bool)$product?->tax);
+                                    $set('quantity', (int)$product?->quantity);
 
-                                    // ->live(onBlur: true)
-                                    ->afterStateUpdated(function ($state, $set, $get ){
-                                        $set('total', number_format($state*$get('quantity'), 2)  );
-                                        // $total = 0 ; 
-                                        // if(!$repeaters = $get('../../items')){
-                                        //     return $total ;
-                                        // }
-                                        // foreach($repeaters AS $key => $val){
-                                        //     $total += (float)$get("../../items.{$key}.total");
-                                        // }
-                                        // $set('../../sub_total', number_format($total, 2) );
-                                        // $set('../../final_amount', number_format($total, 2));
-                                    })
-                                    ->default(0.00),
-                                Forms\Components\Checkbox::make('tax')
+                                    // dd((float)$product?->price,number_format((float)str_replace(",", "", $product?->price), 2), $product?->quantity, $get('price'), (float)$get('price'));
+                                    $set('total', number_format((int)$product?->quantity*(float)str_replace(",", "", $get('price')), 2)  );
+                                   
+                                })
+                                // ->live(onBlur: true)
+                                ->columnSpan(3),
+                            Forms\Components\TextInput::make('price')
+                                ->required()
+                                ->prefix('RM')
+                                ->formatStateUsing(fn (string $state): string => number_format($state, 2))
+                                ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
+
+                                // ->live(onBlur: true)
+                                ->afterStateUpdated(function ($state, $set, $get ){
+                                    $set('total', number_format((float)str_replace(",", "", $state)*(int)$get('quantity'), 2)  );
+                                    // $total = 0 ; 
+                                    // if(!$repeaters = $get('../../items')){
+                                    //     return $total ;
+                                    // }
+                                    // foreach($repeaters AS $key => $val){
+                                    //     $total += (float)$get("../../items.{$key}.total");
+                                    // }
+                                    // $set('../../sub_total', number_format($total, 2) );
+                                    // $set('../../final_amount', number_format($total, 2));
+                                })
+                                ->default(0.00),
+                            Forms\Components\Checkbox::make('tax')
                                 // ->live(onBlur: true)
                                 ->inline(false),
-                                Forms\Components\TextInput::make('quantity')
-                                    ->required()
-                                    ->numeric()
-                                    // ->live(onBlur: true)
-                                    ->afterStateUpdated(function ($state, $set, $get ){
-                                        $set('total', number_format($state*$get('price'), 2)  );
-                                    })
-                                    ->default(1),
-                                Forms\Components\Select::make('unit')
-                                    ->options([
-                                        'Unit' => 'Unit',
-                                        'Kg' => 'Kg',
-                                        'Gram' => 'Gram',
-                                        'Box' => 'Box',
-                                        'Pack' => 'Pack',
-                                        'Day' => 'Day',
-                                        'Month' => 'Month',
-                                        'Year' => 'Year',
-                                        'People' => 'People',
+                            Forms\Components\TextInput::make('quantity')
+                                ->required()
+                                ->numeric()
+                                // ->live(onBlur: true)
+                                ->afterStateUpdated(function ($state, $set, $get ){
+                                    $set('total', number_format($state*(float)str_replace(",", "", $get('price')), 2)  );
+                                })
+                                ->default(1),
+                            Forms\Components\Select::make('unit')
+                                ->options([
+                                    'Unit' => 'Unit',
+                                    'Kg' => 'Kg',
+                                    'Gram' => 'Gram',
+                                    'Box' => 'Box',
+                                    'Pack' => 'Pack',
+                                    'Day' => 'Day',
+                                    'Month' => 'Month',
+                                    'Year' => 'Year',
+                                    'People' => 'People',
 
-                                    ])
-                                    ->default('Unit')
-                                    ->searchable()
-                                    ->preload()
-                                    ->required(),
-                                Forms\Components\TextInput::make('total')
-                                    ->prefix('RM')
-                                    ->readonly()
-                                    ->formatStateUsing(fn (string $state): string => number_format($state, 2))
-                                    ->default(0.00),
-                            ])->columns(5),
+                                ])
+                                ->default('Unit')
+                                ->searchable()
+                                ->preload()
+                                ->required(),
+                            Forms\Components\TextInput::make('total')
+                                ->prefix('RM')
+                                ->readonly()
+                                ->formatStateUsing(fn (string $state): string => number_format($state, 2))
+                                ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
+                                ->default(0.00),
+                        ])
+                        ->mutateRelationshipDataBeforeSaveUsing(function (array $data): array {
+                           return $data;
+                        })->columns(5),
 
-                    ]),
+                ]),
                 Forms\Components\Section::make()
                     ->schema([
                         Forms\Components\Textarea::make('notes'),
@@ -263,10 +272,13 @@ class InvoiceResource extends Resource
                         ->schema([
                             Forms\Components\TextInput::make('sub_total')
                                 ->formatStateUsing(fn ( $state)  => number_format($state, 2))
+                                ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
                                 ->prefix('RM')
                                 ->readonly()
                                 ->default(0),
                             Forms\Components\TextInput::make('taxes')
+                                ->formatStateUsing(fn ( $state)  => number_format($state, 2))
+                                ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
                                 ->prefix('RM')
                                 ->readonly()
                                 ->default(0),
@@ -277,11 +289,15 @@ class InvoiceResource extends Resource
                                 ->integer()
                                 ->default(0),
                             Forms\Components\TextInput::make('delivery')
+                                ->formatStateUsing(fn ( $state)  => number_format($state, 2))
+                                ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
                                 ->prefix('RM')
                                 ->live(onBlur: true)
                                 ->numeric()
                                 ->default(0.00),
                             Forms\Components\TextInput::make('final_amount')
+                                ->formatStateUsing(fn ( $state)  => number_format($state, 2))
+                                ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
                                 ->prefix('RM')
                                 ->readonly()
                                 ->live(onBlur: true)
@@ -300,10 +316,10 @@ class InvoiceResource extends Resource
                                     return $sub_total ;
                                 }
                                 foreach($repeaters AS $key => $val){
-                                    $sub_total += (float)$get("items.{$key}.total");
+                                    $sub_total += (float)str_replace(",", "", $get("items.{$key}.total"));
                                     
                                     if($get("items.{$key}.tax") == true){
-                                        $taxes = $taxes + ((int)$get('percentage_tax') / 100 * (float)$get("items.{$key}.total")) ;
+                                        $taxes = $taxes + ((int)$get('percentage_tax') / 100 * (float)str_replace(",", "", $get("items.{$key}.total"))) ;
                                     }else{
 
                                     }
@@ -312,7 +328,7 @@ class InvoiceResource extends Resource
 
                                 $set('sub_total', number_format($sub_total, 2));
                                 $set('taxes', number_format($taxes, 2));
-                                $set('final_amount', number_format($sub_total + (float)$get("taxes") + (float)$get("delivery"), 2));
+                                $set('final_amount', number_format($sub_total + (float)str_replace(",", "", $get("taxes")) + (float)str_replace(",", "", $get("delivery")), 2));
 
                                 return ;
                                 // return $sub_total." ".(float)$get("taxes"). " ". (float)$get("delivery")." ".$sub_total + (float)$get("taxes") + (float)$get("delivery")  ;
@@ -373,11 +389,26 @@ class InvoiceResource extends Resource
                     ->color('primary')
                     ->sortable()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('title')
+                    ->label(__('Title'))
+                    ->sortable()
+                    ->searchable()
+                    ->formatStateUsing(function(string $state, $record): string {
+                            return __("{$state}<br><i>({$record->items()->count()} items)</i>");
+                        } 
+                    )
+                    ->toggleable(isToggledHiddenByDefault: false)
+                    ->html(),
                 Tables\Columns\TextColumn::make('customer.name')
                     ->label(__('Customer'))
                     ->formatStateUsing(fn (string $state): string => __("<b>{$state}</b>"))
                     ->html()
-                    ->searchable(),
+                    ->searchable()
+                    ->url(function ($record) {
+                        return $record->customer
+                            ? CustomerResource::getUrl('edit', ['record' => $record->customer_id])
+                            : null;
+                    }),
                 Tables\Columns\TextColumn::make('invoice_date')
                     ->date()
                     ->sortable()
@@ -402,9 +433,8 @@ class InvoiceResource extends Resource
                     ])
                     ->selectablePlaceholder(false)
                     ->searchable(),
-                Tables\Columns\TextColumn::make('title')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+               
+
                 Tables\Columns\TextColumn::make('sub_total')
                     ->numeric()
                     ->sortable()
@@ -425,6 +455,10 @@ class InvoiceResource extends Resource
                     ->label(__("Amount"))
                     ->numeric()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('payment_type')
+                    ->badge()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -437,17 +471,17 @@ class InvoiceResource extends Resource
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
                 SelectFilter::make('invoice_status')
-                ->label('Status')
-                ->multiple()
-                ->options([
-                    'draft' => 'Draft',
-                    'new' => 'New',
-                    'process' => 'Process',
-                    'done' => 'Done',
-                    'expired' => 'Expired',
-                    'cancelled' => 'Cancelled',
-                ])
-                ->indicator('Status'),
+                    ->label('Status')
+                    ->multiple()
+                    ->options([
+                        'draft' => 'Draft',
+                        'new' => 'New',
+                        'process' => 'Process',
+                        'done' => 'Done',
+                        'expired' => 'Expired',
+                        'cancelled' => 'Cancelled',
+                    ])
+                    ->indicator('Status'),
                 Filter::make('numbering_f')
                     ->form([
                         TextInput::make('numbering')
@@ -540,10 +574,11 @@ class InvoiceResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
                     Tables\Actions\RestoreBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('numbering', 'desc');
     }
 
     public static function getRelations(): array
@@ -569,6 +604,12 @@ class InvoiceResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::whereBelongsTo(Filament::getTenant(), 'teams')->count();
+        
     }
 
     public static function customerForm(){
@@ -650,4 +691,6 @@ class InvoiceResource extends Resource
             
         ]);
     }
+
+
 }

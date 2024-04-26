@@ -429,6 +429,7 @@ class QuotationResource extends Resource
                                             ->numeric()
                                             ->prefix('RM')
                                             ->formatStateUsing(fn (?string $state): ?string => number_format($state, 2))
+                                            ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
                                     ])
                                     ->createOptionAction(function (Action $action) {
                                         $action->mutateFormDataUsing(function ($data) {
@@ -443,11 +444,14 @@ class QuotationResource extends Resource
                                             ->modalWidth('Screen');
                                     })
                                     ->afterStateUpdated(function ($state, $set, $get ){
+                                        
                                         $product = Product::find($state);
-                                        $set('price', number_format($product->price, 2));
-                                        $set('tax', (bool)$product->tax);
-                                        $set('quantity', (int)$product->quantity);
-                                        $set('total', number_format((int)$product->quantity*$get('price'), 2)  );
+                                        $set('price', number_format((float)$product?->price, 2));
+                                        $set('tax', (bool)$product?->tax);
+                                        $set('quantity', (int)$product?->quantity);
+
+                                        // dd((float)$product?->price,number_format((float)str_replace(",", "", $product?->price), 2), $product?->quantity, $get('price'), (float)$get('price'));
+                                        $set('total', number_format((int)$product?->quantity*(float)str_replace(",", "", $get('price')), 2)  );
                                        
                                     })
                                     // ->live(onBlur: true)
@@ -456,10 +460,11 @@ class QuotationResource extends Resource
                                     ->required()
                                     ->prefix('RM')
                                     ->formatStateUsing(fn (string $state): string => number_format($state, 2))
+                                    ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
 
                                     // ->live(onBlur: true)
                                     ->afterStateUpdated(function ($state, $set, $get ){
-                                        $set('total', number_format($state*$get('quantity'), 2)  );
+                                        $set('total', number_format((float)str_replace(",", "", $state)*(int)$get('quantity'), 2)  );
                                         // $total = 0 ; 
                                         // if(!$repeaters = $get('../../items')){
                                         //     return $total ;
@@ -472,14 +477,14 @@ class QuotationResource extends Resource
                                     })
                                     ->default(0.00),
                                 Forms\Components\Checkbox::make('tax')
-                                // ->live(onBlur: true)
-                                ->inline(false),
+                                    // ->live(onBlur: true)
+                                    ->inline(false),
                                 Forms\Components\TextInput::make('quantity')
                                     ->required()
                                     ->numeric()
                                     // ->live(onBlur: true)
                                     ->afterStateUpdated(function ($state, $set, $get ){
-                                        $set('total', number_format($state*$get('price'), 2)  );
+                                        $set('total', number_format($state*(float)str_replace(",", "", $get('price')), 2)  );
                                     })
                                     ->default(1),
                                 Forms\Components\Select::make('unit')
@@ -503,8 +508,12 @@ class QuotationResource extends Resource
                                     ->prefix('RM')
                                     ->readonly()
                                     ->formatStateUsing(fn (string $state): string => number_format($state, 2))
+                                    ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
                                     ->default(0.00),
-                            ])->columns(5),
+                            ])
+                            ->mutateRelationshipDataBeforeSaveUsing(function (array $data): array {
+                               return $data;
+                            })->columns(5),
 
                     ]),
                 Forms\Components\Section::make()
@@ -514,10 +523,13 @@ class QuotationResource extends Resource
                         ->schema([
                             Forms\Components\TextInput::make('sub_total')
                                 ->formatStateUsing(fn ( $state)  => number_format($state, 2))
+                                ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
                                 ->prefix('RM')
                                 ->readonly()
                                 ->default(0),
                             Forms\Components\TextInput::make('taxes')
+                                ->formatStateUsing(fn ( $state)  => number_format($state, 2))
+                                ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
                                 ->prefix('RM')
                                 ->readonly()
                                 ->default(0),
@@ -528,11 +540,15 @@ class QuotationResource extends Resource
                                 ->integer()
                                 ->default(0),
                             Forms\Components\TextInput::make('delivery')
+                                ->formatStateUsing(fn ( $state)  => number_format($state, 2))
+                                ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
                                 ->prefix('RM')
                                 ->live(onBlur: true)
                                 ->numeric()
                                 ->default(0.00),
                             Forms\Components\TextInput::make('final_amount')
+                                ->formatStateUsing(fn ( $state)  => number_format($state, 2))
+                                ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
                                 ->prefix('RM')
                                 ->readonly()
                                 ->live(onBlur: true)
@@ -551,10 +567,10 @@ class QuotationResource extends Resource
                                     return $sub_total ;
                                 }
                                 foreach($repeaters AS $key => $val){
-                                    $sub_total += (float)$get("items.{$key}.total");
+                                    $sub_total += (float)str_replace(",", "", $get("items.{$key}.total"));
                                     
                                     if($get("items.{$key}.tax") == true){
-                                        $taxes = $taxes + ((int)$get('percentage_tax') / 100 * (float)$get("items.{$key}.total")) ;
+                                        $taxes = $taxes + ((int)$get('percentage_tax') / 100 * (float)str_replace(",", "", $get("items.{$key}.total"))) ;
                                     }else{
 
                                     }
@@ -563,7 +579,7 @@ class QuotationResource extends Resource
 
                                 $set('sub_total', number_format($sub_total, 2));
                                 $set('taxes', number_format($taxes, 2));
-                                $set('final_amount', number_format($sub_total + (float)$get("taxes") + (float)$get("delivery"), 2));
+                                $set('final_amount', number_format($sub_total + (float)str_replace(",", "", $get("taxes")) + (float)str_replace(",", "", $get("delivery")), 2));
 
                                 return ;
                                 // return $sub_total." ".(float)$get("taxes"). " ". (float)$get("delivery")." ".$sub_total + (float)$get("taxes") + (float)$get("delivery")  ;
@@ -624,7 +640,12 @@ class QuotationResource extends Resource
                     ->label(__('Customer'))
                     ->formatStateUsing(fn (string $state): string => __("<b>{$state}</b>"))
                     ->html()
-                    ->searchable(),
+                    ->searchable()
+                    ->url(function ($record) {
+                        return $record->customer
+                            ? CustomerResource::getUrl('edit', ['record' => $record->customer_id])
+                            : null;
+                    }),
                 Tables\Columns\TextColumn::make('quotation_date')
                     ->date()
                     ->sortable()
@@ -633,6 +654,9 @@ class QuotationResource extends Resource
 
                 Tables\Columns\SelectColumn::make('quote_status')
                     ->label('Status')
+                    ->extraHeaderAttributes([
+                        'style' => 'padding-right:100px'
+                    ])
                     ->options([
                         'draft' => 'Draft',
                         'new' => 'New',
@@ -675,19 +699,19 @@ class QuotationResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
                 SelectFilter::make('quote_status')
-                ->label('Status')
-                ->multiple()
-                ->options([
-                    'draft' => 'Draft',
-                    'new' => 'New',
-                    'process' => 'Process',
-                    'done' => 'Done',
-                    'expired' => 'Expired',
-                    'cancelled' => 'Cancelled',
-                ])
-                ->indicator('Status'),
+                    ->label('Status')
+                    ->multiple()
+                    ->options([
+                        'draft' => 'Draft',
+                        'new' => 'New',
+                        'process' => 'Process',
+                        'done' => 'Done',
+                        'expired' => 'Expired',
+                        'cancelled' => 'Cancelled',
+                    ])
+                    ->indicator('Status'),
                 Filter::make('numbering_f')
                     ->form([
                         TextInput::make('numbering')
@@ -734,6 +758,7 @@ class QuotationResource extends Resource
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\ForceDeleteAction::make(),
                     Tables\Actions\ViewAction::make(),
                     Tables\Actions\Action::make('pdf') 
                         ->label('PDF')
@@ -779,8 +804,11 @@ class QuotationResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('numbering', 'desc');
     }
 
     public static function getRelations(): array
@@ -799,6 +827,20 @@ class QuotationResource extends Resource
             'view' => Pages\ViewQuotation::route('/{record}'),
             'test' => Pages\Tests::route('/test'),
         ];
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::whereBelongsTo(Filament::getTenant(), 'teams')->count();
+        
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
     }
 
 

@@ -58,6 +58,7 @@ class AppPanelProvider extends PanelProvider
             ->emailVerification()
             ->profile()
             ->spa()
+            ->navigation(request()->path() == 'app/company-1/choose-company' ? false : true)
             ->databaseNotifications()
             ->navigationGroups([
                 NavigationGroup::make()

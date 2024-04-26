@@ -11,6 +11,13 @@ class LoginResponse implements LoginResponseContract
 {
     public function toResponse($request): RedirectResponse | Redirector
     {
-        return redirect()->intended(Filament::getUrl());
+        $url = explode('/', Filament::getUrl());
+        if($url[3] == 'app'){
+            return redirect()->intended(Filament::getUrl().'/choose-company');
+        }else{
+            return redirect()->intended(Filament::getUrl());
+
+        }
+      
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Team;
 use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Illuminate\Support\Str;
+use Filament\Actions\Action;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Select;
@@ -90,11 +91,29 @@ class RegisterTeam extends RegisterTenant
       public static function canView(): bool
       {
         $checkteam = collect(DB::select('SELECT * FROM team_user WHERE user_id = ?', [auth()->user()->id]))->count();
-         if($checkteam > 0){
+         if($checkteam > 2){
             return false;
          }
             return true;
       }
+
+      protected function hasFullWidthFormActions(): bool
+      {
+          return false;
+      }
+
+      
+    protected function getFormActions(): array
+    {
+        return [
+           
+            Action::make('Back')
+            ->url(url()->previous())
+            ->extraAttributes(['style' => 'width:30%;','class' => 'bg-gray-400']),    
+            $this->getRegisterFormAction()
+            ->extraAttributes(['style' => 'width:60%;']),   
+        ];
+    }
 
       
 }

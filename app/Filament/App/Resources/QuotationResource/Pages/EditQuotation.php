@@ -2,9 +2,10 @@
 
 namespace App\Filament\App\Resources\QuotationResource\Pages;
 
-use App\Filament\App\Resources\QuotationResource;
 use Filament\Actions;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Resources\Pages\EditRecord;
+use App\Filament\App\Resources\QuotationResource;
 
 class EditQuotation extends EditRecord
 {
@@ -23,5 +24,12 @@ class EditQuotation extends EditRecord
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
+    }
+
+    protected function handleRecordUpdate(Model $record, array $data): Model
+    {
+        $record->update($data);
+
+        return $record;
     }
 }
