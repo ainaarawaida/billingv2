@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('poscode')->nullable();
             $table->string('city')->nullable();
             $table->string('state')->nullable();
+            $table->string('photo')->nullable();
             $table->timestamps();
         });
       

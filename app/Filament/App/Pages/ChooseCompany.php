@@ -9,6 +9,7 @@ use Filament\Tables\Actions\Action;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
 
@@ -34,6 +35,7 @@ class ChooseCompany extends Page implements HasForms, HasTable
                 TextColumn::make('name'),
                 TextColumn::make('email'),
                 TextColumn::make('phone'),
+                ImageColumn::make('photo')
             ])
             ->filters([
               

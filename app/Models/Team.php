@@ -55,7 +55,14 @@ class Team extends Model implements HasAvatar
 
     public function getFilamentAvatarUrl(): ?string
     {
-        return $this->avatar_url;
+
+        // dd((boolean)$this->photo);
+        if(isset($this->photo)){
+            return url("storage/".$this->photo);
+        }else{
+            return $this->avatar_url;
+        }
+       
     }
 
    

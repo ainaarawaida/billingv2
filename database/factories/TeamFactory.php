@@ -44,6 +44,7 @@ class TeamFactory extends Factory
                 'LBN',
                 'PJY'
             ]),
+            'photo' => null,
         ];
     }
 }

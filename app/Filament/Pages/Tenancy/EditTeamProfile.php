@@ -13,9 +13,15 @@ use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
 use Filament\Pages\Tenancy\EditTenantProfile;
+use Filament\Forms\Concerns\InteractsWithForms;
 
 class EditTeamProfile extends EditTenantProfile
 {
+
+      // use InteractsWithForms;
+      
+      public ?array $data = [];
+
       public static function getLabel(): string
       {
             return 'Organization';
@@ -37,7 +43,7 @@ class EditTeamProfile extends EditTenantProfile
                                                 ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state))),
                                           TextInput::make('slug')
                                                 ->required()
-                                                ->unique(Team::class, 'slug'),
+                                                ->unique(Team::class, ignoreRecord: true),
                                           TextInput::make('email')
                                                 ->email()
                                                 // ->required()
@@ -88,8 +94,9 @@ class EditTeamProfile extends EditTenantProfile
                               Tabs\Tab::make('logo')
                                     ->label(__("Logo"))
                                     ->schema([
-                                          FileUpload::make('image')
+                                          FileUpload::make('photo')
                                                 ->image()
+                                                ->directory('photo')
                                                 ->avatar()
                                                 ->imageEditor()
                                                 ->circleCropper()
@@ -101,19 +108,36 @@ class EditTeamProfile extends EditTenantProfile
            
       }
 
-      public function getRedirectUrl(): string
+      protected function getRedirectUrl(): ?string
       {
-            // return Filament::getUrl('index');
-            // $newSlug = $this->record->slug;
-            // $tenant = Filament::getTenant();
-            // dd($tenant);
-            // Replace '/desired-route' with the actual path you want to redirect to
-            // dd(route('filament.admin.tenant'));
-            // dd(route('filament.admin.tenant'));
-            // $link = route('filament.admin.tenant') ;
-            return route('filament.admin.tenant');
-            // return redirect()->to($link);
-            // return static::getResource()::getUrl('index');
-            // return route('filament.admin.tenant');
+          
+            // return route(self::getRouteName());
+            // return self::getUrl();
+            // return self::getUrl();
+                  $record = $this->form->getState();
+            //     return null;
+                 // return Filament::getUrl('index');
+                  // $newSlug = $this->record->slug;
+                  $panel = Filament::getCurrentPanel()->getId();
+                  // dd("d",$tenant, $this->form->getState()['slug']);
+                  // Replace '/desired-route' with the actual path you want to redirect to
+                  // dd(route('filament.admin.tenant'));
+                  // dd(route('filament.admin.tenant'));
+                  // $link = route('filament.admin.tenant') ;
+                  // return route('filament.admin.tenant');
+                  // return url(url($panel)."/".$record['slug']);
+                  return $this->redirect(url($panel)."/".$record['slug']);
+                  // return static::getResource()::getUrl('index');
+                  // return route('filament.admin.tenant');
       }
+
+      // public static function getRouteName(?string $panel = null): string
+      // {
+      //     $panel = $panel ? Filament::getPanel($panel) : Filament::getCurrentPanel();
+      //     // $routeName = 'pages.' . static::getRelativeRouteName();
+      //     $routeName = 'tenant.' . static::getRelativeRouteName(); // here is the change I've made 
+      //     $routeName = static::prependClusterRouteBaseName($routeName);
+           
+      //     return $panel->generateRouteName($routeName);
+      // }
 }

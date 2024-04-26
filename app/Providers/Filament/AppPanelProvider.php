@@ -8,6 +8,7 @@ use App\Models\Team;
 use Filament\Widgets;
 use Filament\PanelProvider;
 use App\Filament\Auth\Login;
+use App\Filament\Auth\EditProfile;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use Filament\Navigation\NavigationGroup;
@@ -15,6 +16,7 @@ use Filament\Http\Middleware\Authenticate;
 use App\Filament\Pages\Tenancy\RegisterTeam;
 use App\Filament\Pages\Tenancy\EditTeamProfile;
 use Illuminate\Session\Middleware\StartSession;
+use App\Filament\Pages\Tenancy\EditTeamProfile2;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
@@ -52,14 +54,15 @@ class AppPanelProvider extends PanelProvider
             ->tenantRegistration(RegisterTeam::class)
             ->tenantProfile(EditTeamProfile::class)
             ->tenant(Team::class, ownershipRelationship: 'teams', slugAttribute: 'slug')
-            ->tenantMenu(request()->path() == 'app/company-1/choose-company' ? false : true)
+            ->tenantMenu(isset(request()->segments()[2]) && request()->segments()[2] == 'choose-company' ? false : true)
             ->login(Login::class)
             ->registration()
             ->passwordReset()
             ->emailVerification()
-            ->profile()
+            // ->profile()
+            ->profile(EditProfile::class)
             ->spa()
-            ->navigation(request()->path() == 'app/company-1/choose-company' ? false : true)
+            ->navigation(isset(request()->segments()[2]) && request()->segments()[2] == 'choose-company' ? false : true)
             ->databaseNotifications()
             ->navigationGroups([
                 NavigationGroup::make()
