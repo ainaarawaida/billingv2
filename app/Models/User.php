@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Filament\Panel;
+use App\Models\UserDetail;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -84,7 +85,17 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAvata
 
     public function getFilamentAvatarUrl(): ?string
     {
-        return $this->avatar_url;
+        if(isset($this->user_detail->photo)){
+            return url("storage/".$this->user_detail->photo);
+        }else{
+            return $this->avatar_url;
+        }
+       
+    }
+
+    public function user_detail()
+    {
+        return $this->hasOne(UserDetail::class);
     }
 
 }
