@@ -4,8 +4,12 @@ namespace App\Filament\App\Resources;
 
 use stdClass;
 use Filament\Forms;
+use App\Models\Item;
 use Filament\Tables;
+use Livewire\Livewire;
+use App\Models\Invoice;
 use App\Models\Product;
+use Livewire\Component;
 use App\Models\Customer;
 use Filament\Forms\Form;
 use App\Models\Quotation;
@@ -23,11 +27,13 @@ use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Tables\Enums\FiltersLayout;
+use Illuminate\Support\Facades\Redirect;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\RichEditor;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Actions\Action;
+use App\Filament\App\Resources\InvoiceResource;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\App\Resources\QuotationResource\Pages;
 use App\Filament\App\Resources\QuotationResource\RelationManagers;
@@ -760,6 +766,48 @@ class QuotationResource extends Resource
                     Tables\Actions\DeleteAction::make(),
                     Tables\Actions\ForceDeleteAction::make(),
                     Tables\Actions\ViewAction::make(),
+                    Tables\Actions\Action::make('gen_invoice')
+                        ->label(__('Gen Invoice'))
+                        ->icon('heroicon-o-clipboard-document-list')
+                        ->color('info')
+                        ->action(function (Model $record, Component $livewire) {
+                            $lastid = Invoice::where('team_id', $record->team_id)->count('id') + 1 ;
+                            $invoice =  Invoice::create([
+                                'customer_id' => $record->customer_id ,
+                                'team_id' => $record->team_id ,
+                                'numbering' => str_pad($lastid, 6, "0", STR_PAD_LEFT),
+                                'invoice_date' => now()->format('Y-m-d'),
+                                'pay_before' => now()->format('Y-m-d'), // Valid days between 7 and 30
+                                'invoice_status' => 'draft',
+                                'title' => $record->title,
+                                'notes' => $record->notes,
+                                'sub_total' => $record->sub_total, // Subtotal between 1000 and 10000
+                                'taxes' => $record->taxes, // Can be calculated based on percentage_tax and sub_total later
+                                'percentage_tax' => $record->percentage_tax, // Tax percentage between 0 and 20
+                                'delivery' => $record->delivery, // Delivery cost between 0 and 100
+                                'final_amount' => $record->final_amount, //
+                            ]);
+                            $item = Item::where('quotation_id', $record->id)->get();
+                            foreach ($item as $key => $value) {
+                                Item::create([
+                                    'invoice_id' => $invoice->id,
+                                    'product_id' => $value->product_id,
+                                    'title' => $value->title,
+                                    'price' => $value->price,
+                                    'tax' => $value->tax,
+                                    'quantity' => $value->quantity,
+                                    'unit' => $value->unit,
+                                    'total' => $value->total,
+                                ]);
+                            };
+
+                            Notification::make()
+                            ->title('Generate Invoice successfully')
+                            ->success()
+                            ->send();
+
+                            $livewire->redirect(InvoiceResource::getUrl('edit', ['record' => $invoice->id]), navigate:true);
+                        }),
                     Tables\Actions\Action::make('pdf') 
                         ->label('PDF')
                         ->color('success')

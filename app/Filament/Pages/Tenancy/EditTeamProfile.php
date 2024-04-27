@@ -110,7 +110,6 @@ class EditTeamProfile extends EditTenantProfile
 
       protected function getRedirectUrl(): ?string
       {
-          
             // return route(self::getRouteName());
             // return self::getUrl();
             // return self::getUrl();
@@ -126,7 +125,7 @@ class EditTeamProfile extends EditTenantProfile
                   // $link = route('filament.admin.tenant') ;
                   // return route('filament.admin.tenant');
                   // return url(url($panel)."/".$record['slug']);
-                  return $this->redirect(url($panel)."/".$record['slug']);
+                  return $this->redirect(url($panel)."/".$record['slug'], navigate:false);
                   // return static::getResource()::getUrl('index');
                   // return route('filament.admin.tenant');
       }
