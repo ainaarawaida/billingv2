@@ -7,10 +7,13 @@ use Filament\Panel;
 use App\Models\Team;
 use Filament\Widgets;
 use Filament\PanelProvider;
+use Filament\Pages\Dashboard;
+use Filament\Facades\Filament;
 use App\Filament\Pages\Auth\Login;
-use App\Filament\Pages\Auth\EditProfile;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
+use Filament\Navigation\NavigationItem;
+use App\Filament\Pages\Auth\EditProfile;
 use Filament\Navigation\NavigationGroup;
 use Filament\Http\Middleware\Authenticate;
 use App\Filament\Pages\Tenancy\RegisterTeam;
@@ -18,6 +21,7 @@ use App\Filament\Pages\Tenancy\EditTeamProfile;
 use Illuminate\Session\Middleware\StartSession;
 use App\Filament\Pages\Tenancy\EditTeamProfile2;
 use Illuminate\Cookie\Middleware\EncryptCookies;
+use App\Filament\App\Resources\QuotationResource;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -38,7 +42,7 @@ class AppPanelProvider extends PanelProvider
                 'primary' => Color::Slate,
             ])
             // ->renderHook(
-            //     PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE ,
+            //     PanelsRenderHook::SIDEBAR_NAV_END ,
             //     function(): string {
             //         return '<a wire:navigate href="'.url('/app/login').'" class="fi-topbar-item-button flex items-center justify-center gap-x-2 rounded-lg px-3 py-2 outline-none transition duration-75 hover:bg-gray-50 focus-visible:bg-gray-50 dark:hover:bg-white/5 dark:focus-visible:bg-white/5 bg-gray-50 dark:bg-white/5">
                    
@@ -68,10 +72,15 @@ class AppPanelProvider extends PanelProvider
                 NavigationGroup::make()
                     ->label('Document'),
                 NavigationGroup::make()
-                    ->label('Blog'),
-                NavigationGroup::make()
-                    ->label(fn (): string => __('navigation.settings'))
-                    ->collapsed(),
+                    ->label('Setting'),
+            ])
+            ->navigationItems([
+                NavigationItem::make('Organization')
+                    ->label(__('Organization'))
+                    ->url(fn () => Filament::getUrl().'/profile')
+                    ->icon('heroicon-o-presentation-chart-line')
+                    ->group('Setting')
+                    ->sort(1),
             ])
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\\Filament\\App\\Resources')
             ->discoverPages(in: app_path('Filament/App/Pages'), for: 'App\\Filament\\App\\Pages')

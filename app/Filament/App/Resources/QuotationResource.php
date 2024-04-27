@@ -633,6 +633,7 @@ class QuotationResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('title')
                     ->label(__('Title'))
+                    ->wrap()
                     ->sortable()
                     ->searchable()
                     ->formatStateUsing(function(string $state, $record): string {
@@ -766,6 +767,50 @@ class QuotationResource extends Resource
                     Tables\Actions\DeleteAction::make(),
                     Tables\Actions\ForceDeleteAction::make(),
                     Tables\Actions\ViewAction::make(),
+                    Tables\Actions\Action::make('replicate')
+                        ->label(__('Replicate'))
+                        ->icon('heroicon-m-square-2-stack')
+                        ->color('info')
+                        ->action(function (Model $record, Component $livewire) {
+                            $lastid = Quotation::where('team_id', $record->team_id)->count('id') + 1 ;
+                            $quotation =  Quotation::create([
+                                'customer_id' => $record->customer_id ,
+                                'team_id' => $record->team_id ,
+                                'numbering' => str_pad($lastid, 6, "0", STR_PAD_LEFT),
+                                'quotation_date' => $record->quotation_date,
+                                'valid_days' => $record->valid_days, // Valid days between 7 and 30
+                                'quote_status' => $record->quote_status,
+                                'title' => $record->title,
+                                'notes' => $record->notes,
+                                'sub_total' => $record->sub_total, // Subtotal between 1000 and 10000
+                                'taxes' => $record->taxes, // Can be calculated based on percentage_tax and sub_total later
+                                'percentage_tax' => $record->percentage_tax, // Tax percentage between 0 and 20
+                                'delivery' => $record->delivery, // Delivery cost between 0 and 100
+                                'final_amount' => $record->final_amount, //
+                            ]);
+                            $item = Item::where('quotation_id', $record->id)->get();
+                            foreach ($item as $key => $value) {
+                                Item::create([
+                                    'quotation_id' => $quotation->id,
+                                    'product_id' => $value->product_id,
+                                    'title' => $value->title,
+                                    'price' => $value->price,
+                                    'tax' => $value->tax,
+                                    'quantity' => $value->quantity,
+                                    'unit' => $value->unit,
+                                    'total' => $value->total,
+                                ]);
+                            };
+
+                            Notification::make()
+                            ->title('Replicate Quotation successfully')
+                            ->success()
+                            ->send();
+
+                            $livewire->redirect(QuotationResource::getUrl('edit', ['record' => $quotation->id]), navigate:true);
+                        }),
+                    
+                    
                     Tables\Actions\Action::make('gen_invoice')
                         ->label(__('Gen Invoice'))
                         ->icon('heroicon-o-clipboard-document-list')

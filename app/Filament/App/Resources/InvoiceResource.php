@@ -4,9 +4,11 @@ namespace App\Filament\App\Resources;
 
 use stdClass;
 use Filament\Forms;
+use App\Models\Item;
 use Filament\Tables;
 use App\Models\Invoice;
 use App\Models\Product;
+use Livewire\Component;
 use App\Models\Customer;
 use Filament\Forms\Form;
 use App\Mail\InvoiceEmail;
@@ -391,6 +393,7 @@ class InvoiceResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('title')
                     ->label(__('Title'))
+                    ->wrap()
                     ->sortable()
                     ->searchable()
                     ->formatStateUsing(function(string $state, $record): string {
@@ -530,6 +533,50 @@ class InvoiceResource extends Resource
                     Tables\Actions\DeleteAction::make(),
                     Tables\Actions\ForceDeleteAction::make(),
                     Tables\Actions\ViewAction::make(),
+                    Tables\Actions\Action::make('replicate')
+                        ->label(__('Replicate'))
+                        ->icon('heroicon-m-square-2-stack')
+                        ->color('info')
+                        ->action(function (Model $record, Component $livewire) {
+                            $lastid = Invoice::where('team_id', $record->team_id)->count('id') + 1 ;
+                            $invoice =  Invoice::create([
+                                'customer_id' => $record->customer_id ,
+                                'team_id' => $record->team_id ,
+                                'numbering' => str_pad($lastid, 6, "0", STR_PAD_LEFT),
+                                'invoice_date' => $record->invoice_date,
+                                'pay_before' => $record->pay_before, // Valid days between 7 and 30
+                                'invoice_status' => $record->invoice_status,
+                                'title' => $record->title,
+                                'notes' => $record->notes,
+                                'sub_total' => $record->sub_total, // Subtotal between 1000 and 10000
+                                'taxes' => $record->taxes, // Can be calculated based on percentage_tax and sub_total later
+                                'percentage_tax' => $record->percentage_tax, // Tax percentage between 0 and 20
+                                'delivery' => $record->delivery, // Delivery cost between 0 and 100
+                                'final_amount' => $record->final_amount, //
+                            ]);
+                            $item = Item::where('invoice_id', $record->id)->get();
+                            foreach ($item as $key => $value) {
+                                Item::create([
+                                    'invoice_id' => $invoice->id,
+                                    'product_id' => $value->product_id,
+                                    'title' => $value->title,
+                                    'price' => $value->price,
+                                    'tax' => $value->tax,
+                                    'quantity' => $value->quantity,
+                                    'unit' => $value->unit,
+                                    'total' => $value->total,
+                                ]);
+                            };
+
+                            Notification::make()
+                            ->title('Replicate Invoice successfully')
+                            ->success()
+                            ->send();
+
+                            $livewire->redirect(InvoiceResource::getUrl('edit', ['record' => $invoice->id]), navigate:true);
+                        }),
+                    
+                    
                     Tables\Actions\Action::make('pdf') 
                         ->label('PDF')
                         ->color('success')
