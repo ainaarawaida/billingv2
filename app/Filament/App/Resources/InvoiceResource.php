@@ -177,7 +177,7 @@ class InvoiceResource extends Resource
                                         ->default(0),
                                     Forms\Components\TextInput::make('price')
                                         ->required()
-                                        ->numeric()
+                                        ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
                                         ->prefix('RM')
                                         ->formatStateUsing(fn (?string $state): ?string => number_format($state, 2))
                                         ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
@@ -210,6 +210,7 @@ class InvoiceResource extends Resource
                             Forms\Components\TextInput::make('price')
                                 ->required()
                                 ->prefix('RM')
+                                ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
                                 ->formatStateUsing(fn (string $state): string => number_format($state, 2))
                                 ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
 
@@ -291,11 +292,11 @@ class InvoiceResource extends Resource
                                 ->integer()
                                 ->default(0),
                             Forms\Components\TextInput::make('delivery')
+                                ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
                                 ->formatStateUsing(fn ( $state)  => number_format($state, 2))
                                 ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
                                 ->prefix('RM')
                                 ->live(onBlur: true)
-                                ->numeric()
                                 ->default(0.00),
                             Forms\Components\TextInput::make('final_amount')
                                 ->formatStateUsing(fn ( $state)  => number_format($state, 2))

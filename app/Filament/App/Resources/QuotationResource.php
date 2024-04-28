@@ -432,7 +432,7 @@ class QuotationResource extends Resource
                                             ->default(0),
                                         Forms\Components\TextInput::make('price')
                                             ->required()
-                                            ->numeric()
+                                            ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
                                             ->prefix('RM')
                                             ->formatStateUsing(fn (?string $state): ?string => number_format($state, 2))
                                             ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
@@ -463,6 +463,7 @@ class QuotationResource extends Resource
                                     // ->live(onBlur: true)
                                     ->columnSpan(3),
                                 Forms\Components\TextInput::make('price')
+                                    ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
                                     ->required()
                                     ->prefix('RM')
                                     ->formatStateUsing(fn (string $state): string => number_format($state, 2))
@@ -546,6 +547,7 @@ class QuotationResource extends Resource
                                 ->integer()
                                 ->default(0),
                             Forms\Components\TextInput::make('delivery')
+                                ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
                                 ->formatStateUsing(fn ( $state)  => number_format($state, 2))
                                 ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
                                 ->prefix('RM')

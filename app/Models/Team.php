@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Customer;
 use App\Models\Quotation;
 use App\Models\CustomMedia;
+use App\Models\PaymentMethod;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Models\Contracts\HasAvatar;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -63,6 +64,11 @@ class Team extends Model implements HasAvatar
             return $this->avatar_url;
         }
        
+    }
+
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(PaymentMethod::class);
     }
 
    

@@ -9,6 +9,9 @@ use App\Models\UserSetting;
 use Filament\Actions\Action;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
 use Filament\Support\Exceptions\Halt;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\TextInput;
@@ -59,13 +62,25 @@ class PaymentGateway extends Page implements HasForms
                                     </div>
                                     
                                 </div>')),
-                                TextInput::make('sp_SecurePay_UID')
+                                Hidden::make('Securepay.id')
+                                    ->default(1)
+                                    ->formatStateUsing(fn (?string $state): ?string => 1),
+                                Hidden::make('Securepay.name')
+                                    ->default('Securepay')
+                                    ->formatStateUsing(fn (?string $state): ?string => 'Securepay'),
+                                Toggle::make('Securepay.status')
+                                    ->onIcon('heroicon-o-check')
+                                    ->offIcon('heroicon-o-x-mark')
+                                    ->onColor('success')
+                                    ->offColor('danger'),
+                              
+                                TextInput::make('Securepay.sp_SecurePay_UID')
                                     ->label('SecurePay UID')
                                     ->prefixIcon('heroicon-o-clipboard-document-check'),
-                                TextInput::make('sp_Authentication_Token')
+                                TextInput::make('Securepay.sp_Authentication_Token')
                                     ->label('Authentication Token')
                                     ->prefixIcon('heroicon-o-clipboard-document-check'),
-                                TextInput::make('sp_Checksum_Token')
+                                TextInput::make('Securepay.sp_Checksum_Token')
                                     ->label('Checksum Token')
                                     ->prefixIcon('heroicon-o-clipboard-document-check'),
                             ]),
@@ -87,7 +102,18 @@ class PaymentGateway extends Page implements HasForms
                                     </div>
                                     
                                 </div>')),
-                                TextInput::make('tp_ToyyibPay_User_Secret_Key')
+                                Hidden::make('Toyyibpay.id')
+                                    ->default(2)
+                                    ->formatStateUsing(fn (?string $state): ?string => 2),
+                                Hidden::make('Toyyibpay.name')
+                                    ->default('Toyyibpay')
+                                    ->formatStateUsing(fn (?string $state): ?string => 'Toyyibpay'),
+                                Toggle::make('Toyyibpay.status')
+                                    ->onIcon('heroicon-o-check')
+                                    ->offIcon('heroicon-o-x-mark')
+                                    ->onColor('success')
+                                    ->offColor('danger'),
+                                TextInput::make('Toyyibpay.tp_ToyyibPay_User_Secret_Key')
                                     ->label('ToyyibPay User Secret Key')
                                     ->prefixIcon('heroicon-o-clipboard-document-check'),
                              

@@ -28,7 +28,7 @@ class Settings extends Page implements HasForms
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $title = 'Document Settings';
     protected static ?string $navigationGroup = 'Setting';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 2;
     protected static string $view = 'filament.app.pages.settings';
     protected ?string $heading = '';
 
