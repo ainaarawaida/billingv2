@@ -44,7 +44,7 @@ class QuotationResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'Document';
+    protected static ?string $navigationGroup = 'Billing';
     protected static ?int $navigationSort = 4;
 
     // protected static ?string $tenantOwnershipRelationshipName = 'teams';

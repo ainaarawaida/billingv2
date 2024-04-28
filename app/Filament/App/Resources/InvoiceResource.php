@@ -33,7 +33,7 @@ use App\Filament\App\Resources\InvoiceResource\RelationManagers;
 class InvoiceResource extends Resource
 {
     protected static ?string $model = Invoice::class;
-    protected static ?string $navigationGroup = 'Document';
+    protected static ?string $navigationGroup = 'Billing';
     protected static ?int $navigationSort = 5;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 

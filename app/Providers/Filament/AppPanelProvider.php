@@ -70,7 +70,9 @@ class AppPanelProvider extends PanelProvider
             ->databaseNotifications()
             ->navigationGroups([
                 NavigationGroup::make()
-                    ->label('Document'),
+                    ->label('Billing'),
+                NavigationGroup::make()
+                    ->label('Resources'),
                 NavigationGroup::make()
                     ->label('Setting'),
             ])
