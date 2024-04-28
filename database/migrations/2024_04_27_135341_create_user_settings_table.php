@@ -16,9 +16,14 @@ return new class extends Migration
         Schema::create('user_settings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable();
+            $table->string('quotation_prefix_code')->nullable();
+            $table->string('quotation_current_no')->nullable();
+            $table->string('quotation_template')->nullable();
+
             $table->string('invoice_prefix_code')->nullable();
-            $table->string('current_no')->nullable();
-            $table->string('template_invois')->nullable();
+            $table->string('invoice_current_no')->nullable();
+            $table->string('invoice_template')->nullable();
+            $table->json('payment_gateway')->nullable();
             $table->timestamps();
         });
         Schema::enableForeignKeyConstraints();
