@@ -28,6 +28,7 @@ class PaymentResource extends Resource
                 Forms\Components\Section::make()
                     ->schema([
                         Forms\Components\Select::make('invoice_id')
+                            ->prefix('#I')
                             ->relationship('invoice', 'numbering', modifyQueryUsing: fn (Builder $query) => $query->whereBelongsTo(Filament::getTenant(), 'teams'))
                             ->searchable()
                             ->preload(),

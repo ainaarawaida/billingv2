@@ -5,6 +5,8 @@ use App\Models\Team;
 use App\Models\Product;
 use App\Models\Customer;
 use App\Models\Quotation;
+use App\Models\TeamSetting;
+use Filament\Facades\Filament;
 
 if(!isset($record)){
   $id = str_replace('luqmanahmadnordin', "", base64_decode($id)) ;
@@ -12,6 +14,7 @@ if(!isset($record)){
   $team = Team::where('id', $record->team_id)->first();
   $item = Item::with('product')->where('quotation_id', $record->id)->get();
   $customer = Customer::where('id', $record->customer_id)->first();
+  $prefix = TeamSetting::where('team_id', $record->team_id )->first()->quotation_prefix_code ?? '#Q' ;
   // dd($customer);
 }elseif(isset($record)){
   $id = $record->id ;
@@ -19,6 +22,8 @@ if(!isset($record)){
   $team = Team::where('id', $record->team_id)->first();
   $item = Item::with('product')->where('quotation_id', $record->id)->get();
   $customer = Customer::where('id', $record->customer_id)->first();
+  $prefix = TeamSetting::where('team_id', $record->team_id )->first()->quotation_prefix_code ?? '#Q' ;
+                            
   
 }
 
@@ -68,7 +73,7 @@ if(!isset($record)){
             </div>
           </div>
           <div class="col d-flex flex-column justify-content-start align-items-end">
-            <p class="h3">#Q{{ $record->numbering }} </p>
+            <p class="h3">{{ $prefix }}{{ $record->numbering }} </p>
             <div>Issue Date: {{ date("j F, Y", strtotime($record->quotation_date) ) }}</div>
             <?php $validday = '+ '.$record->valid_days. ' days' ; ?>
             <div>Due Date: {{ date("j F, Y", strtotime($validday , strtotime($record->quotation_date)) ) }}</div>

@@ -2,9 +2,10 @@
 
 use App\Models\Item;
 use App\Models\Team;
+use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\Customer;
-use App\Models\Invoice;
+use App\Models\TeamSetting;
 
 if(!isset($record)){
   $id = str_replace('luqmanahmadnordin', "", base64_decode($id)) ;
@@ -12,14 +13,16 @@ if(!isset($record)){
   $team = Team::where('id', $record->team_id)->first();
   $item = Item::with('product')->where('invoice_id', $record->id)->get();
   $customer = Customer::where('id', $record->customer_id)->first();
-  // dd($customer);
+  $prefix = TeamSetting::where('team_id', $record->team_id )->first()->invoice_prefix_code ?? '#Q' ;
+  
 }elseif(isset($record)){
   $id = $record->id ;
   $record = Invoice::where('id',$id)->first();
   $team = Team::where('id', $record->team_id)->first();
   $item = Item::with('product')->where('invoice_id', $record->id)->get();
   $customer = Customer::where('id', $record->customer_id)->first();
-  
+  $prefix = TeamSetting::where('team_id', $record->team_id )->first()->invoice_prefix_code ?? '#Q' ;
+   
 }
 
 // dd($record);
@@ -70,7 +73,7 @@ if(!isset($record)){
             </div>
           </div>
           <div class="col d-flex flex-column justify-content-start align-items-end">
-            <p class="h3">#I{{ $record->numbering }} </p>
+            <p class="h3">{{ $prefix }}{{ $record->numbering }} </p>
             <div>Invoice Date: {{ date("j F, Y", strtotime($record->invoice_date) ) }}</div>
             <div>Pay Before: {{ date("j F, Y", strtotime($record->pay_before) ) }}</div>
           </div>

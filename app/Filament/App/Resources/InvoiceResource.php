@@ -13,6 +13,7 @@ use App\Models\Customer;
 use Filament\Forms\Form;
 use App\Mail\InvoiceEmail;
 use Filament\Tables\Table;
+use App\Models\TeamSetting;
 use App\Mail\QuotationEmail;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
@@ -114,9 +115,10 @@ class InvoiceResource extends Resource
 
                             Forms\Components\TextInput::make('numbering')
                                 ->hiddenLabel()
-                                ->readOnly()
-                                ->dehydrated(false)
-                                ->prefix('#I')
+                                ->disabled(fn (string $operation): string => $operation == 'create')
+                                // ->readOnly()
+                                // ->dehydrated(false)
+                                ->prefix(fn (string $operation): string => TeamSetting::where('team_id', Filament::getTenant()->id )->first()->invoice_prefix_code ?? '#I')
                             // ->visible(fn (string $operation): bool => $operation === 'edit')
                             ->formatStateUsing(function(?string $state, $operation, $record): ?string {
                                 if($operation === 'create'){
@@ -384,7 +386,8 @@ class InvoiceResource extends Resource
                     ->label('No.')
                     ->formatStateUsing(function(string $state, $record): string {
                             $newDate = date("d M, Y", strtotime($record->invoice_date));
-                            return __("<b class=''>#I{$state}</b><br>{$newDate}");
+                            $prefix = TeamSetting::where('team_id', Filament::getTenant()->id )->first()->invoice_prefix_code ?? '#I' ;
+                            return __("<b class=''>{$prefix}{$state}</b><br>{$newDate}");
 
                         } 
                     )

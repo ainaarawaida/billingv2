@@ -38,12 +38,12 @@ class Settings extends Page implements HasForms
     {
         $teamSetting = TeamSetting::where('team_id', Filament::getTenant()->id )->first()?->toArray();
         $this->form->fill([
-            $teamSetting['quotation_prefix_code'] ?? 'quotation_prefix_code' => 'Q',
-            $teamSetting['quotation_current_no'] ??'quotation_current_no' => 1,
-            $teamSetting['quotation_template'] ?? 'quotation_template' => 1,
-            $teamSetting['invoice_prefix_code'] ?? 'invoice_prefix_code' => 'I',
-            $teamSetting['invoice_current_no'] ??'invoice_current_no' => 1,
-            $teamSetting['invoice_template'] ?? 'invoice_template' => 1
+            'quotation_prefix_code' => $teamSetting['quotation_prefix_code'] ?? '#Q',
+            'quotation_current_no' =>  $teamSetting['quotation_current_no'] ?? 1,
+            'quotation_template' => $teamSetting['quotation_template']  ?? 1,
+            'invoice_prefix_code' => $teamSetting['invoice_prefix_code']  ?? '#I',
+            'invoice_current_no' => $teamSetting['invoice_current_no']  ?? 1,
+            'invoice_template' => $teamSetting['invoice_template']  ?? 1
         ]);
     }
 

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Filament\Support\Facades\FilamentIcon;
 use Filament\Support\Facades\FilamentView;
 use BezhanSalleh\FilamentLanguageSwitch\LanguageSwitch;
 use BezhanSalleh\FilamentLanguageSwitch\Enums\Placement;
@@ -47,5 +48,12 @@ class AppServiceProvider extends ServiceProvider
                     // Additional custom routes where the switcher should be visible outside panels
                 ]); // also accepts a closure
         });
+
+        FilamentIcon::register([
+            'panels::sidebar.collapse-button' => 'heroicon-o-chevron-double-left',
+            // 'panels::sidebar.group.collapse-button' => view('icons.chevron-up'),
+        ]);
+
+
     }
 }
