@@ -6,7 +6,9 @@ use Filament\Forms\Form;
 
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Blade;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\RichEditor;
@@ -44,6 +46,20 @@ class Login extends BaseAuth
             ->autofocus()
             ->default('admin@admin.test')
             ->extraInputAttributes(['tabindex' => 1]);
+    }
+
+    protected function getPasswordFormComponent(): Component
+    {
+        parent::getPasswordFormComponent();
+        return TextInput::make('password')
+            ->label(__('filament-panels::pages/auth/login.form.password.label'))
+            ->hint(filament()->hasPasswordReset() ? new HtmlString(Blade::render('<x-filament::link :href="filament()->getRequestPasswordResetUrl()"> {{ __(\'filament-panels::pages/auth/login.actions.request_password_reset.label\') }}</x-filament::link>')) : null)
+            ->password()
+            ->revealable(filament()->arePasswordsRevealable())
+            ->autocomplete('current-password')
+            ->required()
+            ->default('admin')
+            ->extraInputAttributes(['tabindex' => 2]);
     }
 
     /**

@@ -8,8 +8,10 @@ use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use App\Models\TeamSetting;
 use App\Models\UserSetting;
 use App\Models\PaymentMethod;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -40,7 +42,7 @@ class PaymentMethodResource extends Resource
                         ->preload()
                         ->required()
                         ->afterStateUpdated(function (Set $set, Get $get, ?string $state) {
-                            if($state == 'payment_gateway'){
+                            if(isset($state) && $state == 'payment_gateway'){
                                 $set('name', 'Payment Gateway');
                             }else{
                                 $set('name', '');
@@ -52,17 +54,30 @@ class PaymentMethodResource extends Resource
                         ->visible(fn (Get $get) => $get('type') == 'payment_gateway')
                         ->label('Payment Gateway')
                         ->options(function (Get $get, string $operation){
-                                $user_setting = UserSetting::where('user_id', auth()->user()->id)->first()->payment_gateway;
-                             
-                                $temp = collect($user_setting)->where('status', true)->pluck('name', 'id');
-
+                                $team_setting = TeamSetting::where('team_id', Filament::getTenant()->id)->first()?->payment_gateway;
+                                $temp = collect($team_setting)->where('status', true)->pluck('name', 'id');
                                 return $temp ;
                             })
+                        ->disableOptionWhen(function (string $value): bool {
+                            $payment_method = PaymentMethod::where('team_id', Filament::getTenant()->id)
+                            ->pluck('payment_gateway_id')->toArray();
+                            return in_array($value, $payment_method) ;
+                        })
+                        // ->formatStateUsing(function (?string $state): ?string {
+                        //     $payment_method = PaymentMethod::where('status', 1)
+                        //     ->where('team_id', Filament::getTenant()->id)
+                        //     ->pluck('payment_gateway_id')->toArray();
+                        //     if(in_array($state, $payment_method)){
+                        //         return null;
+                        //     }else{
+                        //         return $state;
+                        //     }
+                        // })
                         ->required()
                         ->preload()
                         ->afterStateUpdated(function (Set $set, Get $get, ?string $state) {
-                            $user_setting = UserSetting::where('user_id', auth()->user()->id)->first()->payment_gateway;
-                            $temp = collect($user_setting)->where('id', $state)->first();
+                            $team_setting = TeamSetting::where('team_id', Filament::getTenant()->id)->first()->payment_gateway;
+                            $temp = collect($team_setting)->where('id', $state)->first();
                             if($temp && isset($temp['name'])){
                                 $set('name', 'Payment Gateway:'.$temp['name']);
 
@@ -93,17 +108,19 @@ class PaymentMethodResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('team_id')
-                    ->numeric()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('bank_account')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('payment_gateway_id')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('type')
+                        ->badge()
+                        ->formatStateUsing(function(string $state, $record): string {
+                            return str_replace('_', ' ', ucfirst($state));
+                        } 
+                    )
+                    ->html()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('status')
+                Tables\Columns\ToggleColumn::make('status')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -118,8 +135,14 @@ class PaymentMethodResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\ForceDeleteAction::make(),
+                    Tables\Actions\ViewAction::make(),
+                   
+                       
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

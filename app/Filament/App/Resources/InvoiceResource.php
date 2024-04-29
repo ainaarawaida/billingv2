@@ -398,7 +398,7 @@ class InvoiceResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->formatStateUsing(function(string $state, $record): string {
-                            return __("{$state}<br><i>({$record->items()->count()} items)</i>");
+                            return "{$state}<br><i>({$record->items()->count()} ". __('items') .")</i>";
                         } 
                     )
                     ->toggleable(isToggledHiddenByDefault: false)

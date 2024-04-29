@@ -639,8 +639,7 @@ class QuotationResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->formatStateUsing(function(string $state, $record): string {
-                            // dd($record->items()->count());
-                            return __("{$state}<br><i>({$record->items()->count()} items)</i>");
+                            return "{$state}<br><i>({$record->items()->count()} ". __('items') .")</i>";
 
                         } 
                     )

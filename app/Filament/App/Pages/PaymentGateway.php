@@ -5,8 +5,10 @@ namespace App\Filament\App\Pages;
 
 use Filament\Forms\Form;
 use Filament\Pages\Page;
+use App\Models\TeamSetting;
 use App\Models\UserSetting;
 use Filament\Actions\Action;
+use Filament\Facades\Filament;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Hidden;
@@ -33,8 +35,8 @@ class PaymentGateway extends Page implements HasForms
     
     public function mount(): void
     {
-        $userSetting = UserSetting::where('user_id', auth()->user()->id )->first()?->toArray();
-        $this->form->fill($userSetting['payment_gateway']);
+        $teamSetting = TeamSetting::where('team_id', Filament::getTenant()->id )->first()?->toArray();
+        $this->form->fill($teamSetting['payment_gateway'] ?? []);
     }
 
     public function form(Form $form): Form
@@ -144,8 +146,8 @@ class PaymentGateway extends Page implements HasForms
         $temp = $this->form->getState();
         $data['payment_gateway'] = $temp ; 
         try {
-            $userSetting = UserSetting::updateOrCreate(
-                ['user_id' => auth()->user()->id], // Search by email
+            $teamSetting = TeamSetting::updateOrCreate(
+                ['team_id' => Filament::getTenant()->id], // Search by email
                 $data
             );
         } catch (Halt $exception) {

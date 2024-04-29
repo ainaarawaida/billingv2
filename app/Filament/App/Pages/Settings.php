@@ -4,8 +4,10 @@ namespace App\Filament\App\Pages;
 
 use Filament\Forms\Form;
 use Filament\Pages\Page;
+use App\Models\TeamSetting;
 use App\Models\UserSetting;
 use Filament\Actions\Action;
+use Filament\Facades\Filament;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
 use Illuminate\Support\Facades\Hash;
@@ -34,12 +36,14 @@ class Settings extends Page implements HasForms
 
     public function mount(): void
     {
-        $userSetting = UserSetting::where('user_id', auth()->user()->id )->first()?->toArray();
-
+        $teamSetting = TeamSetting::where('team_id', Filament::getTenant()->id )->first()?->toArray();
         $this->form->fill([
-            $userSetting['quotation_prefix_code'] ?? 'quotation_prefix_code' => 'Q',
-            $userSetting['quotation_current_no'] ??'quotation_current_no' => 1,
-            $userSetting['quotation_template'] ?? 'quotation_template' => 1
+            $teamSetting['quotation_prefix_code'] ?? 'quotation_prefix_code' => 'Q',
+            $teamSetting['quotation_current_no'] ??'quotation_current_no' => 1,
+            $teamSetting['quotation_template'] ?? 'quotation_template' => 1,
+            $teamSetting['invoice_prefix_code'] ?? 'invoice_prefix_code' => 'I',
+            $teamSetting['invoice_current_no'] ??'invoice_current_no' => 1,
+            $teamSetting['invoice_template'] ?? 'invoice_template' => 1
         ]);
     }
 
@@ -112,8 +116,8 @@ class Settings extends Page implements HasForms
 
         $data = $this->form->getState();
         try {
-            $userSetting = UserSetting::updateOrCreate(
-                ['user_id' => auth()->user()->id], // Search by email
+            $teamSetting = TeamSetting::updateOrCreate(
+                ['team_id' => Filament::getTenant()->id], // Search by email
                 $data
             );
         } catch (Halt $exception) {
