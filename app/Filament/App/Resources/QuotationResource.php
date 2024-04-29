@@ -48,251 +48,6 @@ class QuotationResource extends Resource
     protected static ?string $navigationGroup = 'Billing';
     protected static ?int $navigationSort = 4;
 
-    // protected static ?string $tenantOwnershipRelationshipName = 'teams';
-
-
-    // public static function form(Form $form): Form
-    // {
-    //     return $form
-    //             ->schema([
-    //                 Forms\Components\Group::make()
-    //                     ->schema([
-    //                         Forms\Components\Section::make()
-    //                             ->schema([
-
-    //                                 Forms\Components\Select::make('customer_id')
-    //                                     ->relationship('customer', 'name')
-    //                                     ->searchable()
-    //                                     ->required()
-    //                                     ->preload()
-    //                                     ->live(onBlur: true)
-                                    
-    //                                     ->createOptionForm([
-    //                                         Forms\Components\TextInput::make('name')
-    //                                             ->required()
-    //                                             ->maxLength(255),
-                    
-    //                                         Forms\Components\TextInput::make('email')
-    //                                             ->label('Email address')
-    //                                             ->required()
-    //                                             ->email()
-    //                                             ->maxLength(255)
-    //                                             ->unique(),
-                    
-    //                                         Forms\Components\TextInput::make('phone')
-    //                                             ->maxLength(255),
-                    
-    //                                         Forms\Components\Select::make('gender')
-    //                                             ->placeholder('Select gender')
-    //                                             ->options([
-    //                                                 'male' => 'Male',
-    //                                                 'female' => 'Female',
-    //                                             ])
-    //                                             ->required()
-    //                                             ->native(false),
-    //                                     ])
-    //                                     ->createOptionAction(function (Action $action) {
-    //                                         return $action
-    //                                             ->modalHeading('Create customer')
-    //                                             ->modalSubmitActionLabel('Create customer')
-    //                                             ->modalWidth('lg');
-    //                                     }),
-
-    //                                 Forms\Components\ViewField::make('detail_customer')
-    //                                     ->view('filament.detail_customer'),
-                                
-    //                             ])
-
-                            
-    //                     ]),
-    //                 Forms\Components\Group::make()
-    //                     ->schema([
-    //                         Forms\Components\Section::make()
-    //                         ->schema([
-    //                             Forms\Components\DatePicker::make('quotation_date')
-    //                                 // ->format('d/m/Y')
-    //                                 ->native(false)
-    //                                 ->displayFormat('d/m/Y')
-    //                                 ->default(now())
-    //                                 ->required(),
-    //                             Forms\Components\TextInput::make('valid_days')
-    //                                 ->numeric()
-    //                                 ->default(1)
-    //                                 ->minValue(0)
-    //                                 ->required(),
-
-    //                             Forms\Components\Select::make('quote_status')
-    //                                 ->options([
-    //                                     'draft' => 'Draft',
-    //                                     'new' => 'New',
-    //                                     'process' => 'Process',
-    //                                     'done' => 'Done',
-    //                                     'expired' => 'Expired',
-    //                                     'cancelled' => 'Cancelled',
-
-    //                                 ])
-    //                                 ->default('draft')
-    //                                 ->searchable()
-    //                                 ->preload()
-    //                                 ->required()
-    //                                 ->columnSpan(2),
-
-
-    //                         ])->columns(2)
-                            
-    //                     ]),
-    //                     Forms\Components\Section::make()
-    //                         ->schema([
-    //                             Forms\Components\TextInput::make('title')
-    //                             ->afterStateHydrated(function ($component, string $state) {
-    //                                 $component->state(ucwords($state));
-    //                             })
-    //                                 ->required()
-    //                                 ->maxLength(255),
-
-    //                         ]),
-    //                     Forms\Components\Section::make()
-    //                         ->schema([
-    //                             Forms\Components\Repeater::make('items')
-    //                                 ->live(onBlur: true)
-    //                                 ->minItems(1)
-    //                                 ->collapsible()
-    //                                 ->relationship('items')
-    //                                 ->schema([
-    //                                     Forms\Components\Textarea::make('title')
-    //                                         ->required()
-    //                                         ->columnSpan(2),
-    //                                         Forms\Components\Select::make('product_id')
-    //                                         ->relationship('product','title')
-    //                                         ->searchable()
-    //                                         ->preload()
-    //                                         ->distinct()
-    //                                         ->disableOptionsWhenSelectedInSiblingRepeaterItems()
-    //                                         // ->live(onBlur: true)
-    //                                         ->columnSpan(3),
-    //                                     Forms\Components\TextInput::make('price')
-    //                                         ->required()
-    //                                         ->prefix('RM')
-    //                                         ->formatStateUsing(fn (string $state): string => number_format($state, 2))
-
-    //                                         // ->live(onBlur: true)
-    //                                         ->afterStateUpdated(function ($state, $set, $get ){
-    //                                             $set('total', number_format($state*$get('quantity'), 2)  );
-    //                                             // $total = 0 ; 
-    //                                             // if(!$repeaters = $get('../../items')){
-    //                                             //     return $total ;
-    //                                             // }
-    //                                             // foreach($repeaters AS $key => $val){
-    //                                             //     $total += (float)$get("../../items.{$key}.total");
-    //                                             // }
-    //                                             // $set('../../sub_total', number_format($total, 2) );
-    //                                             // $set('../../final_amount', number_format($total, 2));
-    //                                         })
-    //                                         ->default(0.00),
-    //                                     Forms\Components\Checkbox::make('tax')
-    //                                     // ->live(onBlur: true)
-    //                                     ->inline(false),
-    //                                     Forms\Components\TextInput::make('quantity')
-    //                                         ->required()
-    //                                         ->numeric()
-    //                                         // ->live(onBlur: true)
-    //                                         ->afterStateUpdated(function ($state, $set, $get ){
-    //                                             $set('total', number_format($state*$get('price'), 2)  );
-    //                                         })
-    //                                         ->default(1),
-    //                                     Forms\Components\Select::make('unit')
-    //                                         ->options([
-    //                                             'Unit' => 'Unit',
-    //                                             'Kg' => 'Kg',
-    //                                             'Gram' => 'Gram',
-    //                                             'Box' => 'Box',
-    //                                             'Pack' => 'Pack',
-    //                                             'Day' => 'Day',
-    //                                             'Month' => 'Month',
-    //                                             'Year' => 'Year',
-    //                                             'People' => 'People',
-
-    //                                         ])
-    //                                         ->default('Unit')
-    //                                         ->searchable()
-    //                                         ->preload()
-    //                                         ->required(),
-    //                                     Forms\Components\TextInput::make('total')
-    //                                         ->prefix('RM')
-    //                                         ->readonly()
-    //                                         ->formatStateUsing(fn (string $state): string => number_format($state, 2))
-    //                                         ->default(0.00),
-    //                                 ])->columns(5),
-
-    //                         ]),
-    //                     Forms\Components\Section::make()
-    //                         ->schema([
-    //                             Forms\Components\Textarea::make('notes'),
-    //                             Forms\Components\Group::make()
-    //                             ->schema([
-    //                                 Forms\Components\TextInput::make('sub_total')
-    //                                     ->formatStateUsing(fn ( $state)  => number_format($state, 2))
-    //                                     ->prefix('RM')
-    //                                     ->readonly()
-    //                                     ->default(0),
-    //                                 Forms\Components\TextInput::make('taxes')
-    //                                     ->prefix('RM')
-    //                                     ->readonly()
-    //                                     ->default(0),
-    //                                 Forms\Components\TextInput::make('percentage_tax')
-    //                                     ->prefix('%')
-    //                                     ->live(onBlur: true)
-    //                                     ->integer()
-    //                                     ->default(0),
-    //                                 Forms\Components\TextInput::make('delivery')
-    //                                     ->prefix('RM')
-    //                                     ->live(onBlur: true)
-    //                                     ->numeric()
-    //                                     ->default(0.00),
-    //                                 Forms\Components\TextInput::make('final_amount')
-    //                                     ->prefix('RM')
-    //                                     ->readonly()
-    //                                     ->live(onBlur: true)
-    //                                     ->default(0.00),
-                                        
-
-    //                             ])->inlineLabel(),
-
-    //                             Forms\Components\Placeholder::make('calculation')
-    //                                 ->hiddenLabel()
-    //                                 ->content(function ($get, $set){
-    //                                     $sub_total = 0 ; 
-    //                                     $taxes = 0 ;
-                                      
-    //                                     if(!$repeaters = $get('items')){
-    //                                         return $sub_total ;
-    //                                     }
-    //                                     foreach($repeaters AS $key => $val){
-    //                                         $sub_total += (float)$get("items.{$key}.total");
-                                          
-    //                                         if($get("items.{$key}.tax") == true){
-    //                                             $taxes = $taxes + ((int)$get('percentage_tax') / 100 * (float)$get("items.{$key}.total")) ;
-    //                                         }else{
-
-    //                                         }
-                                           
-    //                                     }
-
-    //                                     $set('sub_total', number_format($sub_total, 2));
-    //                                     $set('taxes', number_format($taxes, 2));
-    //                                     $set('final_amount', number_format($sub_total + (float)$get("taxes") + (float)$get("delivery"), 2));
-
-    //                                     return "";
-    //                                     // return $sub_total." ".(float)$get("taxes"). " ". (float)$get("delivery")." ".$sub_total + (float)$get("taxes") + (float)$get("delivery")  ;
-    //                                 }),
-
-    //                         ])->columns(2),
-                           
-
-                        
-    //             ]);
-    // }
-
     public static function form(Form $form): Form
     {
         return $form
@@ -330,7 +85,7 @@ class QuotationResource extends Resource
                                     ->dehydrated(false)
                                     ->view('filament.detail_customer'),
                                 // Forms\Components\Placeholder::make('detail_customer2')
-                                // ->content(fn ($record) => new HtmlString('<b>asma</b>')),
+                                // ->content(fn ($record) => new HtmlString('<b>aaa</b>')),
                             
                             ])
 
@@ -378,8 +133,9 @@ class QuotationResource extends Resource
                             ->formatStateUsing(function(?string $state, $operation, $record): ?string {
                                 if($operation === 'create'){
                                     $tenant_id = Filament::getTenant()->id ;
-                                    $lastid = Quotation::where('team_id', $tenant_id)->count('id') + 1 ;
-                                    return str_pad($lastid, 6, "0", STR_PAD_LEFT) ;
+                                    $quotation_current_no = TeamSetting::where('team_id', Filament::getTenant()->id )->first()->quotation_current_no ?? '0' ;
+                                    // $lastid = Quotation::where('team_id', $tenant_id)->count('id') + 1 ;
+                                    return str_pad(($quotation_current_no + 1), 6, "0", STR_PAD_LEFT) ;
 
                                 }else{
                                     return $record->numbering ;
@@ -776,11 +532,17 @@ class QuotationResource extends Resource
                         ->icon('heroicon-m-square-2-stack')
                         ->color('info')
                         ->action(function (Model $record, Component $livewire) {
-                            $lastid = Quotation::where('team_id', $record->team_id)->count('id') + 1 ;
+                            $team_setting = TeamSetting::where('team_id', $record->team_id )->first();
+                            $quotation_current_no = $team_setting->quotation_current_no ?? '0' ;    
+
+                            $team_setting['quotation_current_no'] = $quotation_current_no + 1 ;
+                            $team_setting->save();
+
+                            // $lastid = Quotation::where('team_id', $record->team_id)->count('id') + 1 ;
                             $quotation =  Quotation::create([
                                 'customer_id' => $record->customer_id ,
                                 'team_id' => $record->team_id ,
-                                'numbering' => str_pad($lastid, 6, "0", STR_PAD_LEFT),
+                                'numbering' => str_pad(($quotation_current_no + 1), 6, "0", STR_PAD_LEFT),
                                 'quotation_date' => $record->quotation_date,
                                 'valid_days' => $record->valid_days, // Valid days between 7 and 30
                                 'quote_status' => $record->quote_status,
@@ -820,11 +582,17 @@ class QuotationResource extends Resource
                         ->icon('heroicon-o-clipboard-document-list')
                         ->color('info')
                         ->action(function (Model $record, Component $livewire) {
-                            $lastid = Invoice::where('team_id', $record->team_id)->count('id') + 1 ;
+                            $team_setting = TeamSetting::where('team_id', $record->team_id )->first();
+                            $invoice_current_no = $team_setting->invoice_current_no ?? '0' ;    
+
+                            $team_setting['invoice_current_no'] = $invoice_current_no + 1 ;
+                            $team_setting->save();
+
+                            // $lastid = Invoice::where('team_id', $record->team_id)->count('id') + 1 ;
                             $invoice =  Invoice::create([
                                 'customer_id' => $record->customer_id ,
                                 'team_id' => $record->team_id ,
-                                'numbering' => str_pad($lastid, 6, "0", STR_PAD_LEFT),
+                                'numbering' => str_pad(($invoice_current_no + 1), 6, "0", STR_PAD_LEFT),
                                 'invoice_date' => now()->format('Y-m-d'),
                                 'pay_before' => now()->format('Y-m-d'), // Valid days between 7 and 30
                                 'invoice_status' => 'draft',

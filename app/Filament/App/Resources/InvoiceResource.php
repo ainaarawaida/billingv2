@@ -123,8 +123,11 @@ class InvoiceResource extends Resource
                             ->formatStateUsing(function(?string $state, $operation, $record): ?string {
                                 if($operation === 'create'){
                                     $tenant_id = Filament::getTenant()->id ;
-                                    $lastid = Invoice::where('team_id', $tenant_id)->count('id') + 1 ;
-                                    return str_pad($lastid, 6, "0", STR_PAD_LEFT) ;
+                                    $team_setting = TeamSetting::where('team_id', $tenant_id )->first();
+                                    $invoice_current_no = $team_setting->invoice_current_no ?? '0' ;    
+
+                                    // $lastid = Invoice::where('team_id', $tenant_id)->count('id') + 1 ;
+                                    return str_pad(($invoice_current_no + 1), 6, "0", STR_PAD_LEFT) ;
 
                                 }else{
                                     return $record->numbering ;
@@ -542,11 +545,17 @@ class InvoiceResource extends Resource
                         ->icon('heroicon-m-square-2-stack')
                         ->color('info')
                         ->action(function (Model $record, Component $livewire) {
-                            $lastid = Invoice::where('team_id', $record->team_id)->count('id') + 1 ;
+                            $team_setting = TeamSetting::where('team_id', $record->team_id )->first();
+                            $invoice_current_no = $team_setting->invoice_current_no ?? '0' ;    
+
+                            $team_setting['invoice_current_no'] = $invoice_current_no + 1 ;
+                            $team_setting->save();
+
+                            // $lastid = Invoice::where('team_id', $record->team_id)->count('id') + 1 ;
                             $invoice =  Invoice::create([
                                 'customer_id' => $record->customer_id ,
                                 'team_id' => $record->team_id ,
-                                'numbering' => str_pad($lastid, 6, "0", STR_PAD_LEFT),
+                                'numbering' => str_pad(($invoice_current_no + 1), 6, "0", STR_PAD_LEFT),
                                 'invoice_date' => $record->invoice_date,
                                 'pay_before' => $record->pay_before, // Valid days between 7 and 30
                                 'invoice_status' => $record->invoice_status,

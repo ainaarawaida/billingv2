@@ -10,6 +10,7 @@ use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\Group;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use Filament\Support\Exceptions\Halt;
@@ -17,6 +18,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -63,14 +65,28 @@ class Settings extends Page implements HasForms
                                     ->prefixIcon('heroicon-o-clipboard-document-check')
                                     ->numeric()
                                     ->required(),
-                                Select::make('quotation_template')
-                                    ->prefixIcon('heroicon-o-clipboard-document-check')
-                                    ->required()
-                                    ->options([
-                                        '1' => 'Template 01',
-                                        '2' => 'Template 02',
-                                        '3' => 'Template 03',
-                                    ]),
+                                Group::make()
+                                    ->schema([
+                                        Select::make('quotation_template')
+                                            ->prefixIcon('heroicon-o-clipboard-document-check')
+                                            ->required()
+                                            ->options([
+                                                '1' => 'Template 01',
+                                            ]),
+                                        Placeholder::make('')
+                                            ->label(false)
+                                            ->content(fn ($record) => new HtmlString('
+                                            <div class="flex flex-col justify-center items-center">
+                                                    <img src="'.url('/assets').'/quotationpdf.png" class="" style="width:300px;">
+                                              
+                                            </div>
+                                        
+                                        ')),
+
+
+                                    ])
+
+                                    ->columns(2)
                             ]),
                         Tabs\Tab::make('Invoice')
                             ->schema([
@@ -82,14 +98,29 @@ class Settings extends Page implements HasForms
                                     ->prefixIcon('heroicon-o-clipboard-document-check')
                                     ->numeric()
                                     ->required(),
-                                Select::make('invoice_template')
-                                    ->prefixIcon('heroicon-o-clipboard-document-check')
-                                    ->required()
-                                    ->options([
-                                        '1' => 'Template 01',
-                                        '2' => 'Template 02',
-                                        '3' => 'Template 03',
-                                    ]),
+                                Group::make()
+                                    ->schema([
+                                        Select::make('invoice_template')
+                                            ->prefixIcon('heroicon-o-clipboard-document-check')
+                                            ->required()
+                                            ->options([
+                                                '1' => 'Template 01',
+                                            ]),
+                                        Placeholder::make('')
+                                            ->label(false)
+                                            ->content(fn ($record) => new HtmlString('
+                                            <div class="flex flex-col justify-center items-center">
+                                                    <img src="'.url('/assets').'/invoicepdf.png" class="" style="width:300px;">
+                                              
+                                            </div>
+                                        
+                                        ')),
+
+
+                                    ])
+                                    ->columns(2)
+
+                               
                             ]),
                         Tabs\Tab::make('Payment')
                             ->schema([
