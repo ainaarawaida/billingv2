@@ -71,6 +71,11 @@ class Team extends Model implements HasAvatar
         return $this->hasMany(PaymentMethod::class);
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
    
 
 

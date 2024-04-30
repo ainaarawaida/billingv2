@@ -22,4 +22,9 @@ class Payment extends Model
     {
         return $this->belongsTo(Invoice::class, 'invoice_id');
     }
+
+    public function payment_method(): BelongsTo
+    {
+        return $this->belongsTo(PaymentMethod::class, 'payment_method_id');
+    }
 }

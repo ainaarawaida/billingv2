@@ -118,6 +118,7 @@ class CustomerResource extends Resource
                 Tables\Columns\TextColumn::make('company')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('ssm')
+                    ->label("SSM")
                     ->searchable(),
                 Tables\Columns\TextColumn::make('address')
                     ->searchable(),
@@ -126,6 +127,7 @@ class CustomerResource extends Resource
                 Tables\Columns\TextColumn::make('city')
                     ->searchable(),
                 Tables\Columns\SelectColumn::make('state')
+                ->disabled(true)
                 ->label(new HtmlString('<span style="">State</span>'))
                 ->extraHeaderAttributes([
                     'style' => 'padding-right:150px'

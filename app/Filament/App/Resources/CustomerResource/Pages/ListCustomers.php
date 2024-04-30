@@ -2,9 +2,13 @@
 
 namespace App\Filament\App\Resources\CustomerResource\Pages;
 
-use App\Filament\App\Resources\CustomerResource;
 use Filament\Actions;
+use Filament\Actions\ExportAction;
+use Filament\Actions\ImportAction;
 use Filament\Resources\Pages\ListRecords;
+use App\Filament\Exports\CustomerExporter;
+use App\Filament\Imports\CustomerImporter;
+use App\Filament\App\Resources\CustomerResource;
 
 class ListCustomers extends ListRecords
 {
@@ -14,6 +18,14 @@ class ListCustomers extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+            ImportAction::make()
+                ->importer(CustomerImporter::class)
+                ->icon('heroicon-o-arrow-up-on-square')
+                ->color('primary'), 
+            ExportAction::make()
+                ->exporter(CustomerExporter::class)
+                ->icon('heroicon-o-arrow-down-on-square')
+                ->color('primary'), 
         ];
     }
 }

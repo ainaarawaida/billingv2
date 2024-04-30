@@ -5,8 +5,11 @@ namespace App\Filament\App\Resources;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Payment;
+use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use App\Models\TeamSetting;
+use App\Models\PaymentMethod;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,23 +35,21 @@ class PaymentResource extends Resource
                             ->relationship('invoice', 'numbering', modifyQueryUsing: fn (Builder $query) => $query->whereBelongsTo(Filament::getTenant(), 'teams'))
                             ->searchable()
                             ->preload(),
-                        Forms\Components\Select::make('payment_method')
-                            ->options([
-                                'draft' => 'Draft',
-                                'pending_payment' => 'Pending payment',
-                                'on_hold' => 'On hold',
-                                'processing ' => 'Processing ',
-                                'completed' => 'Completed',
-                                'failed' => 'Failed',
-                                'canceled' => 'Canceled',
-                                'refunded' => 'Refunded',
-                            ])
-                            ->default('draft')
+                        Forms\Components\Select::make('payment_method_id')
+                            ->label("Payment Method")
+                            ->options(function (Get $get, string $operation){
+                                $payment_method = PaymentMethod::where('team_id', Filament::getTenant()->id)
+                                ->where('status', 1)->get()->pluck('name', 'id');
+                                return $payment_method ;
+                            })
                             ->searchable()
                             ->preload()
                             ->required(),
-                        Forms\Components\DatePicker::make('payment_date'),
+                        Forms\Components\DatePicker::make('payment_date')
+                            ->required()
+                            ->default(now()),
                         Forms\Components\TextInput::make('total')
+                            ->required()
                             ->prefix('RM')
                             ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
                             ->formatStateUsing(fn (string $state): string => number_format($state, 2))
@@ -81,25 +82,38 @@ class PaymentResource extends Resource
 
     public static function table(Table $table): Table
     {
+        $prefix = TeamSetting::where('team_id', Filament::getTenant()->id )->first()->invoice_prefix_code ?? '#I' ;
+       
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('team_id')
+                Tables\Columns\TextColumn::make('invoice.numbering')
                     ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('invoice.title')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('bank_account')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('payment_method')
+                    ->sortable()
+                    ->searchable()
+                    ->formatStateUsing(function(string $state, $record): string {
+                            return "{$state}";
+                        } 
+                    )
+                    ->color('primary')
+                    ->prefix($prefix)
+                    ->url(fn($record) => InvoiceResource::getUrl('edit', ['record' => $record->invoice_id])),
+                Tables\Columns\TextColumn::make('payment_method.name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('payment_date')
-                    ->date()
+                    ->date('j F, Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('total')
+                    ->prefix('RM ')
+                    ->numeric()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('notes')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('status')
-                    ->searchable(),
+                    ->badge()
+                    ->searchable()
+                    ->formatStateUsing(fn (string $state): string => __(ucwords($state))),
                 Tables\Columns\TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()
@@ -117,8 +131,12 @@ class PaymentResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\ForceDeleteAction::make(),
+                    Tables\Actions\ViewAction::make(),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

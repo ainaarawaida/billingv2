@@ -420,14 +420,15 @@ class InvoiceResource extends Resource
                             : null;
                     }),
                 Tables\Columns\TextColumn::make('invoice_date')
-                    ->date()
+                    ->date('j F, Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('pay_before')
-                    ->date()
+                    ->date('j F, Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\SelectColumn::make('invoice_status')
+                    ->disabled(true)
                     ->label('Status')
                     ->extraHeaderAttributes([
                         'style' => 'padding-right:100px'
@@ -446,22 +447,27 @@ class InvoiceResource extends Resource
                
 
                 Tables\Columns\TextColumn::make('sub_total')
+                    ->prefix('RM ')
                     ->numeric()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('taxes')
+                    ->prefix('RM ')
                     ->numeric()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('percentage_tax')
+                    ->suffix('% ')
                     ->numeric()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('delivery')
+                    ->prefix('RM ')
                     ->numeric()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('final_amount')
+                    ->prefix('RM ')
                     ->label(__("Amount"))
                     ->numeric()
                     ->sortable(),

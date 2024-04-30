@@ -52,6 +52,7 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('title')
                     ->sortable(),
                 Tables\Columns\CheckboxColumn::make('tax')
+                    ->disabled(true)
                     ->label('Tax')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('quantity')
