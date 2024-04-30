@@ -15,9 +15,6 @@ class PaymentImporter extends Importer
     public static function getColumns(): array
     {
         return [
-            ImportColumn::make('team_id')
-                ->numeric()
-                ->rules(['integer']),
             ImportColumn::make('invoice')
                 ->relationship(),
             ImportColumn::make('payment_method')

@@ -49,7 +49,7 @@ class PaymentGateway extends Page implements HasForms
                             ->schema([
                                 // ...
                                 Placeholder::make('created')
-                                    ->label('')
+                                    ->hiddenLabel()
                                     ->content(fn ($record) => new HtmlString('<div class="text-center">
                                     <div class="flex flex-col justify-center items-center">
                                         <a href="https://securepay.my" target="_blank">
@@ -89,7 +89,7 @@ class PaymentGateway extends Page implements HasForms
                         Tabs\Tab::make('Toyyibpay')
                             ->schema([
                                 Placeholder::make('created')
-                                    ->label('')
+                                    ->hiddenLabel()
                                     ->content(fn ($record) => new HtmlString('<div class="text-center">
                                     <div class="flex flex-col justify-center items-center">
                                         <a href="https://toyyibpay.com/" target="_blank">

@@ -14,6 +14,10 @@ class Quotation extends Model
     use SoftDeletes;
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'attachments' => 'array', // Cast JSON data to an array
+    ];
+
     public function teams(): BelongsTo
     {
         return $this->belongsTo(Team::class, 'team_id');
@@ -32,6 +36,10 @@ class Quotation extends Model
     public function items()
     {
         return $this->hasMany(Item::class);
+    }
+
+    public function notes(){
+        return $this->hasMany(Note::class, 'type_id');
     }
 
     

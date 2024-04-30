@@ -5,6 +5,7 @@ namespace App\Filament\App\Resources;
 use stdClass;
 use Filament\Forms;
 use App\Models\Item;
+use App\Models\Note;
 use Filament\Tables;
 use Livewire\Livewire;
 use App\Models\Invoice;
@@ -19,10 +20,14 @@ use App\Mail\QuotationEmail;
 use Filament\Facades\Filament;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Resources\Resource;
+
 use Illuminate\Support\HtmlString;
+use Filament\Forms\Components\Tabs;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Support\Facades\Mail;
+use Filament\Forms\Components\Select;
 use Illuminate\Support\Facades\Blade;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Contracts\HasTable;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
@@ -30,7 +35,9 @@ use Filament\Notifications\Notification;
 use Filament\Tables\Enums\FiltersLayout;
 use Illuminate\Support\Facades\Redirect;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
+use Filament\Tables\Actions\CreateAction;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Actions\Action;
@@ -58,7 +65,7 @@ class QuotationResource extends Resource
                             ->schema([
 
                                 Forms\Components\Select::make('customer_id')
-                                ->relationship('customer', 'name', modifyQueryUsing: fn (Builder $query) => $query->whereBelongsTo(Filament::getTenant(), 'teams'))
+                                    ->relationship('customer', 'name', modifyQueryUsing: fn (Builder $query) => $query->whereBelongsTo(Filament::getTenant(), 'teams'))
                                     ->searchable()
                                     ->required()
                                     ->preload()
@@ -95,18 +102,21 @@ class QuotationResource extends Resource
                     ->schema([
                         Forms\Components\Section::make()
                         ->schema([
-                            Forms\Components\DatePicker::make('quotation_date')
-                                // ->format('d/m/Y')
-                                ->native(false)
-                                ->displayFormat('d/m/Y')
-                                ->default(now())
-                                ->required(),
-                            Forms\Components\TextInput::make('valid_days')
-                                ->numeric()
-                                ->default(1)
-                                ->minValue(0)
-                                ->required(),
-
+                            Forms\Components\Group::make()
+                                ->schema([
+                                    Forms\Components\DatePicker::make('quotation_date')
+                                        // ->format('d/m/Y')
+                                        ->native(false)
+                                        ->displayFormat('d/m/Y')
+                                        ->default(now())
+                                        ->required(),
+                                    Forms\Components\TextInput::make('valid_days')
+                                        ->numeric()
+                                        ->default(1)
+                                        ->minValue(0)
+                                        ->required(),
+                                ])
+                                ->columns(2),
                             Forms\Components\Select::make('quote_status')
                                 ->options([
                                     'draft' => 'Draft',
@@ -120,43 +130,35 @@ class QuotationResource extends Resource
                                 ->default('draft')
                                 ->searchable()
                                 ->preload()
-                                ->required()
-                                ->columnSpan(2),
+                                ->required(),
 
                             Forms\Components\TextInput::make('numbering')
-                            ->hiddenLabel()
-                            ->disabled(fn (string $operation): string => $operation == 'create')
-                            // ->readOnly()
-                            // ->dehydrated(false)
-                            ->prefix(fn (string $operation): string => TeamSetting::where('team_id', Filament::getTenant()->id )->first()->quotation_prefix_code ?? '#Q') 
-                            // ->visible(fn (string $operation): bool => $operation === 'edit')
-                            ->formatStateUsing(function(?string $state, $operation, $record): ?string {
-                                if($operation === 'create'){
-                                    $tenant_id = Filament::getTenant()->id ;
-                                    $quotation_current_no = TeamSetting::where('team_id', Filament::getTenant()->id )->first()->quotation_current_no ?? '0' ;
-                                    // $lastid = Quotation::where('team_id', $tenant_id)->count('id') + 1 ;
-                                    return str_pad(($quotation_current_no + 1), 6, "0", STR_PAD_LEFT) ;
+                                ->hiddenLabel()
+                                ->disabled(fn (string $operation): string => $operation == 'create')
+                                // ->readOnly()
+                                // ->dehydrated(false)
+                                ->prefix(fn (string $operation): string => TeamSetting::where('team_id', Filament::getTenant()->id )->first()->quotation_prefix_code ?? '#Q') 
+                                // ->visible(fn (string $operation): bool => $operation === 'edit')
+                                ->formatStateUsing(function(?string $state, $operation, $record): ?string {
+                                    if($operation === 'create'){
+                                        $tenant_id = Filament::getTenant()->id ;
+                                        $quotation_current_no = TeamSetting::where('team_id', Filament::getTenant()->id )->first()->quotation_current_no ?? '0' ;
+                                        // $lastid = Quotation::where('team_id', $tenant_id)->count('id') + 1 ;
+                                        return str_pad(($quotation_current_no + 1), 6, "0", STR_PAD_LEFT) ;
 
-                                }else{
-                                    return $record->numbering ;
-                                }
-                            })
-                            ->columnSpan(2),
+                                    }else{
+                                        return $record->numbering ;
+                                    }
+                                }),
 
 
-                        ])->columns(2)
+                        ])->columns(1)
                         
                     ]),
 
                 Forms\Components\Section::make()
                     ->schema([
-                        Forms\Components\TextInput::make('title')
-                        ->afterStateHydrated(function (?TextInput $component, ?string $state) {
-                            $component->state(ucwords($state));
-                        })
-                            ->required()
-                            ->maxLength(255),
-
+                        Forms\Components\Textarea::make('summary'),
                     ]),
 
                 Forms\Components\Section::make()
@@ -167,123 +169,137 @@ class QuotationResource extends Resource
                             ->collapsible()
                             ->relationship('items')
                             ->schema([
-                                Forms\Components\Textarea::make('title')
-                                    ->required()
-                                    ->columnSpan(2),
-                                Forms\Components\Select::make('product_id')
-                                    ->relationship('product', 'title', modifyQueryUsing: fn (Builder $query) => $query->whereBelongsTo(Filament::getTenant(), 'teams'))
-                                    ->searchable()
-                                    ->preload()
-                                    ->distinct()
-                                    ->disableOptionsWhenSelectedInSiblingRepeaterItems()
-                                    ->createOptionForm([
+                                Forms\Components\Group::make()
+                                    ->schema([
                                         Forms\Components\Textarea::make('title')
-                                            ->maxLength(65535)
-                                            ->columnSpanFull(),
-                                        Forms\Components\Checkbox::make('tax')
-                                            // ->live(onBlur: true)
-                                            ->inline(false),
+                                            ->required()
+                                            ->columnSpan(1),
+                                        Forms\Components\Select::make('product_id')
+                                            ->relationship('product', 'title', modifyQueryUsing: fn (Builder $query) => $query->whereBelongsTo(Filament::getTenant(), 'teams'))
+                                            ->searchable()
+                                            ->preload()
+                                            ->distinct()
+                                            ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                                            ->createOptionForm([
+                                                Forms\Components\Textarea::make('title')
+                                                    ->maxLength(65535)
+                                                    ->columnSpanFull(),
+                                                Forms\Components\Checkbox::make('tax')
+                                                    // ->live(onBlur: true)
+                                                    ->inline(false),
 
+                                                Forms\Components\TextInput::make('quantity')
+                                                    ->required()
+                                                    ->numeric()
+                                                    ->default(0),
+                                                Forms\Components\TextInput::make('price')
+                                                    ->required()
+                                                    ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
+                                                    ->prefix('RM')
+                                                    ->formatStateUsing(fn (?string $state): ?string => number_format($state, 2))
+                                                    ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
+                                            ])
+                                            ->createOptionAction(function (Action $action) {
+                                                $action->mutateFormDataUsing(function ($data) {
+                                                    $data['team_id'] = Filament::getTenant()->id;
+                                            
+                                                    return $data;
+                                                });
+                                                
+                                                return $action
+                                                    // ->modalHeading('Create customer')
+                                                    // ->modalSubmitActionLabel('Create customer')
+                                                    ->modalWidth('Screen');
+                                            })
+                                            ->afterStateUpdated(function ($state, $set, $get ){
+                                                
+                                                $product = Product::find($state);
+                                                $set('price', number_format((float)$product?->price, 2));
+                                                $set('tax', (bool)$product?->tax);
+                                                $set('quantity', (int)$product?->quantity);
+
+                                                // dd((float)$product?->price,number_format((float)str_replace(",", "", $product?->price), 2), $product?->quantity, $get('price'), (float)$get('price'));
+                                                $set('total', number_format((int)$product?->quantity*(float)str_replace(",", "", $get('price')), 2)  );
+                                            
+                                            })
+                                            // ->live(onBlur: true)
+                                            ->columnSpan(1),
+                                    
+                                    ])
+                                ->columns(2),
+                                Forms\Components\Group::make()
+                                    ->schema([
+
+                                        Forms\Components\TextInput::make('price')
+                                            ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
+                                            ->required()
+                                            ->prefix('RM')
+                                            ->formatStateUsing(fn (string $state): string => number_format($state, 2))
+                                            ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
+        
+                                            // ->live(onBlur: true)
+                                            ->afterStateUpdated(function ($state, $set, $get ){
+                                                $set('total', number_format((float)str_replace(",", "", $state)*(int)$get('quantity'), 2)  );
+                                                // $total = 0 ; 
+                                                // if(!$repeaters = $get('../../items')){
+                                                //     return $total ;
+                                                // }
+                                                // foreach($repeaters AS $key => $val){
+                                                //     $total += (float)$get("../../items.{$key}.total");
+                                                // }
+                                                // $set('../../sub_total', number_format($total, 2) );
+                                                // $set('../../final_amount', number_format($total, 2));
+                                            })
+                                            ->default(0.00),
+                                        Forms\Components\Checkbox::make('tax')
+                                            ->label('Tax')
+                                            ->inline(false),
                                         Forms\Components\TextInput::make('quantity')
                                             ->required()
                                             ->numeric()
-                                            ->default(0),
-                                        Forms\Components\TextInput::make('price')
-                                            ->required()
-                                            ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
+                                            // ->live(onBlur: true)
+                                            ->afterStateUpdated(function ($state, $set, $get ){
+                                                $set('total', number_format($state*(float)str_replace(",", "", $get('price')), 2)  );
+                                            })
+                                            ->default(1),
+                                        Forms\Components\Select::make('unit')
+                                            ->options([
+                                                'Unit' => 'Unit',
+                                                'Kg' => 'Kg',
+                                                'Gram' => 'Gram',
+                                                'Box' => 'Box',
+                                                'Pack' => 'Pack',
+                                                'Day' => 'Day',
+                                                'Month' => 'Month',
+                                                'Year' => 'Year',
+                                                'People' => 'People',
+        
+                                            ])
+                                            ->default('Unit')
+                                            ->searchable()
+                                            ->preload()
+                                            ->required(),
+                                        Forms\Components\TextInput::make('total')
                                             ->prefix('RM')
-                                            ->formatStateUsing(fn (?string $state): ?string => number_format($state, 2))
+                                            ->readonly()
+                                            ->formatStateUsing(fn (string $state): string => number_format($state, 2))
                                             ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
-                                    ])
-                                    ->createOptionAction(function (Action $action) {
-                                        $action->mutateFormDataUsing(function ($data) {
-                                            $data['team_id'] = Filament::getTenant()->id;
-                                    
-                                            return $data;
-                                        });
-                                        
-                                        return $action
-                                            // ->modalHeading('Create customer')
-                                            // ->modalSubmitActionLabel('Create customer')
-                                            ->modalWidth('Screen');
-                                    })
-                                    ->afterStateUpdated(function ($state, $set, $get ){
-                                        
-                                        $product = Product::find($state);
-                                        $set('price', number_format((float)$product?->price, 2));
-                                        $set('tax', (bool)$product?->tax);
-                                        $set('quantity', (int)$product?->quantity);
+                                            ->default(0.00),
 
-                                        // dd((float)$product?->price,number_format((float)str_replace(",", "", $product?->price), 2), $product?->quantity, $get('price'), (float)$get('price'));
-                                        $set('total', number_format((int)$product?->quantity*(float)str_replace(",", "", $get('price')), 2)  );
-                                       
-                                    })
-                                    // ->live(onBlur: true)
-                                    ->columnSpan(3),
-                                Forms\Components\TextInput::make('price')
-                                    ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
-                                    ->required()
-                                    ->prefix('RM')
-                                    ->formatStateUsing(fn (string $state): string => number_format($state, 2))
-                                    ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
 
-                                    // ->live(onBlur: true)
-                                    ->afterStateUpdated(function ($state, $set, $get ){
-                                        $set('total', number_format((float)str_replace(",", "", $state)*(int)$get('quantity'), 2)  );
-                                        // $total = 0 ; 
-                                        // if(!$repeaters = $get('../../items')){
-                                        //     return $total ;
-                                        // }
-                                        // foreach($repeaters AS $key => $val){
-                                        //     $total += (float)$get("../../items.{$key}.total");
-                                        // }
-                                        // $set('../../sub_total', number_format($total, 2) );
-                                        // $set('../../final_amount', number_format($total, 2));
-                                    })
-                                    ->default(0.00),
-                                Forms\Components\Checkbox::make('tax')
-                                    // ->live(onBlur: true)
-                                    ->inline(false),
-                                Forms\Components\TextInput::make('quantity')
-                                    ->required()
-                                    ->numeric()
-                                    // ->live(onBlur: true)
-                                    ->afterStateUpdated(function ($state, $set, $get ){
-                                        $set('total', number_format($state*(float)str_replace(",", "", $get('price')), 2)  );
-                                    })
-                                    ->default(1),
-                                Forms\Components\Select::make('unit')
-                                    ->options([
-                                        'Unit' => 'Unit',
-                                        'Kg' => 'Kg',
-                                        'Gram' => 'Gram',
-                                        'Box' => 'Box',
-                                        'Pack' => 'Pack',
-                                        'Day' => 'Day',
-                                        'Month' => 'Month',
-                                        'Year' => 'Year',
-                                        'People' => 'People',
 
                                     ])
-                                    ->default('Unit')
-                                    ->searchable()
-                                    ->preload()
-                                    ->required(),
-                                Forms\Components\TextInput::make('total')
-                                    ->prefix('RM')
-                                    ->readonly()
-                                    ->formatStateUsing(fn (string $state): string => number_format($state, 2))
-                                    ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
-                                    ->default(0.00),
+                                    ->columns(5),
+
+                               
                             ])
                             ->mutateRelationshipDataBeforeSaveUsing(function (array $data): array {
                                return $data;
-                            })->columns(5),
+                            })->columns(1),
 
                     ]),
                 Forms\Components\Section::make()
                     ->schema([
-                        Forms\Components\Textarea::make('notes'),
                         Forms\Components\Group::make()
                         ->schema([
                             Forms\Components\TextInput::make('sub_total')
@@ -321,7 +337,8 @@ class QuotationResource extends Resource
                                 ->default(0.00),
                                 
 
-                        ])->inlineLabel(),
+                        ])
+                        ->columns(2),
 
                         Forms\Components\Placeholder::make('calculation')
                             ->hiddenLabel()
@@ -351,7 +368,74 @@ class QuotationResource extends Resource
                                 // return $sub_total." ".(float)$get("taxes"). " ". (float)$get("delivery")." ".$sub_total + (float)$get("taxes") + (float)$get("delivery")  ;
                             }),
 
-                    ])->columns(2),
+                    ]), 
+
+                    Forms\Components\Section::make()
+                    ->schema([
+                        Tabs::make('Tabs')
+                            ->tabs([
+                                Tabs\Tab::make('additional')
+                                    ->label(__('Additional'))
+                                    ->schema([
+                                        Forms\Components\Textarea::make('terms_conditions'),
+                                        Forms\Components\Textarea::make('footer'),
+                                    ])->columns(2),
+                                Tabs\Tab::make('Notes')
+                                    ->schema([
+                                        Textarea::make('content')
+                                            ->visible(fn (string $operation): string => $operation == 'create')
+                                            ->label('Content'),
+                                        Forms\Components\Actions::make([
+                                            Forms\Components\Actions\Action::make('Add Note')
+                                                ->visible(fn (string $operation): string => $operation != 'create')
+                                                ->form([
+                                                    Textarea::make('content')
+                                                        ->label('Content')
+                                                        ->required(),
+                                                ])
+                                                ->action(function (Forms\Get $get, Forms\Set $set, array $data, $record): void {
+                                                    $data['user_id'] = auth()->user()->id ;
+                                                    $data['team_id'] = Filament::getTenant()->id ;
+                                                    $data['type_id'] = $record->id ;
+                                                    $data['type'] = 'quotation' ;
+                                                    $note = Note::create($data);
+                                                    Notification::make() 
+                                                        ->success()
+                                                        ->title(__('filament-panels::resources/pages/edit-record.notifications.saved.title'))
+                                                        ->send(); 
+                                                })
+                                        ]),
+                                        Forms\Components\Placeholder::make('notes')
+                                            ->visible(fn (string $operation): string => $operation != 'create')
+                                            ->hiddenLabel()
+                                            ->content(function ($get, $set, $record){
+                                                $notes = Note::where('team_id', Filament::getTenant()->id)
+                                                ->where('type', 'quotation')
+                                                ->where('type_id', $record->id)
+                                                ->get();
+                                                $dataString = "";
+                                                foreach($notes AS $key => $val){
+                                                    $dataString .= " <p><b>{$val->user->name} </b> {$val->created_at} <br> {$val->content} </p><br>";
+                                                }
+                                                return new HtmlString($dataString);
+                                            })
+
+                                    ]),
+                                Tabs\Tab::make('l_attachments')
+                                    ->label(__('Attachments'))
+                                    ->schema([
+                                        FileUpload::make('attachments')
+                                            ->multiple()
+                                            ->downloadable()
+                                    ]),
+                            ])
+                    ]),
+                
+
+
+                  
+
+
                          
             ]);
     }

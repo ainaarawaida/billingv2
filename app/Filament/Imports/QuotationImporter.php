@@ -2,6 +2,7 @@
 
 namespace App\Filament\Imports;
 
+use Carbon\Carbon;
 use App\Models\Quotation;
 use Filament\Facades\Filament;
 use Filament\Actions\Imports\Importer;
@@ -15,52 +16,60 @@ class QuotationImporter extends Importer
     public static function getColumns(): array
     {
         return [
+            ImportColumn::make('id'),
             ImportColumn::make('customer')
-                ->relationship(),
-            ImportColumn::make('team_id')
-                ->numeric()
-                ->rules(['integer']),
+                ->relationship(resolveUsing: ['email', 'name']),
             ImportColumn::make('numbering')
                 ->rules(['max:255']),
             ImportColumn::make('quotation_date')
-                ->rules(['date']),
+                ->fillRecordUsing(function ($record, string $state) {
+                    $dateTime = new \DateTime($state);
+                    $record->quotation_date = $dateTime->format('Y-m-d') ;
+                    $record->team_id = Filament::getTenant()->id ;
+                }),
             ImportColumn::make('valid_days')
                 ->numeric()
                 ->rules(['integer']),
             ImportColumn::make('quote_status')
                 ->rules(['max:255']),
-            ImportColumn::make('title')
-                ->rules(['max:255']),
-            ImportColumn::make('notes')
+            ImportColumn::make('summary')
                 ->rules(['max:65535']),
-            ImportColumn::make('sub_total')
-                ->numeric()
-                ->rules(['integer']),
-            ImportColumn::make('taxes')
-                ->numeric()
-                ->rules(['integer']),
-            ImportColumn::make('percentage_tax')
-                ->numeric()
-                ->rules(['integer']),
-            ImportColumn::make('delivery')
-                ->numeric()
-                ->rules(['integer']),
-            ImportColumn::make('final_amount')
-                ->numeric()
-                ->rules(['integer']),
+            ImportColumn::make('sub_total'),
+            ImportColumn::make('taxes'),
+            ImportColumn::make('percentage_tax'),
+            ImportColumn::make('delivery'),
+            ImportColumn::make('final_amount'),
+            ImportColumn::make('terms_conditions')
+                ->rules(['max:65535']),
+            ImportColumn::make('footer')
+                ->rules(['max:65535']),
+            ImportColumn::make('attachments'),
         ];
     }
 
     public function resolveRecord(): ?Quotation
     {
-        $this->data['team_id'] = Filament::getTenant()->id ;
-        return Quotation::firstOrNew($this->data);
-        // return Quotation::firstOrNew([
-        //     // Update existing records, matching them by `$this->data['column_name']`
-        //     'email' => $this->data['email'],
-        // ]);
+        // $this->data['team_id'] = Filament::getTenant()->id ;
+        // $dateTime = new \DateTime($this->data['quotation_date']);
+        // $this->data['quotation_date'] =  $dateTime->format('Y-m-d') ;
+        // dd($this->data);
+        // return Quotation::create(
+        //     $this->data
+        // );;
+
+
+        return Quotation::firstOrNew([
+            // Update existing records, matching them by `$this->data['column_name']`
+            'id' => $this->data['id'] ?? null,
+        ]);
 
         // return new Quotation();
+    }
+
+    protected function beforeSave()
+    {
+        $this->record->team_id = Filament::getTenant()->id ;
+        // Similar to `beforeSave()`, but only runs when creating a new record.
     }
 
     public static function getCompletedNotificationBody(Import $import): string

@@ -34,8 +34,6 @@ class CustomerImporter extends Importer
                 ->rules(['max:255']),
             ImportColumn::make('state')
                 ->rules(['max:255']),
-            ImportColumn::make('country')
-                ->rules(['max:255']),
         ];
     }
 

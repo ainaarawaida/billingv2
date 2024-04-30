@@ -21,13 +21,16 @@ return new class extends Migration
             $table->date('quotation_date')->nullable();
             $table->integer('valid_days')->nullable();
             $table->string('quote_status')->nullable();
-            $table->string('title')->nullable();
-            $table->text('notes')->nullable();
+            $table->text('summary')->nullable();
             $table->decimal('sub_total', 10, 2)->nullable();
             $table->decimal('taxes', 10, 2)->nullable();
             $table->decimal('percentage_tax', 5, 2)->nullable();
             $table->decimal('delivery', 10, 2)->nullable();
             $table->decimal('final_amount', 10, 2)->nullable();
+            $table->text('terms_conditions')->nullable();
+            $table->text('footer')->nullable();
+            $table->json('attachments')->nullable();
+            
             $table->softDeletes();
             $table->timestamps();
 

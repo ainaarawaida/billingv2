@@ -17,9 +17,6 @@ class InvoiceImporter extends Importer
         return [
             ImportColumn::make('customer')
                 ->relationship(),
-            ImportColumn::make('team_id')
-                ->numeric()
-                ->rules(['integer']),
             ImportColumn::make('numbering')
                 ->rules(['max:255']),
             ImportColumn::make('invoice_date')

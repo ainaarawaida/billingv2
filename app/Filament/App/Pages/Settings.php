@@ -74,7 +74,7 @@ class Settings extends Page implements HasForms
                                                 '1' => 'Template 01',
                                             ]),
                                         Placeholder::make('')
-                                            ->label(false)
+                                            ->hiddenLabel()
                                             ->content(fn ($record) => new HtmlString('
                                             <div class="flex flex-col justify-center items-center">
                                                     <img src="'.url('/assets').'/quotationpdf.png" class="" style="width:300px;">
@@ -107,7 +107,7 @@ class Settings extends Page implements HasForms
                                                 '1' => 'Template 01',
                                             ]),
                                         Placeholder::make('')
-                                            ->label(false)
+                                            ->hiddenLabel()
                                             ->content(fn ($record) => new HtmlString('
                                             <div class="flex flex-col justify-center items-center">
                                                     <img src="'.url('/assets').'/invoicepdf.png" class="" style="width:300px;">
