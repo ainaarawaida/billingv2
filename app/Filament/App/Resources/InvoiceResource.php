@@ -357,10 +357,7 @@ class InvoiceResource extends Resource
                         ->searchable()
                         ->preload()
                         ->required(),
-                    Forms\Components\CheckboxList::make('payment_type')
-                        ->options([
-                            'ToyyibPay (FPX)' => 'ToyyibPay (FPX)',
-                        ])
+                  
                 ])
                 ->columns(2),
 
@@ -471,10 +468,6 @@ class InvoiceResource extends Resource
                     ->label(__("Amount"))
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('payment_type')
-                    ->badge()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

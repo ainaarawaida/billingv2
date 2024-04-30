@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('invoices');
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
@@ -28,12 +29,13 @@ return new class extends Migration
             $table->decimal('percentage_tax', 5, 2)->nullable();
             $table->decimal('delivery', 10, 2)->nullable();
             $table->decimal('final_amount', 10, 2)->nullable();
+            $table->decimal('balance', 10, 2)->nullable();
             $table->json('invoice_type')->nullable();
-            $table->json('payment_type')->nullable();
             
             $table->softDeletes();
             $table->timestamps();
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
