@@ -22,8 +22,7 @@ return new class extends Migration
             $table->date('invoice_date')->nullable();
             $table->date('pay_before')->nullable();
             $table->string('invoice_status')->nullable();
-            $table->string('title')->nullable();
-            $table->text('notes')->nullable();
+            $table->text('summary')->nullable();
             $table->decimal('sub_total', 10, 2)->nullable();
             $table->decimal('taxes', 10, 2)->nullable();
             $table->decimal('percentage_tax', 5, 2)->nullable();
@@ -31,6 +30,9 @@ return new class extends Migration
             $table->decimal('final_amount', 10, 2)->nullable();
             $table->decimal('balance', 10, 2)->nullable();
             $table->json('invoice_type')->nullable();
+            $table->text('terms_conditions')->nullable();
+            $table->text('footer')->nullable();
+            $table->json('attachments')->nullable();
             
             $table->softDeletes();
             $table->timestamps();

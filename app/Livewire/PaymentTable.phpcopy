@@ -1,0 +1,76 @@
+<?php
+
+namespace App\Livewire;
+
+use Filament\Tables;
+use App\Models\Payment;
+use Livewire\Component;
+use App\Models\TeamSetting;
+use Filament\Facades\Filament;
+use Illuminate\Contracts\View\View;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Tables\Contracts\HasTable;
+use Illuminate\Database\Eloquent\Builder;
+use App\Filament\App\Resources\PaymentResource;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Tables\Concerns\InteractsWithTable;
+
+
+class PaymentTable extends Component implements HasForms, HasTable
+{
+    use InteractsWithTable;
+    use InteractsWithForms;
+
+    public $record;
+
+    public function mount($record)
+    {
+        $this->record = $record;
+    }
+    
+    protected function getTableQuery(): Builder
+    {
+        return Payment::query()
+            ->where('team_id', Filament::getTenant()->id)
+            ->where('invoice_id', $this->record->id);
+    }
+
+    protected function getTableColumns(): array
+    {
+        return [
+            Tables\Columns\TextColumn::make('invoice.numbering')
+                ->label('No.')
+                ->formatStateUsing(function(string $state, $record): string {
+                        $newDate = date("d M, Y", strtotime($record->invoice_date));
+                        $prefix = TeamSetting::where('team_id', Filament::getTenant()->id )->first()->invoice_prefix_code ?? '#I' ;
+                        return __("<b class=''>{$prefix}{$state}</b><br>{$newDate}");
+
+                    } 
+                )
+                ->html()
+                ->color('primary')
+                ->sortable()
+                ->searchable(),
+            Tables\Columns\TextColumn::make('payment_method.name'),
+            Tables\Columns\TextColumn::make('status')
+                ->formatStateUsing(function(string $state, $record): string {
+                    return  ucwords($state);
+                })
+                ->badge(),
+            Tables\Columns\TextColumn::make('action')
+                ->label(__('Action'))
+                ->url(fn ( $record): string => PaymentResource::getUrl('edit', ['record' => $record->id]))
+                ->state(function (Payment $record) {
+                    return '<b>View</b>';
+                })
+                ->badge()
+                ->html(),
+               
+        ];
+    }
+
+    public function render()
+    {
+        return view('livewire.payment-table');
+    }
+}

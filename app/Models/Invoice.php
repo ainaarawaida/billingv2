@@ -16,6 +16,7 @@ class Invoice extends Model
     protected $casts = [
         'invoice_type' => 'array', // Cast JSON data to an array
         'payment_type' => 'array', 
+        'attachments' => 'array', 
     ];
 
     public function teams(): BelongsTo
@@ -31,6 +32,10 @@ class Invoice extends Model
     public function items()
     {
         return $this->hasMany(Item::class);
+    }
+
+    public function notes(){
+        return $this->hasMany(Note::class, 'type_id');
     }
 
 }

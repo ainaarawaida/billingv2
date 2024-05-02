@@ -338,6 +338,7 @@ class QuotationResource extends Resource
                                 
 
                         ])
+                        ->inlineLabel()
                         ->columns(2),
 
                         Forms\Components\Placeholder::make('calculation')
@@ -380,47 +381,85 @@ class QuotationResource extends Resource
                                         Forms\Components\Textarea::make('terms_conditions'),
                                         Forms\Components\Textarea::make('footer'),
                                     ])->columns(2),
+
                                 Tabs\Tab::make('Notes')
+                                    ->label(__('Notes'))
                                     ->schema([
                                         Textarea::make('content')
                                             ->visible(fn (string $operation): string => $operation == 'create')
                                             ->label('Content'),
-                                        Forms\Components\Actions::make([
-                                            Forms\Components\Actions\Action::make('Add Note')
-                                                ->visible(fn (string $operation): string => $operation != 'create')
-                                                ->form([
-                                                    Textarea::make('content')
-                                                        ->label('Content')
-                                                        ->required(),
-                                                ])
-                                                ->action(function (Forms\Get $get, Forms\Set $set, array $data, $record): void {
-                                                    $data['user_id'] = auth()->user()->id ;
-                                                    $data['team_id'] = Filament::getTenant()->id ;
-                                                    $data['type_id'] = $record->id ;
-                                                    $data['type'] = 'quotation' ;
-                                                    $note = Note::create($data);
-                                                    Notification::make() 
-                                                        ->success()
-                                                        ->title(__('filament-panels::resources/pages/edit-record.notifications.saved.title'))
-                                                        ->send(); 
-                                                })
-                                        ]),
-                                        Forms\Components\Placeholder::make('notes')
-                                            ->visible(fn (string $operation): string => $operation != 'create')
-                                            ->hiddenLabel()
-                                            ->content(function ($get, $set, $record){
-                                                $notes = Note::where('team_id', Filament::getTenant()->id)
-                                                ->where('type', 'quotation')
-                                                ->where('type_id', $record->id)
-                                                ->get();
-                                                $dataString = "";
-                                                foreach($notes AS $key => $val){
-                                                    $dataString .= " <p><b>{$val->user->name} </b> {$val->created_at} <br> {$val->content} </p><br>";
-                                                }
-                                                return new HtmlString($dataString);
-                                            })
+                                        // Forms\Components\Actions::make([
+                                        //     Forms\Components\Actions\Action::make('Add Note')
+                                        //         ->visible(fn (string $operation): string => $operation != 'create')
+                                        //         ->form([
+                                        //             Textarea::make('content')
+                                        //                 ->label('Content')
+                                        //                 ->required(),
+                                        //         ])
+                                        //         ->action(function (Forms\Get $get, Forms\Set $set, array $data, $record): void {
+                                        //             $data['user_id'] = auth()->user()->id ;
+                                        //             $data['team_id'] = Filament::getTenant()->id ;
+                                        //             $data['type_id'] = $record->id ;
+                                        //             $data['type'] = 'quotation' ;
+                                        //             $note = Note::create($data);
+                                        //             Notification::make() 
+                                        //                 ->success()
+                                        //                 ->title(__('filament-panels::resources/pages/edit-record.notifications.saved.title'))
+                                        //                 ->send(); 
 
+                                        //                 $set('count', 0);   
+                                        //         })
+                                        //     ]),
+
+                                        Forms\Components\Livewire::make('note-list',['type' => 'quotation'])
+                                            ->hidden(fn (?Model $record): bool => $record === null),
                                     ]),
+
+                                // Tabs\Tab::make('Notes')
+                                //     ->schema([
+                                //         Textarea::make('content')
+                                //             ->visible(fn (string $operation): string => $operation == 'create')
+                                //             ->label('Content'),
+                                //         Forms\Components\Actions::make([
+                                //             Forms\Components\Actions\Action::make('Add Note')
+                                //                 ->visible(fn (string $operation): string => $operation != 'create')
+                                //                 ->form([
+                                //                     Textarea::make('content')
+                                //                         ->label('Content')
+                                //                         ->required(),
+                                //                 ])
+                                //                 ->action(function (Forms\Get $get, Forms\Set $set, array $data, $record): void {
+                                //                     $data['user_id'] = auth()->user()->id ;
+                                //                     $data['team_id'] = Filament::getTenant()->id ;
+                                //                     $data['type_id'] = $record->id ;
+                                //                     $data['type'] = 'quotation' ;
+                                //                     $note = Note::create($data);
+                                //                     Notification::make() 
+                                //                         ->success()
+                                //                         ->title(__('filament-panels::resources/pages/edit-record.notifications.saved.title'))
+                                //                         ->send(); 
+
+                                //                      $set('count', 0);   
+                                //                 })
+                                //         ]),
+                                //         Forms\Components\Placeholder::make('notes')
+                                //             ->visible(fn (string $operation): string => $operation != 'create')
+                                //             ->hiddenLabel()
+                                //             ->content(function ($get, $set, $record){
+                                //                 $notes = Note::where('team_id', Filament::getTenant()->id)
+                                //                 ->where('type', 'quotation')
+                                //                 ->where('type_id', $record->id)
+                                //                 ->get();
+                                //                 $dataString = "";
+                                //                 foreach($notes AS $key => $val){
+                                //                     $dataString .= " <p><b> {$val->user->name} </b> {$val->created_at} <br> {$val->content} </p><br>
+                                //                     <button class='btn btn-danger bg-danger-100' wire:click='increment({$val->id})'>delete</button>
+                                //                     ";
+                                //                 }
+                                //                 return new HtmlString($dataString);
+                                //             })
+
+                                //     ]),
                                 Tabs\Tab::make('l_attachments')
                                     ->label(__('Attachments'))
                                     ->schema([
@@ -439,6 +478,8 @@ class QuotationResource extends Resource
                          
             ]);
     }
+
+
 
     public static function table(Table $table): Table
     {
@@ -476,8 +517,8 @@ class QuotationResource extends Resource
                     ->width('1%')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('title')
-                    ->label(__('Title'))
+                Tables\Columns\TextColumn::make('summary')
+                    ->label(__('Summary'))
                     ->wrap()
                     ->sortable()
                     ->searchable()
