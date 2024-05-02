@@ -22,8 +22,9 @@ use App\Filament\App\Resources\PaymentResource;
     <table class="table-auto w-full shadow-md">
     <thead>
         <tr class="bg-gray-100 text-gray-600 text-left">
-        <th class="px-3 py-2">invoice.numbering</th>
-        <th class="px-3 py-2">payment_method.name</th>
+        <th class="px-3 py-2">invoice No</th>
+        <th class="px-3 py-2">Payment Method</th>
+        <th class="px-3 py-2">Total</th>
         <th class="px-3 py-2">status</th>
         <th class="px-3 py-2">action</th>
         </tr>
@@ -33,6 +34,7 @@ use App\Filament\App\Resources\PaymentResource;
         <tr class="border hover:bg-gray-100">
             <td class="px-3 py-2">{{ $prefix.$item->invoice->numbering  }}</td>
             <td class="px-3 py-2">{{ $item->payment_method->name }}</td>
+            <td class="px-3 py-2">{{ number_format($item->total, 2)  }}</td>
             <td class="px-3 py-2">
                 <x-filament::badge>
                     {{ ucwords($item->status) }}
