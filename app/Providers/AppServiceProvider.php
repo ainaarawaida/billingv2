@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use Filament\Support\Assets\Css;
 use Illuminate\Support\ServiceProvider;
 use Filament\Support\Facades\FilamentIcon;
 use Filament\Support\Facades\FilamentView;
+use Filament\Support\Facades\FilamentAsset;
 use BezhanSalleh\FilamentLanguageSwitch\LanguageSwitch;
 use BezhanSalleh\FilamentLanguageSwitch\Enums\Placement;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
@@ -26,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
             LoginResponse::class,
             \App\Http\Responses\Auth\LoginResponse::class
         );
+
     }
 
     /**

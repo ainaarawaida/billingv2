@@ -9,15 +9,7 @@ use App\Filament\App\Resources\PaymentResource;
 ?>
 
 <div>
-    <div class="flex justify-end p-3">
-        <x-filament::button wire:click.prevent="openCreateModal">
-            Add Payment
-        </x-filament::button>
-    </div>
 
-    @if ($showCreateModal)
-        @include('livewire.create-modal')
-    @endif
 
     <table class="table-auto w-full shadow-md">
     <thead>
@@ -33,11 +25,11 @@ use App\Filament\App\Resources\PaymentResource;
         @foreach ($items as $item)
         <tr class="border hover:bg-gray-100">
             <td class="px-3 py-2">{{ $prefix.$item->invoice->numbering  }}</td>
-            <td class="px-3 py-2">{{ $item->payment_method->name }}</td>
+            <td class="px-3 py-2">{{ $item?->payment_method?->name }}</td>
             <td class="px-3 py-2">{{ number_format($item->total, 2)  }}</td>
             <td class="px-3 py-2">
                 <x-filament::badge>
-                    {{ ucwords($item->status) }}
+                    {{ ucwords(str_replace("_", " ", $item->status)) }}
                 </x-filament::badge>
             </td>
             <td class="px-3 py-2">

@@ -7,7 +7,9 @@ use Filament\Forms;
 use App\Models\Item;
 use Filament\Tables;
 use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Product;
+use Filament\Forms\Get;
 use Livewire\Component;
 use App\Models\Customer;
 use Filament\Forms\Form;
@@ -15,11 +17,14 @@ use App\Mail\InvoiceEmail;
 use Filament\Tables\Table;
 use App\Models\TeamSetting;
 use App\Mail\QuotationEmail;
+use App\Models\PaymentMethod;
+use App\Livewire\PaymentTable;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Tabs;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Support\Facades\Mail;
+use Filament\Forms\Components\Livewire;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Contracts\HasTable;
 use Illuminate\Database\Eloquent\Model;
@@ -389,16 +394,87 @@ class InvoiceResource extends Resource
                                                 ->multiple()
                                                 ->downloadable()
                                         ]),
+                                   
                                     Tabs\Tab::make('payment')
                                         ->label(__('Payment'))
+                                        ->hidden(fn (?Model $record): bool => $record === null)
                                         ->schema([
+                                            Forms\Components\Actions::make([
+                                                Forms\Components\Actions\Action::make('addPayment')
+                                                    ->label(__('Add Payment'))
+                                                    ->form([
+                                                        Forms\Components\Section::make()
+                                                        ->schema([
+                                                            Forms\Components\Select::make('payment_method_id')
+                                                                ->label("Payment Method")
+                                                                ->options(function (Get $get, string $operation){
+                                                                    $payment_method = PaymentMethod::where('team_id', Filament::getTenant()->id)
+                                                                    ->where('status', 1)->get()->pluck('name', 'id');
+                                                                    return $payment_method ;
+                                                                })
+                                                                ->searchable()
+                                                                ->preload()
+                                                                ->required(),
+                                                            Forms\Components\DatePicker::make('payment_date')
+                                                                ->required()
+                                                                ->default(now()),
+                                                            Forms\Components\TextInput::make('total')
+                                                                ->required()
+                                                                ->prefix('RM')
+                                                                ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
+                                                                ->formatStateUsing(fn (string $state): string => number_format($state, 2))
+                                                                ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
+                                                                ->default(0.00),
+                                                            Forms\Components\Select::make('status')
+                                                                    ->options([
+                                                                        'draft' => 'Draft',
+                                                                        'pending_payment' => 'Pending payment',
+                                                                        'on_hold' => 'On hold',
+                                                                        'processing ' => 'Processing ',
+                                                                        'completed' => 'Completed',
+                                                                        'failed' => 'Failed',
+                                                                        'canceled' => 'Canceled',
+                                                                        'refunded' => 'Refunded',
+                                                                    ])
+                                                                    ->default('draft')
+                                                                    ->searchable()
+                                                                    ->preload()
+                                                                    ->required(),
+                                                            Forms\Components\Textarea::make('notes')
+                                                                ->maxLength(65535)
+                                                                ->columnSpanFull(),
+                                        
+                                                            
+                                                        ])
+                                                        ->columns(2),
+                                                    ])
+                                                    ->action(function (array $data, Component $livewire, ?Model $record): void {
+                                                        $data['team_id'] = Filament::getTenant()->id ;
+                                                        $data['invoice_id'] = $record->id ;
+                                                        Payment::create($data);
+
+                                                        //update balance on invoice
+                                                        $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
+                                                        ->where('invoice_id', $record->id)
+                                                        ->where('status', 'completed')->sum('total');
+                                                        $record->balance = $record->final_amount - $totalPayment; 
+                                                        $record->update();
+                                                      
+                                                        $livewire->dispatch('refreshPaymentTable');
+                                                    })
+                                            ]),
                                             Forms\Components\Livewire::make('payment-table')
-                                                ->key('foo-first')
+                                                ->key('payment-table')
                                                 ->hidden(fn (?Model $record): bool => $record === null),
-                                        ])
+                                        ]),
+
+                                    
+
 
                                 ])
                         ]),
+
+                   
 
                 
 
@@ -509,6 +585,15 @@ class InvoiceResource extends Resource
                     ->label(__("Amount"))
                     ->numeric()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('balance')
+                    ->prefix('RM ')
+                    ->label(__("Balance"))
+                    ->state(function (Invoice $record): float {
+                        return $record->balance ?? $record->final_amount ;
+                    })
+                    ->numeric()
+                    ->sortable(),
+                    
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

@@ -27,7 +27,7 @@ class NoteList extends Component
     public $record ;
     public $showCreateModal = false;
     public $items = [];
-    public $newItem = '';
+    public $content = '';
     public $type ;
  
     public function mount()
@@ -50,6 +50,13 @@ class NoteList extends Component
 
     }
 
+    public function rules(): array
+    {
+        return [
+            'content' => 'required',
+        ];
+    }
+
     public function addItem()
     {
         $data['user_id'] = auth()->user()->id ;
@@ -62,13 +69,14 @@ class NoteList extends Component
         ->where('team_id', Filament::getTenant()->id)->get();
 
         $this->showCreateModal = false;
-        $this->newItem = '';
+        $this->reset(['content']);
     }
 
     public function closeCreateModal()
     {
         $this->showCreateModal = false;
-        $this->newItem = ''; // Clear new item value on close
+        $this->resetValidation();
+        $this->reset(['content']); // Clear new item value on close
     }
 
     public function openCreateModal()

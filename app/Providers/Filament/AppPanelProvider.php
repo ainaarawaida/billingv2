@@ -12,6 +12,7 @@ use Filament\Facades\Filament;
 use App\Filament\Pages\Auth\Login;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Contracts\View\View;
 use Filament\Navigation\NavigationItem;
 use App\Filament\Pages\Auth\EditProfile;
 use Filament\Navigation\NavigationGroup;
@@ -41,18 +42,11 @@ class AppPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Slate,
             ])
+            // ->viteTheme('resources/css/app.css')
+            
             // ->renderHook(
-            //     PanelsRenderHook::SIDEBAR_NAV_END ,
-            //     function(): string {
-            //         return '<a wire:navigate href="'.url('/app/login').'" class="fi-topbar-item-button flex items-center justify-center gap-x-2 rounded-lg px-3 py-2 outline-none transition duration-75 hover:bg-gray-50 focus-visible:bg-gray-50 dark:hover:bg-white/5 dark:focus-visible:bg-white/5 bg-gray-50 dark:bg-white/5">
-                   
-            //         <span class="fi-topbar-item-label text-sm font-medium text-primary-600 dark:text-primary-400">
-            //             Login
-            //         </span>
-
-        
-            // </a>' ;
-            //     }
+            //     PanelsRenderHook::CONTENT_END  ,
+            //     fn (): View => view('livewire.mymodal'),
             // )
             ->sidebarCollapsibleOnDesktop()
             ->tenantRegistration(RegisterTeam::class)
@@ -113,6 +107,7 @@ class AppPanelProvider extends PanelProvider
             ])
             ->plugin(
                 \Hasnayeen\Themes\ThemesPlugin::make()
-            );
+            )
+            ;
     }
 }
