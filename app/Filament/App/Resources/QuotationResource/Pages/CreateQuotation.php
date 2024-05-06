@@ -49,9 +49,15 @@ class CreateQuotation extends CreateRecord
         $tenant_id = Filament::getTenant()->id ;
         $team_setting = TeamSetting::where('team_id', $tenant_id )->first();
         $quotation_current_no = $team_setting->quotation_current_no ?? '0' ;
-
-        $team_setting['quotation_current_no'] = $quotation_current_no + 1 ;
-        $team_setting->save();
+        if($team_setting){
+            $team_setting->quotation_current_no = $quotation_current_no + 1 ;
+            $team_setting->save();
+        }else{
+            $team_setting = TeamSetting::create([
+                'team_id' => $tenant_id,
+                'quotation_current_no' => Quotation::where('team_id', $tenant_id)->count('id') + 1 ,
+            ]);
+        }
 
       
         

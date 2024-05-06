@@ -39,8 +39,7 @@ class InvoiceFactory extends Factory
                 'expired',
                 'cancelled',
             ]),
-            'title' => $this->faker->sentence,
-            'notes' => $this->faker->paragraph,
+            'summary' => $this->faker->sentence,
             'sub_total' => null, // Subtotal between 1000 and 10000
             'taxes' => null, // Can be calculated based on percentage_tax and sub_total later
             'percentage_tax' => $this->faker->numberBetween(0, 20), // Tax percentage between 0 and 20
@@ -52,9 +51,9 @@ class InvoiceFactory extends Factory
                 'Monthly' => 'Monthly',
                 'Yearly' => 'Yearly',
             ]), //
-            'payment_type' => [
-                "ToyyibPay (FPX)"
-            ], //
+            'terms_conditions' => $this->faker->sentence,
+            'footer' => $this->faker->sentence,
+            'attachments' => null,
         ];
     }
 }

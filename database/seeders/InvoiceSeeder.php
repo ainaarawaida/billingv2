@@ -40,6 +40,8 @@ class InvoiceSeeder extends Seeder
                 $product = Product::where('team_id', $invoice->team_id)
                             ->inRandomOrder()
                             ->first() ?? null;
+                if(!$product)
+                    continue;
 
                 $total = $product->price * $product->quantity;
 
