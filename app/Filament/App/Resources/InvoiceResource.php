@@ -15,15 +15,19 @@ use App\Models\Customer;
 use Filament\Forms\Form;
 use App\Mail\InvoiceEmail;
 use Filament\Tables\Table;
+use App\Livewire\NoteTable;
 use App\Models\TeamSetting;
 use App\Mail\QuotationEmail;
 use App\Models\PaymentMethod;
 use App\Livewire\PaymentTable;
 use Filament\Facades\Filament;
+use App\Livewire\PaymentTable2;
 use Filament\Resources\Resource;
+use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Support\Facades\Mail;
+use Filament\Support\Enums\ActionSize;
 use Filament\Forms\Components\Livewire;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Contracts\HasTable;
@@ -384,7 +388,8 @@ class InvoiceResource extends Resource
                                                 ->visible(fn (string $operation): string => $operation == 'create')
                                                 ->label('Content'),
 
-                                            Forms\Components\Livewire::make('note-list',['type' => 'invoice'])
+                                            Forms\Components\Livewire::make(NoteTable::class,['type' => 'invoice'])
+                                                ->key('NoteTable')
                                                 ->hidden(fn (?Model $record): bool => $record === null),
                                         ]),
                                     Tabs\Tab::make('l_attachments')
@@ -399,74 +404,81 @@ class InvoiceResource extends Resource
                                         ->label(__('Payment'))
                                         ->hidden(fn (?Model $record): bool => $record === null)
                                         ->schema([
-                                            Forms\Components\Actions::make([
-                                                Forms\Components\Actions\Action::make('addPayment')
-                                                    ->label(__('Add Payment'))
-                                                    ->form([
-                                                        Forms\Components\Section::make()
-                                                        ->schema([
-                                                            Forms\Components\Select::make('payment_method_id')
-                                                                ->label("Payment Method")
-                                                                ->options(function (Get $get, string $operation){
-                                                                    $payment_method = PaymentMethod::where('team_id', Filament::getTenant()->id)
-                                                                    ->where('status', 1)->get()->pluck('name', 'id');
-                                                                    return $payment_method ;
-                                                                })
-                                                                ->searchable()
-                                                                ->preload()
-                                                                ->required(),
-                                                            Forms\Components\DatePicker::make('payment_date')
-                                                                ->required()
-                                                                ->default(now()),
-                                                            Forms\Components\TextInput::make('total')
-                                                                ->required()
-                                                                ->prefix('RM')
-                                                                ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
-                                                                ->formatStateUsing(fn (string $state): string => number_format($state, 2))
-                                                                ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
-                                                                ->default(0.00),
-                                                            Forms\Components\Select::make('status')
-                                                                    ->options([
-                                                                        'draft' => 'Draft',
-                                                                        'pending_payment' => 'Pending payment',
-                                                                        'on_hold' => 'On hold',
-                                                                        'processing ' => 'Processing ',
-                                                                        'completed' => 'Completed',
-                                                                        'failed' => 'Failed',
-                                                                        'canceled' => 'Canceled',
-                                                                        'refunded' => 'Refunded',
-                                                                    ])
-                                                                    ->default('draft')
-                                                                    ->searchable()
-                                                                    ->preload()
-                                                                    ->required(),
-                                                            Forms\Components\Textarea::make('notes')
-                                                                ->maxLength(65535)
-                                                                ->columnSpanFull(),
+                                            Forms\Components\Livewire::make(PaymentTable2::class,[])
+                                            ->key('PaymentTable')
+                                        ])
+                                    // Tabs\Tab::make('payment')
+                                    //     ->label(__('Payment'))
+                                    //     ->hidden(fn (?Model $record): bool => $record === null)
+                                    //     ->schema([
+                                    //         Forms\Components\Actions::make([
+                                    //             Forms\Components\Actions\Action::make('addPayment')
+                                    //                 ->label(__('Add Payment'))
+                                    //                 ->form([
+                                    //                     Forms\Components\Section::make()
+                                    //                     ->schema([
+                                    //                         Forms\Components\Select::make('payment_method_id')
+                                    //                             ->label("Payment Method")
+                                    //                             ->options(function (Get $get, string $operation){
+                                    //                                 $payment_method = PaymentMethod::where('team_id', Filament::getTenant()->id)
+                                    //                                 ->where('status', 1)->get()->pluck('name', 'id');
+                                    //                                 return $payment_method ;
+                                    //                             })
+                                    //                             ->searchable()
+                                    //                             ->preload()
+                                    //                             ->required(),
+                                    //                         Forms\Components\DatePicker::make('payment_date')
+                                    //                             ->required()
+                                    //                             ->default(now()),
+                                    //                         Forms\Components\TextInput::make('total')
+                                    //                             ->required()
+                                    //                             ->prefix('RM')
+                                    //                             ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
+                                    //                             ->formatStateUsing(fn (string $state): string => number_format($state, 2))
+                                    //                             ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
+                                    //                             ->default(0.00),
+                                    //                         Forms\Components\Select::make('status')
+                                    //                                 ->options([
+                                    //                                     'draft' => 'Draft',
+                                    //                                     'pending_payment' => 'Pending payment',
+                                    //                                     'on_hold' => 'On hold',
+                                    //                                     'processing ' => 'Processing ',
+                                    //                                     'completed' => 'Completed',
+                                    //                                     'failed' => 'Failed',
+                                    //                                     'canceled' => 'Canceled',
+                                    //                                     'refunded' => 'Refunded',
+                                    //                                 ])
+                                    //                                 ->default('draft')
+                                    //                                 ->searchable()
+                                    //                                 ->preload()
+                                    //                                 ->required(),
+                                    //                         Forms\Components\Textarea::make('notes')
+                                    //                             ->maxLength(65535)
+                                    //                             ->columnSpanFull(),
                                         
                                                             
-                                                        ])
-                                                        ->columns(2),
-                                                    ])
-                                                    ->action(function (array $data, Component $livewire, ?Model $record): void {
-                                                        $data['team_id'] = Filament::getTenant()->id ;
-                                                        $data['invoice_id'] = $record->id ;
-                                                        Payment::create($data);
+                                    //                     ])
+                                    //                     ->columns(2),
+                                    //                 ])
+                                    //                 ->action(function (array $data, Component $livewire, ?Model $record): void {
+                                    //                     $data['team_id'] = Filament::getTenant()->id ;
+                                    //                     $data['invoice_id'] = $record->id ;
+                                    //                     Payment::create($data);
 
-                                                        //update balance on invoice
-                                                        $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
-                                                        ->where('invoice_id', $record->id)
-                                                        ->where('status', 'completed')->sum('total');
-                                                        $record->balance = $record->final_amount - $totalPayment; 
-                                                        $record->update();
+                                    //                     //update balance on invoice
+                                    //                     $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
+                                    //                     ->where('invoice_id', $record->id)
+                                    //                     ->where('status', 'completed')->sum('total');
+                                    //                     $record->balance = $record->final_amount - $totalPayment; 
+                                    //                     $record->update();
                                                       
-                                                        $livewire->dispatch('refreshPaymentTable');
-                                                    })
-                                            ]),
-                                            Forms\Components\Livewire::make('payment-table')
-                                                ->key('payment-table')
-                                                ->hidden(fn (?Model $record): bool => $record === null),
-                                        ]),
+                                    //                     $livewire->dispatch('refreshPaymentTable');
+                                    //                 })
+                                    //         ]),
+                                    //         Forms\Components\Livewire::make('payment-table')
+                                    //             ->key('payment-table')
+                                    //             ->hidden(fn (?Model $record): bool => $record === null),
+                                    //     ]),
 
                                     
 
@@ -715,6 +727,28 @@ class InvoiceResource extends Resource
                         }),
                     
                     
+                    Tables\Actions\Action::make('public_url') 
+                        ->label('Public Url')
+                        ->color('success')
+                        ->icon('heroicon-o-globe-alt')
+                        ->action(function (Model $record) {
+                            Notification::make()
+                            ->title('Copy Public Url Successfully')
+                            ->success()
+                            ->send();
+                            
+                        })
+                        ->requiresConfirmation()
+                        ->modalHeading('Public Url')
+                        ->modalDescription( fn (Model $record) => new HtmlString('Your Public URL : <a target="_blank" href="'.url('invoicepdf')."/".base64_encode("luqmanahmadnordin".$record->id).'">'.url('invoicepdf')."/".base64_encode("luqmanahmadnordin".$record->id) .'</a>'))
+                        ->modalSubmitActionLabel('Copy public URL')
+                        ->extraAttributes(function (Model $record) {
+                           return [
+                                'class' => 'copy-public_url',
+                                'url' => url('invoicepdf')."/".base64_encode("luqmanahmadnordin".$record->id),
+                            ] ;
+                            
+                        }),
                     Tables\Actions\Action::make('pdf') 
                         ->label('PDF')
                         ->color('success')
@@ -755,6 +789,11 @@ class InvoiceResource extends Resource
                         
                        
                 ])
+                ->label('More actions')
+                ->icon('heroicon-m-ellipsis-vertical')
+                ->size(ActionSize::Small)
+                ->color('primary')
+                ->button()
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -763,7 +802,7 @@ class InvoiceResource extends Resource
                     Tables\Actions\ForceDeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('numbering', 'desc');
+            ->defaultSort('updated_at', 'desc');
     }
 
     public static function getRelations(): array

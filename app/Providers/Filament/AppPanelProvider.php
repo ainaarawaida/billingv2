@@ -13,6 +13,7 @@ use App\Filament\Pages\Auth\Login;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Blade;
 use Filament\Navigation\NavigationItem;
 use App\Filament\Pages\Auth\EditProfile;
 use Filament\Navigation\NavigationGroup;
@@ -31,6 +32,8 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use App\Filament\App\Resources\InvoiceResource\Pages\ListInvoices;
+use App\Filament\App\Resources\InvoiceResource\Pages\CreateInvoice;
 
 class AppPanelProvider extends PanelProvider
 {
@@ -44,10 +47,54 @@ class AppPanelProvider extends PanelProvider
             ])
             // ->viteTheme('resources/css/app.css')
             
-            // ->renderHook(
-            //     PanelsRenderHook::CONTENT_END  ,
-            //     fn (): View => view('livewire.mymodal'),
-            // )
+            ->renderHook(
+                PanelsRenderHook::BODY_END  ,
+                fn (): string => Blade::render('
+                    <script>
+                        window.addEventListener("DOMContentLoaded", () => {
+                            document.querySelector("table").addEventListener("click", async (e) => {
+                                const selectedEle = e.target.closest(".copy-public_url");
+                              if(selectedEle){
+                                  let linkToCopy = selectedEle.getAttribute("url");
+                                    
+                                  try {
+                                        await copyToClipboard(linkToCopy);
+                                    } catch(error) {
+                                        console.error(error);
+                                    }
+                                 
+                                }
+                            })
+                            async function copyToClipboard(textToCopy) {
+                                if (navigator.clipboard && window.isSecureContext) {
+                                    await navigator.clipboard.writeText(textToCopy);
+                                } else {
+                                    const textArea = document.createElement("textarea");
+                                    textArea.value = textToCopy;
+                                        
+                                    textArea.style.position = "absolute";
+                                    textArea.style.left = "-999999px";
+                                        
+                                    document.body.prepend(textArea);
+                                    textArea.select();
+                            
+                                    try {
+                                        document.execCommand("copy");
+                                    } catch (error) {
+                                        console.error(error);
+                                    } finally {
+                                        textArea.remove();
+                                    }
+                                }
+                            }
+                          
+                        })
+                    </script>
+                
+                '),
+                scopes: ListInvoices::class,
+            )
+            
             ->sidebarCollapsibleOnDesktop()
             ->tenantRegistration(RegisterTeam::class)
             ->tenantProfile(EditTeamProfile::class)

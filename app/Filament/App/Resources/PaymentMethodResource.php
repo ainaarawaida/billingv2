@@ -121,6 +121,7 @@ class PaymentMethodResource extends Resource
                     ->html()
                     ->sortable(),
                 Tables\Columns\ToggleColumn::make('status')
+                    ->disabled()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

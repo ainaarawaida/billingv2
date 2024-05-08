@@ -6,6 +6,7 @@ use App\Models\Note;
 use Filament\Actions;
 use App\Models\Quotation;
 use App\Models\TeamSetting;
+use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\ViewField;
@@ -46,6 +47,7 @@ class CreateQuotation extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
+       
         $tenant_id = Filament::getTenant()->id ;
         $team_setting = TeamSetting::where('team_id', $tenant_id )->first();
         $quotation_current_no = $team_setting->quotation_current_no ?? '0' ;
@@ -64,7 +66,7 @@ class CreateQuotation extends CreateRecord
         // $lastid = Quotation::where('team_id', $tenant_id)->count('id') + 1 ;
         $data['numbering'] = str_pad(($quotation_current_no + 1), 6, "0", STR_PAD_LEFT) ;
         $record = new ($this->getModel())($data);
-
+     
         if (
             static::getResource()::isScopedToTenant() &&
             ($tenant = Filament::getTenant())
@@ -105,6 +107,16 @@ class CreateQuotation extends CreateRecord
         }
 
         return $record ;
+    }
+
+    protected function getCreateFormAction(): Action
+    {
+        return Action::make('create')
+            ->label(__('filament-panels::resources/pages/create-record.form.actions.create.label'))
+            ->keyBindings(['mod+s'])
+            ->action(function () {
+                $this->create();
+            });
     }
 
 

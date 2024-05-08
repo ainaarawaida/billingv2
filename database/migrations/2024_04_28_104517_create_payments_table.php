@@ -21,6 +21,7 @@ return new class extends Migration
             $table->date('payment_date')->nullable();
             $table->string('total')->nullable();
             $table->text('notes')->nullable();
+            $table->string('reference')->nullable();
             $table->string('status')->nullable();
            
             

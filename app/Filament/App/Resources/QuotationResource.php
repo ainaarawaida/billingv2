@@ -15,18 +15,20 @@ use App\Models\Customer;
 use Filament\Forms\Form;
 use App\Models\Quotation;
 use Filament\Tables\Table;
+use App\Livewire\NoteTable;
 use App\Models\TeamSetting;
 use App\Mail\QuotationEmail;
 use Filament\Facades\Filament;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Filament\Resources\Resource;
 
+use Filament\Resources\Resource;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Support\Facades\Mail;
 use Filament\Forms\Components\Select;
 use Illuminate\Support\Facades\Blade;
+use Filament\Support\Enums\ActionSize;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Contracts\HasTable;
 use Illuminate\Database\Eloquent\Model;
@@ -411,7 +413,8 @@ class QuotationResource extends Resource
                                         //         })
                                         //     ]),
 
-                                        Forms\Components\Livewire::make('note-list',['type' => 'quotation'])
+                                        Forms\Components\Livewire::make(NoteTable::class,['type' => 'quotation'])
+                                            ->key('NoteTable')
                                             ->hidden(fn (?Model $record): bool => $record === null),
                                     ]),
 
@@ -796,6 +799,11 @@ class QuotationResource extends Resource
                         
                        
                 ])
+                ->label('More actions')
+                ->icon('heroicon-m-ellipsis-vertical')
+                ->size(ActionSize::Small)
+                ->color('primary')
+                ->button()
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -804,7 +812,7 @@ class QuotationResource extends Resource
                     Tables\Actions\ForceDeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('numbering', 'desc');
+            ->defaultSort('updated_at', 'desc');
     }
 
     public static function getRelations(): array

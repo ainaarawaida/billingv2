@@ -12,6 +12,7 @@ use App\Models\TeamSetting;
 use App\Models\PaymentMethod;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\ActionSize;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\App\Resources\PaymentResource\Pages;
@@ -96,7 +97,7 @@ class PaymentResource extends Resource
                     )
                     ->color('primary')
                     ->prefix($prefix)
-                    ->url(fn($record) => InvoiceResource::getUrl('edit', ['record' => $record->invoice_id])),
+                    ->url(fn($record) => isset($record->invoice_id) ? InvoiceResource::getUrl('edit', ['record' => $record->invoice_id]) : false),
                 Tables\Columns\TextColumn::make('payment_method.name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('payment_date')
@@ -137,6 +138,11 @@ class PaymentResource extends Resource
                     Tables\Actions\ForceDeleteAction::make(),
                     Tables\Actions\ViewAction::make(),
                 ])
+                ->label('More actions')
+                ->icon('heroicon-m-ellipsis-vertical')
+                ->size(ActionSize::Small)
+                ->color('primary')
+                ->button()
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -144,7 +150,8 @@ class PaymentResource extends Resource
                     Tables\Actions\ForceDeleteBulkAction::make(),
                     Tables\Actions\RestoreBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('updated_at', 'desc');
     }
 
     public static function getRelations(): array
@@ -170,5 +177,11 @@ class PaymentResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::whereBelongsTo(Filament::getTenant(), 'teams')->count();
+        
     }
 }

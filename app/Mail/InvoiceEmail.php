@@ -12,7 +12,7 @@ use Illuminate\Queue\SerializesModels;
 class InvoiceEmail extends Mailable
 {
     use Queueable, SerializesModels;
-    public $record, $customer;
+    public $record, $customer, $mailtype;
 
     /**
      * Create a new message instance.
@@ -22,6 +22,7 @@ class InvoiceEmail extends Mailable
         //
         $this->record = $record ;
         $this->customer = $customer ;
+        $this->mailtype = true ;
     }
 
     /**

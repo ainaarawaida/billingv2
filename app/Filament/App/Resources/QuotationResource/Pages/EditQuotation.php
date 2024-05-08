@@ -4,6 +4,7 @@ namespace App\Filament\App\Resources\QuotationResource\Pages;
 
 use App\Models\Note;
 use Filament\Actions;
+use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Resources\Pages\EditRecord;
@@ -31,11 +32,22 @@ class EditQuotation extends EditRecord
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
-       
         $record->update($data);
 
         return $record;
     }
+
+    protected function getSaveFormAction(): Action
+    {
+        return Action::make('save')
+            ->label(__('filament-panels::resources/pages/edit-record.form.actions.save.label'))
+            ->keyBindings(['mod+s'])
+            ->action(function () {
+                $this->save();
+            });
+    }
+
+
 
 
 

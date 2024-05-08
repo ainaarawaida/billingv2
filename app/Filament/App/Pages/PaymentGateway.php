@@ -8,6 +8,7 @@ use Filament\Pages\Page;
 use App\Models\TeamSetting;
 use App\Models\UserSetting;
 use Filament\Actions\Action;
+use App\Models\PaymentMethod;
 use Filament\Facades\Filament;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
@@ -153,6 +154,17 @@ class PaymentGateway extends Page implements HasForms
         } catch (Halt $exception) {
             return;
         }
+
+        //update all payment method if payment gateway changed
+        foreach($temp AS $key => $val){
+            if($val['status'] == false){
+                PaymentMethod::where('team_id', Filament::getTenant()->id)
+                ->where('payment_gateway_id', $val['id'])
+                ->update(['status' => 0]);
+            }
+
+        }
+
 
         Notification::make() 
         ->success()

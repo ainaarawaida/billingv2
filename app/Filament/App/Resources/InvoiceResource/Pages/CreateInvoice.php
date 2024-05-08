@@ -6,6 +6,7 @@ use App\Models\Note;
 use Filament\Actions;
 use App\Models\Invoice;
 use App\Models\TeamSetting;
+use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Resources\Pages\CreateRecord;
@@ -34,6 +35,7 @@ class CreateInvoice extends CreateRecord
 
         // $lastid = Invoice::where('team_id', $tenant_id)->count('id') + 1 ;
         $data['numbering'] = str_pad(($invoice_current_no + 1), 6, "0", STR_PAD_LEFT) ;
+        $data['balance'] = $data['final_amount'] ;
         $record = new ($this->getModel())($data);
 
         if (
@@ -78,4 +80,16 @@ class CreateInvoice extends CreateRecord
 
         return $record ;
     }
+
+    protected function getCreateFormAction(): Action
+    {
+        return Action::make('create')
+            ->label(__('filament-panels::resources/pages/create-record.form.actions.create.label'))
+            ->keyBindings(['mod+s'])
+            ->action(function () {
+                $this->create();
+            });
+    }
+
+
 }

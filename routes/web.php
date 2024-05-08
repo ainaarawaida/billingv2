@@ -1,9 +1,12 @@
 <?php
 
 use App\Livewire\Home;
+use App\Models\Invoice;
+use App\Livewire\PublicInvoice;
 use Spatie\LaravelPdf\Facades\Pdf;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Post\Show as PostShow;
+use App\Http\Controllers\OnlinePayment\Toyyibpay;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,7 +34,13 @@ Route::get('/article/{post:slug}', PostShow::class)->name('post.show');
 Route::get('/quotationpdf/{id}', function ($id) {
     return view('pdf.quotation', ['id' => $id]); // View name 'about'
   })->name('pdf.quotation');
-  Route::get('/invoicepdf/{id}', function ($id) {
+
+Route::get('/invoicepdf/{id}', function ($id) {
     return view('pdf.invoice', ['id' => $id]); // View name 'about'
   })->name('pdf.invoice');
+
+Route::get('/public-invoice/{id}', PublicInvoice::class)->name('public.invoice');
   
+Route::get('/online-payment/toyyibpay/{id}', [Toyyibpay::class, 'index']);
+Route::get('/online-payment/toyyibpay-callback/{id}', [Toyyibpay::class, 'callback']);
+
