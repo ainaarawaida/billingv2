@@ -16,7 +16,9 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Support\Exceptions\Halt;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\Placeholder;
@@ -119,6 +121,25 @@ class PaymentGateway extends Page implements HasForms
                                 TextInput::make('Toyyibpay.tp_ToyyibPay_User_Secret_Key')
                                     ->label('ToyyibPay User Secret Key')
                                     ->prefixIcon('heroicon-o-clipboard-document-check'),
+                                TextInput::make('Toyyibpay.tp_ToyyibPay_categoryCode')
+                                    ->label('ToyyibPay Category Code')
+                                    ->prefixIcon('heroicon-o-clipboard-document-check'),
+                                Section::make('Test Sandbox')
+                                    ->description('If you want to use sandbox mode, please fill up the form below.')
+                                    ->schema([
+                                        Toggle::make('Toyyibpay.sandbox')
+                                            ->onIcon('heroicon-o-check')
+                                            ->offIcon('heroicon-o-x-mark')
+                                            ->onColor('success')
+                                            ->offColor('danger'),
+                                        TextInput::make('Toyyibpay.tp_ToyyibPay_Sandbox_User_Secret_Key')
+                                            ->label('ToyyibPay Sandbox User Secret Key')
+                                            ->prefixIcon('heroicon-o-clipboard-document-check'),
+                                        TextInput::make('Toyyibpay.tp_ToyyibPay_Sandbox_categoryCode')
+                                            ->label('ToyyibPay Sandbox Category Code')
+                                            ->prefixIcon('heroicon-o-clipboard-document-check'),
+                                        // ...
+                                    ])
                              
                             ]),
                         // Tabs\Tab::make('Tab 3')

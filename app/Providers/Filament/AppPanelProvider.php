@@ -51,12 +51,13 @@ class AppPanelProvider extends PanelProvider
                 PanelsRenderHook::BODY_END  ,
                 fn (): string => Blade::render('
                     <script>
-                        window.addEventListener("DOMContentLoaded", () => {
+                        document.addEventListener("livewire:navigated", () => {
                             document.querySelector("table").addEventListener("click", async (e) => {
                                 const selectedEle = e.target.closest(".copy-public_url");
+                               
                               if(selectedEle){
                                   let linkToCopy = selectedEle.getAttribute("myurl");
-                                    console.log("salam",linkToCopy);
+                                   
                                   try {
                                         await copyToClipboard(linkToCopy);
                                     } catch(error) {

@@ -146,7 +146,7 @@ if (!isset($record)) {
         <div class="row">
             <div class="col">
                 <div class="d-flex justify-content-between align-items-center p-2">
-                    <img src="{{ asset('storage/'.$team->photo)  }}" alt="User Avatar" class="img-thumbnail rounded-circle" width="100" height="100">
+                    <img src="{{ asset('storage/'.$team->photo)  }}" alt="User Avatar" class="img-thumbnail" width="100" height="100">
                     <h2 class="text-right">Invoice </h2>
                 </div>
 

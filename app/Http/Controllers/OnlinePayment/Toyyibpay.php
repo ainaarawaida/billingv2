@@ -18,11 +18,11 @@ class Toyyibpay extends Controller
         $id = str_replace('luqmanahmadnordin', "", base64_decode($id));
         $invoice = Invoice::find($id);
         $team_setting = TeamSetting::where('team_id', $invoice->team_id )->first();
-        $userSecretKey = $team_setting->payment_gateway['Toyyibpay']['tp_ToyyibPay_User_Secret_Key'] ;
+        $toyyibpay_setting = $team_setting->payment_gateway['Toyyibpay'] ;
         // dd($invoice);
         $some_data = array(
-            'userSecretKey'=> $userSecretKey,
-            'categoryCode'=>'klirj00j',
+            'userSecretKey'=> $toyyibpay_setting['sandbox'] ? $toyyibpay_setting['tp_ToyyibPay_Sandbox_User_Secret_Key'] : $toyyibpay_setting['tp_ToyyibPay_User_Secret_Key'],
+            'categoryCode'=>  $toyyibpay_setting['sandbox'] ? $toyyibpay_setting['tp_ToyyibPay_Sandbox_categoryCode'] : $toyyibpay_setting['tp_ToyyibPay_categoryCode'],
             'billName'=> $team_setting->invoice_prefix_code . $invoice->numbering,
             'billDescription'=> $team_setting->invoice_prefix_code . $invoice->numbering ,
             'billPriceSetting'=>1,
@@ -45,7 +45,7 @@ class Toyyibpay extends Controller
         
           $curl = curl_init();
           curl_setopt($curl, CURLOPT_POST, 1);
-          if('sandbox' == 'sandbox'){
+          if($toyyibpay_setting['sandbox']){
             curl_setopt($curl, CURLOPT_URL, 'https://dev.toyyibpay.com/index.php/api/createBill');  
           }else{
             curl_setopt($curl, CURLOPT_URL, 'https://toyyibpay.com/index.php/api/createBill');  
@@ -59,7 +59,12 @@ class Toyyibpay extends Controller
           $obj = json_decode($result);
          
           if(isset($obj) && is_array($obj) && $obj[0]->BillCode){
-            return redirect()->away('https://dev.toyyibpay.com/'.$obj[0]->BillCode);
+            if($toyyibpay_setting['sandbox']){
+              return redirect()->away('https://dev.toyyibpay.com/'.$obj[0]->BillCode);
+            }else{
+              return redirect()->away('https://toyyibpay.com/'.$obj[0]->BillCode);
+            }
+           
           }else{
             return redirect()->back()->with('message', $obj->msg);
           }
