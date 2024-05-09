@@ -35,53 +35,7 @@ class PaymentTable2 extends BaseWidget
             ->headerActions([
                 Tables\Actions\CreateAction::make()
                     ->model(Payment::class)
-                    ->form([
-                            Section::make()
-                                ->schema([
-                                    Forms\Components\Select::make('payment_method_id')
-                                        ->label("Payment Method")
-                                        ->options(function (Get $get, string $operation){
-                                            $payment_method = PaymentMethod::where('team_id', Filament::getTenant()->id)
-                                            ->where('status', 1)->get()->pluck('name', 'id');
-                                            return $payment_method ;
-                                        })
-                                        ->searchable()
-                                        ->preload()
-                                        ->required(),
-                                    Forms\Components\DatePicker::make('payment_date')
-                                        ->required()
-                                        ->default(now()),
-                                    Forms\Components\TextInput::make('total')
-                                        ->required()
-                                        ->prefix('RM')
-                                        ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
-                                        ->formatStateUsing(fn (string $state): string => number_format($state, 2))
-                                        ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
-                                        ->default(0.00),
-                                    Forms\Components\Select::make('status')
-                                            ->options([
-                                                'draft' => 'Draft',
-                                                'pending_payment' => 'Pending payment',
-                                                'on_hold' => 'On hold',
-                                                'processing ' => 'Processing ',
-                                                'completed' => 'Completed',
-                                                'failed' => 'Failed',
-                                                'canceled' => 'Canceled',
-                                                'refunded' => 'Refunded',
-                                            ])
-                                            ->default('draft')
-                                            ->searchable()
-                                            ->preload()
-                                            ->required(),
-                                    Forms\Components\Textarea::make('notes')
-                                        ->maxLength(65535)
-                                        ->columnSpanFull(),
-            
-                                    
-                                ])
-                                ->columns(2),
-                        
-                    ])
+                    ->form($this->paymentForm())
                     ->mutateFormDataUsing(function (array $data): array {
                         $data['invoice_id'] = $this->record->id;
                         $data['team_id'] = Filament::getTenant()->id;
@@ -151,6 +105,76 @@ class PaymentTable2 extends BaseWidget
                         $this->record->balance = $this->record->final_amount - $totalPayment; 
                         $this->record->update();
                     }),
+                Tables\Actions\EditAction::make()
+                    ->record($this->record)
+                    ->form($this->paymentForm())
+                    ->mutateRecordDataUsing(function (array $data): array {
+                        $data['invoice_id'] = $this->record->id;
+                        $data['team_id'] = Filament::getTenant()->id;
+                        return $data;
+                    })
+                    ->using(function (Model $record, array $data): Model {
+                        $record->update($data);
+                        //update balance on invoice
+                        $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
+                        ->where('invoice_id', $this->record->id)
+                        ->where('status', 'completed')->sum('total');
+                        $this->record->balance = $this->record->final_amount - $totalPayment; 
+                        $this->record->update();
+                        return $record;
+                    }),
             ]);
+    }
+
+
+
+    function paymentForm(){
+        return [
+            Section::make()
+                ->schema([
+                    Forms\Components\Select::make('payment_method_id')
+                        ->label("Payment Method")
+                        ->options(function (Get $get, string $operation){
+                            $payment_method = PaymentMethod::where('team_id', Filament::getTenant()->id)
+                            ->where('status', 1)->get()->pluck('name', 'id');
+                            return $payment_method ;
+                        })
+                        ->searchable()
+                        ->preload()
+                        ->required(),
+                    Forms\Components\DatePicker::make('payment_date')
+                        ->required()
+                        ->default(now()),
+                    Forms\Components\TextInput::make('total')
+                        ->required()
+                        ->prefix('RM')
+                        ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
+                        ->formatStateUsing(fn (string $state): string => number_format($state, 2))
+                        ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
+                        ->default($this->record->balance),
+                    Forms\Components\Select::make('status')
+                            ->options([
+                                'draft' => 'Draft',
+                                'pending_payment' => 'Pending payment',
+                                'on_hold' => 'On hold',
+                                'processing ' => 'Processing ',
+                                'completed' => 'Completed',
+                                'failed' => 'Failed',
+                                'canceled' => 'Canceled',
+                                'refunded' => 'Refunded',
+                            ])
+                            ->default('draft')
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+                    Forms\Components\Textarea::make('notes')
+                        ->maxLength(65535)
+                        ->columnSpanFull(),
+
+                    
+                ])
+                ->columns(2),
+        
+                            ];
     }
 }

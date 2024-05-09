@@ -35,12 +35,12 @@ Route::get('/quotationpdf/{id}', function ($id) {
     return view('pdf.quotation', ['id' => $id]); // View name 'about'
   })->name('pdf.quotation');
 
-Route::get('/invoicepdf/{id}', function ($id) {
-    return view('pdf.invoice', ['id' => $id]); // View name 'about'
+Route::get('/invoicepdf/{id}/{payment_method_id?}', function ($id, $payment_method_id = null) {
+    return view('pdf.invoice', ['id' => $id, 'payment_method_id' => $payment_method_id]); // View name 'about'
   })->name('pdf.invoice');
 
 Route::get('/public-invoice/{id}', PublicInvoice::class)->name('public.invoice');
   
-Route::get('/online-payment/toyyibpay/{id}', [Toyyibpay::class, 'index']);
+Route::get('/online-payment/toyyibpay/{id}/{payment_method_id?}', [Toyyibpay::class, 'index']);
 Route::get('/online-payment/toyyibpay-callback/{id}', [Toyyibpay::class, 'callback']);
 

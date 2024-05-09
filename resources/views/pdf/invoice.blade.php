@@ -30,30 +30,45 @@ if (!isset($record)) {
     $paymentMethod = PaymentMethod::where('team_id', $record->team_id )
     ->where('status', 1)->get();
 
-    if(isset($_GET['billcode'])){
-        if($_GET['status_id'] == 1){
-           $status_payment = 'processing';
-        }elseif($_GET['status_id'] == 2){
-            $status_payment = 'on_hold'; 
-        }elseif($_GET['status_id'] == 3){
-            $status_payment = 'failed'; 
-        }else{
-            $status_payment = 'on_hold';  
-        }
-
-        $payment = [
-            'team_id' => $record->team_id,
-            'invoice_id' => $record->id,
-            'payment_method_id' => $record->customer_id,
-            'payment_date' => date('Y-m-d'),
-            'total' => $record->balance,
-            'notes' => 'billcode:'.$_GET['billcode'],
-            'reference' => $_GET['billcode'],
-            'status' => $status_payment,
+  
+    if(isset($payment_method_id)){
+        $payment_type = $paymentMethod->where('id', $payment_method_id)->first();
         
-        ];
-        Payment::create($payment);
+        if($payment_type->payment_gateway_id == '2'){ //toyyibpay
+            if(isset($_GET['billcode'])){
+                if($_GET['status_id'] == 1){
+                   $status_payment = 'processing';
+                   $status_invoice = 'process';
+                }elseif($_GET['status_id'] == 2){
+                    $status_payment = 'on_hold'; 
+                    $status_invoice = 'process';
+                }elseif($_GET['status_id'] == 3){
+                    $status_payment = 'failed'; 
+                    $status_invoice = 'process';
+                }else{
+                    $status_payment = 'on_hold';  
+                    $status_invoice = 'process';
+                }
+                
+                $payment = Payment::firstOrCreate(
+                    ['reference' => $_GET['transaction_id']], 
+                    [
+                        'team_id' => $record->team_id,
+                        'invoice_id' => $record->id,
+                        'payment_method_id' => $paymentMethod->where('payment_gateway_id',2)->first()->id,
+                        'payment_date' => date('Y-m-d'),
+                        'total' => $record->balance,
+                        'notes' => 'billcode:'.$_GET['billcode'].' transaction id:'.$_GET['transaction_id'],
+                        'reference' => $_GET['transaction_id'],
+                        'status' => $status_payment,
+                    ]
+                );
+                $record->invoice_status = $status_invoice;
+        
+        
+            }
 
+        }
 
     }
 
@@ -90,6 +105,7 @@ if (!isset($record)) {
             <button class="btn btn-success btn-print">
                     <i class="bi bi-printer"></i> Print / PDF
             </button>
+            @if(!isset($payment))
             <div class="btn-group">
                 <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
                     <i class="bi bi-credit-card"></i> Pay
@@ -100,7 +116,7 @@ if (!isset($record)) {
                             @if ($paymentMethodData->payment_gateway_id == 1)  
                             <li><a href="#" class="dropdown-item">{{ $paymentMethodData->name }}</a></li>
                             @elseif ($paymentMethodData->payment_gateway_id == 2) 
-                            <li><a href="{{ url('online-payment/toyyibpay/'.$hashid) }}" class="dropdown-item">{{ $paymentMethodData->name }}</a></li>
+                            <li><a href="{{ url('online-payment/toyyibpay/'.$hashid.'/'.$paymentMethodData->id) }}" class="dropdown-item">{{ $paymentMethodData->name }}</a></li>
                             @else
                             <li><a href="#" class="dropdown-item">{{ $paymentMethodData->name }}</a></li>
                             @endif
@@ -111,12 +127,22 @@ if (!isset($record)) {
                     @endif
                 </ul>
             </div>
+            @endif
 
+        @endif
+
+        @if (Session::has('message'))
+        <div class="alert alert-danger">
+            {{ Session::get('message') }}
+        </div>
         @endif
     </div>
 
 
     <div class="p-3">
+       
+
+
         <div class="row">
             <div class="col">
                 <div class="d-flex justify-content-between align-items-center p-2">
@@ -230,7 +256,7 @@ if (!isset($record)) {
                     </tr>
                     <tr>
                         <td colspan="3"></td>
-                        <td><strong>Total Payment</strong></td>
+                        <td><strong>Total Completed Payment</strong></td>
                         <td class="text-right"><strong>{{ number_format($totalPayment, 2) }}</strong></td>
                     </tr>
                     <tr>
@@ -242,14 +268,28 @@ if (!isset($record)) {
                             <h5 class="fw-bolder">{{ $record->balance  }}</h5>
                         </td>
                     </tr>
-
+                    @if (isset($payment))
+                    <tr>
+                        <td colspan="3">
+                        <span class="badge bg-success">
+                        {{ ucwords($payment->status) }}
+                        </span> Paid On {{ date("j F, Y H:i:s", strtotime($payment->updated_at) ) }}, {{ $payment->notes }}</td>
+                        <td>
+                            <h5 class="fw-bolder">Paid</h5>
+                        </td>
+                        <td class="text-right">
+                            <h5 class="fw-bolder">{{ $record->balance  }}</h5>
+                        </td>
+                    </tr>
+                    @endif
                 </tbody>
             </table>
         </div>
 
         <div class="row">
             <div class="col">
-                <p>Thank you for your business!</p>
+                <p>{{ $record->terms_conditions}}</p>
+                <p>{{ $record->footer}}</p>
             </div>
         </div>
 

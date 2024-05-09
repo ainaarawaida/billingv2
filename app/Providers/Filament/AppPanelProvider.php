@@ -55,8 +55,8 @@ class AppPanelProvider extends PanelProvider
                             document.querySelector("table").addEventListener("click", async (e) => {
                                 const selectedEle = e.target.closest(".copy-public_url");
                               if(selectedEle){
-                                  let linkToCopy = selectedEle.getAttribute("url");
-                                    
+                                  let linkToCopy = selectedEle.getAttribute("myurl");
+                                    console.log("salam",linkToCopy);
                                   try {
                                         await copyToClipboard(linkToCopy);
                                     } catch(error) {
