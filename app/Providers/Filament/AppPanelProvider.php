@@ -51,8 +51,8 @@ class AppPanelProvider extends PanelProvider
                 PanelsRenderHook::BODY_END  ,
                 fn (): string => Blade::render('
                     <script>
-                        document.addEventListener("livewire:navigated", () => {
-                            document.querySelector("table").addEventListener("click", async (e) => {
+                        document?.addEventListener("livewire:navigated", () => {
+                            document?.querySelector("table").addEventListener("click", async (e) => {
                                 const selectedEle = e.target.closest(".copy-public_url");
                                
                               if(selectedEle){
