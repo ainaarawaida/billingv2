@@ -396,6 +396,7 @@ class InvoiceResource extends Resource
                                         ->label(__('Attachments'))
                                         ->schema([
                                             FileUpload::make('attachments')
+                                                ->directory('invoice-attachments')
                                                 ->multiple()
                                                 ->downloadable()
                                         ]),

@@ -467,6 +467,7 @@ class QuotationResource extends Resource
                                     ->label(__('Attachments'))
                                     ->schema([
                                         FileUpload::make('attachments')
+                                            ->directory('quotation-attachments')
                                             ->multiple()
                                             ->downloadable()
                                     ]),

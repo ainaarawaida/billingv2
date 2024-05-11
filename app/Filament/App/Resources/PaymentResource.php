@@ -71,6 +71,11 @@ class PaymentResource extends Resource
                                 ->searchable()
                                 ->preload()
                                 ->required(),
+                        Forms\Components\FileUpload::make('attachments')
+                                ->label(__('Attachments'))
+                                ->directory('payment-attachments')
+                                ->multiple()
+                                ->downloadable(),
                         Forms\Components\Textarea::make('notes')
                             ->maxLength(65535)
                             ->columnSpanFull(),

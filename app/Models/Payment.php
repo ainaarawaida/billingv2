@@ -13,6 +13,10 @@ class Payment extends Model
     use SoftDeletes;
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'attachments' => 'array', 
+    ];
+
     public function teams(): BelongsTo
     {
         return $this->belongsTo(Team::class, 'team_id');

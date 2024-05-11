@@ -23,6 +23,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->string('reference')->nullable();
             $table->string('status')->nullable();
+            $table->json('attachments')->nullable();
            
             
             $table->softDeletes();

@@ -7,6 +7,7 @@ use Spatie\LaravelPdf\Facades\Pdf;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Post\Show as PostShow;
 use App\Http\Controllers\OnlinePayment\Toyyibpay;
+use App\Http\Controllers\OnlinePayment\ManualPayment;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +42,10 @@ Route::get('/invoicepdf/{id}/{payment_method_id?}', function ($id, $payment_meth
 
 Route::get('/public-invoice/{id}', PublicInvoice::class)->name('public.invoice');
   
+//toyyibpay
 Route::get('/online-payment/toyyibpay/{id}/{payment_method_id?}', [Toyyibpay::class, 'index']);
 Route::get('/online-payment/toyyibpay-callback/{id}', [Toyyibpay::class, 'callback']);
+
+//manual payment
+Route::post('/online-payment/manual-payment/{id}/{payment_method_id?}', [ManualPayment::class, 'index']);
 
