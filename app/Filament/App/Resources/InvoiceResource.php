@@ -610,7 +610,7 @@ class InvoiceResource extends Resource
                             $team_setting = TeamSetting::where('team_id', $record->team_id )->first();
                             $invoice_current_no = $team_setting->invoice_current_no ?? '0' ;    
 
-                            $team_setting['invoice_current_no'] = $invoice_current_no + 1 ;
+                            $team_setting->invoice_current_no = $invoice_current_no + 1 ;
                             $team_setting->save();
 
                             // $lastid = Invoice::where('team_id', $record->team_id)->count('id') + 1 ;

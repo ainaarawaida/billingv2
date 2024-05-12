@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Item;
 use App\Models\Product;
 use App\Models\Quotation;
+use App\Models\TeamSetting;
 use Faker\Factory as Faker;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -25,6 +26,11 @@ class QuotationSeeder extends Seeder
             $quotation = Quotation::factory()->create();
             $lastid = Quotation::where('team_id', $quotation->team_id)->count('id') ;
             $numbering = str_pad($lastid, 6, "0", STR_PAD_LEFT) ;
+            $team_setting = TeamSetting::where('team_id', $quotation->team_id )->first();
+            $quotation_current_no = $team_setting->quotation_current_no ?? '0' ;
+            $team_setting->quotation_current_no = $quotation_current_no + 1 ;
+            $team_setting->save();
+
 
             $quotation->update(['numbering' => $numbering]);
             echo $lastid. " ".$numbering . PHP_EOL;
@@ -35,24 +41,23 @@ class QuotationSeeder extends Seeder
             $final_amount = 0 ;
             $sub_total = 0 ;
             $taxes = 0 ;
-            for ($j = 0; $j < $itemlist; $j++) {
-             
 
-                $product = Product::where('team_id', $quotation->team_id)
-                            ->inRandomOrder()
-                            ->first() ?? null;
-                if(!$product)
-                    continue;
+            $product = Product::where('team_id', $quotation->team_id)
+            ->inRandomOrder()
+            ->take($itemlist)
+            ->get();
 
-                $total = $product->price * $product->quantity;
+            foreach($product as $key => $val) {
+
+                $total = $val->price * $val->quantity;
 
                 $item = Item::create([
                     'quotation_id' => $quotation->id,
-                    'product_id' => $product->id,
-                    'title' => $product->title,
-                    'price' => $product->price,
-                    'tax' => $product->tax,
-                    'quantity' => $product->quantity,
+                    'product_id' => $val->id,
+                    'title' => $val->title,
+                    'price' => $val->price,
+                    'tax' => $val->tax,
+                    'quantity' => $val->quantity,
                     'unit' => $faker->randomElement([
                         'Unit' => 'Unit',
                         'Kg' => 'Kg',
@@ -68,7 +73,7 @@ class QuotationSeeder extends Seeder
                 ]);
 
                 $sub_total = $sub_total + $total;
-                if($product->tax){
+                if($val->tax){
                     $taxes = $taxes + ($quotation->percentage_tax / 100 * $total);
 
                 }
