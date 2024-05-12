@@ -4,6 +4,7 @@ namespace App\Filament\App\Resources\InvoiceResource\Pages;
 
 use Filament\Actions;
 use App\Models\Payment;
+use Filament\Forms\Get;
 use Livewire\Attributes\On;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -14,6 +15,7 @@ use App\Filament\App\Resources\InvoiceResource;
 class EditInvoice extends EditRecord
 {
     protected static string $resource = InvoiceResource::class;
+    public $customer_id ;
 
     protected function getHeaderActions(): array
     {
@@ -53,5 +55,11 @@ class EditInvoice extends EditRecord
             ->action(function () {
                 $this->save();
             });
+    }
+
+    #[On('invoiceUpdateStatus')] 
+    public function invoiceUpdateStatus($invoiceStatus = 'draft')
+    {
+        $this->data['invoice_status'] = $invoiceStatus;
     }
 }

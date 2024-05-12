@@ -42,6 +42,7 @@ class PaymentTable2 extends BaseWidget
                         return $data;
                     })
                     ->using(function (array $data, string $model): Model {
+                      
                         $payment = $model::create($data);
                         //update balance on invoice
                         $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
@@ -50,9 +51,11 @@ class PaymentTable2 extends BaseWidget
                         $this->record->balance = $this->record->final_amount - $totalPayment; 
                         if($this->record->balance == 0){
                             $this->record->invoice_status = 'done';
+                            $this->dispatch('invoiceUpdateStatus', $this->record->invoice_status); 
                         }
                         
                         $this->record->update();
+                       
 
                         return $payment;
                     }), // Add the custom action button
@@ -127,6 +130,7 @@ class PaymentTable2 extends BaseWidget
 
                         if($this->record->balance == 0){
                             $this->record->invoice_status = 'done';
+                            $this->dispatch('invoiceUpdateStatus', $this->record->invoice_status); 
                         }
                         
                         $this->record->update();
