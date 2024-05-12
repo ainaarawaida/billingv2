@@ -21,7 +21,7 @@ class QuotationSeeder extends Seeder
         
         //
         // Quotation::factory()->count(20)->create();
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 30; $i++) {
             $quotation = Quotation::factory()->create();
             $lastid = Quotation::where('team_id', $quotation->team_id)->count('id') ;
             $numbering = str_pad($lastid, 6, "0", STR_PAD_LEFT) ;

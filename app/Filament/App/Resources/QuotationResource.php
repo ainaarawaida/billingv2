@@ -52,7 +52,7 @@ class QuotationResource extends Resource
 {
     protected static ?string $model = Quotation::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard';
 
     protected static ?string $navigationGroup = 'Billing';
     protected static ?int $navigationSort = 4;
@@ -710,8 +710,28 @@ class QuotationResource extends Resource
 
                             $livewire->redirect(QuotationResource::getUrl('edit', ['record' => $quotation->id]), navigate:true);
                         }),
-                    
-                    
+                    Tables\Actions\Action::make('public_url') 
+                        ->label('Public Url')
+                        ->color('success')
+                        ->icon('heroicon-o-globe-alt')
+                        ->action(function (Model $record) {
+                            Notification::make()
+                            ->title('Copy Public Url Successfully')
+                            ->success()
+                            ->send();
+                            
+                        })
+                        ->requiresConfirmation()
+                        ->modalHeading('Public Url')
+                        ->modalDescription( fn (Model $record) => new HtmlString('<button type="button" class="fi-btn" style="padding:10px;background:grey;color:white;border-radius: 10px;"><a target="_blank" href="'.url('quotationpdf')."/".base64_encode("luqmanahmadnordin".$record->id).'">Redirect to Public URL</a></button>'))
+                        ->modalSubmitActionLabel('Copy public URL')
+                        ->extraAttributes(function (Model $record) {
+                           return [
+                                'class' => 'copy-public_url',
+                                'myurl' => url('quotationpdf')."/".base64_encode("luqmanahmadnordin".$record->id),
+                            ] ;
+                            
+                        }),
                     Tables\Actions\Action::make('gen_invoice')
                         ->label(__('Gen Invoice'))
                         ->icon('heroicon-o-clipboard-document-list')

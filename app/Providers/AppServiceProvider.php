@@ -37,10 +37,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         //
+        // dd(env('APP_ENV'));
         If (env('APP_ENV') !== 'local') {
             $this->app['request']->server->set('HTTPS', true);
         }
-        
+
         LanguageSwitch::configureUsing(function (LanguageSwitch $switch) {
             $switch
                 ->locales(['ms','en'])

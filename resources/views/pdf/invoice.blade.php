@@ -16,7 +16,7 @@ if (!isset($record)) {
     $team = Team::where('id', $record->team_id)->first();
     $item = Item::with('product')->where('invoice_id', $record->id)->get();
     $customer = Customer::where('id', $record->customer_id)->first();
-    $prefix = TeamSetting::where('team_id', $record->team_id)->first()->invoice_prefix_code ?? '#Q';
+    $prefix = TeamSetting::where('team_id', $record->team_id)->first()->invoice_prefix_code ?? '#I';
 } elseif (isset($record)) {
     $hashid = base64_encode('luqmanahmadnordin' . $record->id);
     $id = $record->id;
@@ -24,7 +24,7 @@ if (!isset($record)) {
     $team = Team::where('id', $record->team_id)->first();
     $item = Item::with('product')->where('invoice_id', $record->id)->get();
     $customer = Customer::where('id', $record->customer_id)->first();
-    $prefix = TeamSetting::where('team_id', $record->team_id)->first()->invoice_prefix_code ?? '#Q';
+    $prefix = TeamSetting::where('team_id', $record->team_id)->first()->invoice_prefix_code ?? '#I';
 }
 
 $paymentMethod = PaymentMethod::where('team_id', $record->team_id)
@@ -57,7 +57,7 @@ if (isset($payment_method_id)) {
                     'invoice_id' => $record->id,
                     'payment_method_id' => $paymentMethod->where('payment_gateway_id', 2)->first()->id,
                     'payment_date' => date('Y-m-d'),
-                    'total' => $record->balance,
+                    'total' => $record->balance ? $record->balance : $record->final_amount,
                     'notes' => 'billcode:' . $_GET['billcode'] . ' transaction id:' . $_GET['transaction_id'],
                     'reference' => $_GET['transaction_id'],
                     'status' => $status_payment,
@@ -158,7 +158,7 @@ $totalPayment = Payment::where('team_id', $record->team_id)
         <div class="row">
             <div class="col">
                 <div class="d-flex justify-content-between align-items-center p-2">
-                    <img src="{{ asset('storage/'.$team->photo)  }}" alt="User Avatar" class="img-thumbnail" width="100" height="100">
+                    <img src="{{ $team->photo ? asset('storage/'.$team->photo) : asset('image.psd.png')  }}" alt="User Avatar" class="img-thumbnail" width="100" height="100">
                     <h2 class="text-right">Invoice </h2>
                 </div>
 
@@ -275,7 +275,7 @@ $totalPayment = Payment::where('team_id', $record->team_id)
                             <h5 class="fw-bolder">Balance</h5>
                         </td>
                         <td class="text-right">
-                            <h5 class="fw-bolder">{{ $record->balance  }}</h5>
+                            <h5 class="fw-bolder">{{ $record->balance ? $record->balance : $record->final_amount }}</h5>
                         </td>
                     </tr>
                     @if (isset($payment))
@@ -329,7 +329,7 @@ $totalPayment = Payment::where('team_id', $record->team_id)
                         </div>
                         <div class="mb-3">
                             <label for="recipient-name" class="col-form-label">Amount <span class="text-danger">*</span></label>
-                            <input type="number" required class="form-control" id="mp-amount" name="total" id="amount">
+                            <input type="number" step="0.01" required class="form-control" id="mp-amount" name="total" id="amount">
                             @if ($errors->has('total'))
                                 <span class="text-danger">{{ $errors->first('total') }}</span>
                             @endif
@@ -386,13 +386,13 @@ $totalPayment = Payment::where('team_id', $record->team_id)
                 // window.close();
             }
 
-            document?.querySelector('.btn-print').addEventListener('click', (e) => {
+            document?.querySelector('.btn-print')?.addEventListener('click', (e) => {
                 document.querySelector('.btn-action').style.display = 'none';
                 window.print();
                 document.querySelector('.btn-action').style.display = 'block';
             });
 
-            document?.querySelector('.payment-list').addEventListener('click', (e) => {
+            document?.querySelector('.payment-list')?.addEventListener('click', (e) => {
                 let detail = JSON.parse(atob(e.target.getAttribute('data-detail')));
                 let actionurl = e.target.getAttribute('data-url');
                 console.log(detail, actionurl);

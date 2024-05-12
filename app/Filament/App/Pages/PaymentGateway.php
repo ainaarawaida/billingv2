@@ -30,7 +30,7 @@ class PaymentGateway extends Page implements HasForms
 
     public ?array $data = [];
     
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
     protected static ?string $navigationGroup = 'Setting';
     protected static ?int $navigationSort = 5;
     protected static string $view = 'filament.app.pages.payment-gateway';
@@ -49,6 +49,7 @@ class PaymentGateway extends Page implements HasForms
                 Tabs::make('Tabs')
                     ->tabs([
                         Tabs\Tab::make('Securepay')
+                            ->visible(false)
                             ->schema([
                                 // ...
                                 Placeholder::make('created')
@@ -124,6 +125,12 @@ class PaymentGateway extends Page implements HasForms
                                 TextInput::make('Toyyibpay.tp_ToyyibPay_categoryCode')
                                     ->label('ToyyibPay Category Code')
                                     ->prefixIcon('heroicon-o-clipboard-document-check'),
+                                Toggle::make('Toyyibpay.billChargeToCustomer')
+                                    ->label('Bill Charge To Customer')
+                                    ->onIcon('heroicon-o-check')
+                                    ->offIcon('heroicon-o-x-mark')
+                                    ->onColor('success')
+                                    ->offColor('danger'),
                                 Section::make('Test Sandbox')
                                     ->description('If you want to use sandbox mode, please fill up the form below.')
                                     ->schema([

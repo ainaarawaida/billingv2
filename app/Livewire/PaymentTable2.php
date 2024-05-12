@@ -48,6 +48,10 @@ class PaymentTable2 extends BaseWidget
                         ->where('invoice_id', $this->record->id)
                         ->where('status', 'completed')->sum('total');
                         $this->record->balance = $this->record->final_amount - $totalPayment; 
+                        if($this->record->balance == 0){
+                            $this->record->invoice_status = 'done';
+                        }
+                        
                         $this->record->update();
 
                         return $payment;
@@ -120,15 +124,23 @@ class PaymentTable2 extends BaseWidget
                         ->where('invoice_id', $this->record->id)
                         ->where('status', 'completed')->sum('total');
                         $this->record->balance = $this->record->final_amount - $totalPayment; 
+
+                        if($this->record->balance == 0){
+                            $this->record->invoice_status = 'done';
+                        }
+                        
                         $this->record->update();
+
                         return $record;
                     }),
-            ]);
+            ])
+            ->defaultSort('updated_at', 'desc');
     }
 
 
 
     function paymentForm(){
+        // dd($this->record);
         return [
             Section::make()
                 ->schema([
@@ -149,9 +161,9 @@ class PaymentTable2 extends BaseWidget
                         ->required()
                         ->prefix('RM')
                         ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
-                        ->formatStateUsing(fn (string $state): string => number_format($state, 2))
-                        ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
-                        ->default($this->record->balance),
+                        ->formatStateUsing(fn (?string $state): ?string => number_format($state, 2))
+                        ->dehydrateStateUsing(fn (?string $state): ?string => (float)str_replace(",", "", $state))
+                        ->default($this->record->balance ? $this->record->balance : $this->record->final_amount),
                     Forms\Components\Select::make('status')
                             ->options([
                                 'draft' => 'Draft',

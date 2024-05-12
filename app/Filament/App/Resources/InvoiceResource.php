@@ -48,7 +48,7 @@ class InvoiceResource extends Resource
     protected static ?string $model = Invoice::class;
     protected static ?string $navigationGroup = 'Billing';
     protected static ?int $navigationSort = 5;
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-newspaper';
 
     public static function form(Form $form): Form
     {
@@ -665,7 +665,7 @@ class InvoiceResource extends Resource
                         })
                         ->requiresConfirmation()
                         ->modalHeading('Public Url')
-                        ->modalDescription( fn (Model $record) => new HtmlString('<button class="fi-btn" style="padding:5px;background:grey;color:white;border-radius: 10px;"><a target="_blank" href="'.url('invoicepdf')."/".base64_encode("luqmanahmadnordin".$record->id).'">'.url('invoicepdf')."/".base64_encode("luqmanahmadnordin".$record->id) .'</a></button>'))
+                        ->modalDescription( fn (Model $record) => new HtmlString('<button type="button" class="fi-btn" style="padding:10px;background:grey;color:white;border-radius: 10px;"><a target="_blank" href="'.url('invoicepdf')."/".base64_encode("luqmanahmadnordin".$record->id).'">Redirect to Public URL</a></button>'))
                         ->modalSubmitActionLabel('Copy public URL')
                         ->extraAttributes(function (Model $record) {
                            return [

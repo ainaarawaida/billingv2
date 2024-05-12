@@ -14,7 +14,7 @@ class TeamSeeder extends Seeder
     public function run(): void
     {
         //
-        Team::factory()->count(5)->create();
+        Team::factory()->count(3)->create();
         $team = Team::all() ;
         $user_id = '1'; //admin
         foreach($team AS $key => $val){

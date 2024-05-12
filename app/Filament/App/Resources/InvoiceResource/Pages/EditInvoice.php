@@ -4,6 +4,7 @@ namespace App\Filament\App\Resources\InvoiceResource\Pages;
 
 use Filament\Actions;
 use App\Models\Payment;
+use Livewire\Attributes\On;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Model;
@@ -36,6 +37,10 @@ class EditInvoice extends EditRecord
         ->where('invoice_id', $record->id)
         ->where('status', 'completed')->sum('total');
         $data['balance'] = $data['final_amount'] - $totalPayment;
+        if($data['balance'] == 0){
+            $data['invoice_status'] = 'done';
+        }
+      
         $record->update($data);
         return $record;
     }

@@ -21,7 +21,7 @@ class InvoiceSeeder extends Seeder
         
         //
         // Invoice::factory()->count(20)->create();
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 30; $i++) {
             $invoice = Invoice::factory()->create();
             $lastid = Invoice::where('team_id', $invoice->team_id)->count('id') ;
             $numbering = str_pad($lastid, 6, "0", STR_PAD_LEFT) ;

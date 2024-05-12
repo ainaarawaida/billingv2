@@ -21,7 +21,7 @@ class TeamFactory extends Factory
             'name' => $this->faker->company,
             'slug' => $this->faker->unique()->slug, // Generate a unique slug
             'email' => $this->faker->unique()->safeEmail,
-            'phone' => $this->faker->phoneNumber,
+            'phone' => str_pad("03" . $this->faker->numerify('########'), 10, '0', STR_PAD_LEFT),
             'ssm' => $this->faker->randomNumber(7, true), // Assuming SSM is a 7-digit number
             'address' => $this->faker->address,
             'poscode' => $this->faker->postcode,

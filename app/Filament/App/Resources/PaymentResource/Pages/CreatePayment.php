@@ -56,6 +56,9 @@ class CreatePayment extends CreateRecord
              ->where('status', 'completed')->sum('total');
              $invoice = Invoice::find($record->invoice_id);
              $invoice->balance = $invoice->final_amount - $totalPayment; 
+             if($invoice->balance == 0){
+                 $invoice->invoice_status = 'paid';
+             }
              $invoice->update();
          }
 

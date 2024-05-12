@@ -60,7 +60,7 @@ if (!isset($record)) {
     <div class="row">
       <div class="col">
         <div class="d-flex justify-content-between align-items-center p-2">
-          <img src="{{ asset('storage/'.$team->photo)  }}" alt="User Avatar" class="img-thumbnail rounded-circle" width="100" height="100">
+          <img src="{{ $team->photo ? asset('storage/'.$team->photo) : asset('image.psd.png')  }}" alt="User Avatar" class="img-thumbnail" width="100" height="100">
           <h2 class="text-right">Invoice </h2>
         </div>
 
@@ -174,7 +174,8 @@ if (!isset($record)) {
 
     <div class="row">
       <div class="col">
-        <p>Thank you for your business!</p>
+          <p>{{ $record->terms_conditions}}</p>
+          <p>{{ $record->footer}}</p>
       </div>
     </div>
 
@@ -196,7 +197,7 @@ if (!isset($record)) {
         // window.close();
       }
 
-      document.querySelector('.btn-print').addEventListener('click', (e) => {
+      document?.querySelector('.btn-print')?.addEventListener('click', (e) => {
                 document.querySelector('.btn-action').style.display = 'none';
                 window.print();
                 document.querySelector('.btn-action').style.display = 'block';

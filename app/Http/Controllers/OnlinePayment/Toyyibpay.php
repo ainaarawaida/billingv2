@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Models\TeamSetting;
 use Illuminate\Http\Request;
 use App\Models\PaymentMethod;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 
 class Toyyibpay extends Controller
@@ -27,7 +28,7 @@ class Toyyibpay extends Controller
             'billDescription'=> $team_setting->invoice_prefix_code . $invoice->numbering ,
             'billPriceSetting'=>1,
             'billPayorInfo'=>1,
-            'billAmount'=> $invoice->balance * 100,
+            'billAmount'=> $invoice->balance ? $invoice->balance * 100 : $invoice->final_amount * 100,
             'billReturnUrl'=> url('invoicepdf/'.$hashid.'/'.$payment_method_id),
             'billCallbackUrl'=> url('online-payment/toyyibpay-callback/'.$hashid),
             'billExternalReferenceNo' => $invoice->numbering. ":id".$invoice->id,
@@ -38,7 +39,7 @@ class Toyyibpay extends Controller
             'billSplitPaymentArgs'=>'',
             'billPaymentChannel'=>2,
             'billContentEmail'=>'Thank you for purchasing our product!',
-            'billChargeToCustomer'=>'',
+            'billChargeToCustomer'=>$toyyibpay_setting['billChargeToCustomer'] ? 0 : '',
             'billExpiryDate'=>'',
             'billExpiryDays'=>''
           );  
@@ -72,6 +73,12 @@ class Toyyibpay extends Controller
     }
 
     public function callback($id){
+      Log::build([
+        'driver' => 'single',
+        'path' => storage_path('logs/custom.log'),
+      ])->info(json_encode($_POST));
+
+      
       $hashid = $id;
       $id = str_replace('luqmanahmadnordin', "", base64_decode($id));
       $invoice = Invoice::find($id);
@@ -89,17 +96,30 @@ class Toyyibpay extends Controller
         $payment_method = PaymentMethod::where('team_id', $invoice->team_id )
         ->where('payment_gateway_id', 2)->first();
 
-        $payment = Payment::where('invoice_id', $invoice->id)
-        ->where('reference', $_POST['refno'])
-        ->update([
-          'team_id' => $invoice->team_id,
-          'invoice_id' => $invoice->id,
-          'payment_method_id' => $payment_method->id,
-          'notes' => 'billcode:'.$_GET['billcode'].' transaction id:'.$_GET['transaction_id'],
-          'status' => $status_payment,
-        ]);
+        $payment = Payment::updateOrCreate(
+          ['reference' => $_POST['refno']],
+          [
+              'team_id' => $invoice->team_id,
+              'invoice_id' => $invoice->id,
+              'payment_method_id' => $payment_method->id,
+              'payment_date' => date('Y-m-d'),
+              'total' => $invoice->balance ? $invoice->balance : $invoice->final_amount,
+              'notes' => 'billcode:' . $_POST['billcode'] . ' transaction id:' . $_POST['refno'],
+              'reference' => $_POST['refno'],
+              'status' => $status_payment,
+          ]
+      );
+
 
         if($status_payment == 'completed'){
+          $totalPayment = Payment::where('team_id',  $invoice->team_id)
+            ->where('invoice_id', $invoice->id)
+            ->where('status', 'completed')->sum('total');
+            $invoice->balance = $invoice->final_amount - $totalPayment;
+            if($invoice->balance == 0){
+              $invoice->invoice_status = 'done';
+            }
+          $invoice->save();
 
         }
 

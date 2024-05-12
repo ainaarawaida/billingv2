@@ -34,6 +34,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use App\Filament\App\Resources\InvoiceResource\Pages\ListInvoices;
 use App\Filament\App\Resources\InvoiceResource\Pages\CreateInvoice;
+use App\Filament\App\Resources\QuotationResource\Pages\ListQuotations;
 
 class AppPanelProvider extends PanelProvider
 {
@@ -52,12 +53,12 @@ class AppPanelProvider extends PanelProvider
                 fn (): string => Blade::render('
                     <script>
                         document?.addEventListener("livewire:navigated", () => {
-                            document?.querySelector("table").addEventListener("click", async (e) => {
+                            document?.querySelector("table")?.addEventListener("click", async (e) => {
                                 const selectedEle = e.target.closest(".copy-public_url");
                                
                               if(selectedEle){
                                   let linkToCopy = selectedEle.getAttribute("myurl");
-                                   
+                                  
                                   try {
                                         await copyToClipboard(linkToCopy);
                                     } catch(error) {
@@ -93,7 +94,10 @@ class AppPanelProvider extends PanelProvider
                     </script>
                 
                 '),
-                scopes: ListInvoices::class,
+                scopes: [
+                    ListQuotations::class,
+                    ListInvoices::class,
+                ]
             )
             
             ->sidebarCollapsibleOnDesktop()

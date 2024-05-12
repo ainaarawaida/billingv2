@@ -26,9 +26,19 @@ class DatabaseSeeder extends Seeder
             ->create();
 
         Notification::make()
-            ->title('Welcome to Filament')
-            ->body('You are ready to start building your application.')
+            ->title('Welcome to Sistem Billing')
+            ->body('You can try this billing system')
             ->success()
             ->sendToDatabase($user);
+
+        $this->call([
+            TeamSeeder::class,
+            CustomerSeeder::class, // Example seeder class
+            ProductSeeder::class,
+            QuotationSeeder::class, 
+            InvoiceSeeder::class,   // Example seeder class
+            // ... Add more seeder classes here
+        ]);
+
     }
 }
