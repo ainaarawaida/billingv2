@@ -622,6 +622,7 @@ class InvoicesRelationManager extends RelationManager
                     $data['numbering'] = str_pad(($invoice_current_no + 1), 6, "0", STR_PAD_LEFT) ;
                     $data['balance'] = $data['final_amount'] ;
 
+                 
                     $invoice = $model::create($data);
                      //save note
                     if($data['content'] != ''){
