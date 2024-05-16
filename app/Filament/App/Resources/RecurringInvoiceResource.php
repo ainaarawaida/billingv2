@@ -480,6 +480,9 @@ class RecurringInvoiceResource extends Resource
                     Tables\Actions\RestoreBulkAction::make(),
                 ]),
             ])
+            ->recordUrl(
+                fn (Model $record): string => RecurringInvoiceResource::getUrl('edit', ['record' => $record->id])
+            )
             ->defaultSort('updated_at', 'desc');
     }
 
