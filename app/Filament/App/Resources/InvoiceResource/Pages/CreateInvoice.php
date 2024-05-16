@@ -29,7 +29,7 @@ class CreateInvoice extends CreateRecord
         }else{
             $team_setting = TeamSetting::create([
                 'team_id' => $tenant_id,
-                'quotation_current_no' => Invoice::where('team_id', $tenant_id)->count('id') + 1 ,
+                'invoice_current_no' => Invoice::where('team_id', $tenant_id)->count('id') + 1 ,
             ]);
         }   
 

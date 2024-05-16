@@ -5,8 +5,10 @@ namespace App\Filament\App\Resources\RecurringInvoiceResource\RelationManagers;
 use stdClass;
 use Filament\Forms;
 use App\Models\Item;
+use App\Models\Note;
 use Filament\Tables;
 use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Customer;
 use Filament\Forms\Form;
@@ -596,9 +598,66 @@ class InvoicesRelationManager extends RelationManager
                     return 'Customer Name %'.$data['customer_name'] . '%';
                 }),
         ], layout: FiltersLayout::AboveContentCollapsible)
+        ->headerActions([
+            Tables\Actions\CreateAction::make()
+                ->mutateFormDataUsing(function (array $data, RelationManager $livewire): array {
+                    $data['team_id'] = Filament::getTenant()->id;
+                    $data['recurring_invoice_id'] = $livewire->getOwnerRecord()->id;
+                    $data['balance'] = $data['final_amount'];
+                    return $data;
+                })
+                ->using(function (array $data, string $model): Model {
+                    $tenant_id = Filament::getTenant()->id ;
+                    $team_setting = TeamSetting::where('team_id', $tenant_id )->first();
+                    $invoice_current_no = $team_setting->invoice_current_no ?? '0' ;    
+                    if($team_setting){
+                        $team_setting->invoice_current_no = $invoice_current_no + 1 ;
+                        $team_setting->save();
+                    }else{
+                        $team_setting = TeamSetting::create([
+                            'team_id' => $tenant_id,
+                            'invoice_current_no' => Invoice::where('team_id', $tenant_id)->count('id') + 1 ,
+                        ]);
+                    }   
+                    $data['numbering'] = str_pad(($invoice_current_no + 1), 6, "0", STR_PAD_LEFT) ;
+                    $data['balance'] = $data['final_amount'] ;
+
+                    $invoice = $model::create($data);
+                     //save note
+                    if($data['content'] != ''){
+                        Note::create([
+                            'user_id' => auth()->user()->id,
+                            'team_id' => Filament::getTenant()->id,
+                            'type' => 'invoice',
+                            'type_id' => $invoice->id,
+                            'content' =>  $data['content'],
+                        ]);
+
+                    }
+
+                    return $invoice; 
+
+
+                }), 
+        ])
         ->actions([
             Tables\Actions\ActionGroup::make([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->mutateFormDataUsing(function (array $data): array {
+                        return $data;
+                    })
+                    ->using(function (Model $record, array $data): Model {
+                         //update balance 
+                        $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
+                        ->where('invoice_id', $record->id)
+                        ->where('status', 'completed')->sum('total');
+                        $data['balance'] = $data['final_amount'] - $totalPayment;
+                        if($data['balance'] == 0){
+                            $data['invoice_status'] = 'done';
+                        }
+                        $record->update($data);
+                        return $record;
+                    }),
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\ForceDeleteAction::make(),
                 Tables\Actions\ViewAction::make(),
