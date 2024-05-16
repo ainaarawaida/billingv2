@@ -41,7 +41,15 @@ Route::get('/invoicepdf/{id}/{payment_method_id?}', function ($id, $payment_meth
     return view('pdf.invoice', ['id' => $id, 'payment_method_id' => $payment_method_id]); // View name 'about'
   })->name('pdf.invoice');
 
-Route::get('/public-invoice/{id}', PublicInvoice::class)->name('public.invoice');
+Route::get('/paymentpdf/{id}', function ($id) {
+    return view('pdf.payment', ['id' => $id]); // View name 'about'
+  })->name('pdf.payment');  
+
+Route::get('/recurringInvoicepdf/{id}', function ($id) {
+    return view('pdf.recurringInvoice', ['id' => $id]); // View name 'about'
+  })->name('pdf.recurringInvoice');  
+
+// Route::get('/public-invoice/{id}', PublicInvoice::class)->name('public.invoice');
   
 //toyyibpay
 Route::get('/online-payment/toyyibpay/{id}/{payment_method_id?}', [Toyyibpay::class, 'index']);

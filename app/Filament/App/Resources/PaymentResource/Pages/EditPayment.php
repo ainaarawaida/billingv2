@@ -44,7 +44,7 @@ class EditPayment extends EditRecord
 
         $record->update($data);
 
-        if($needUpdateBalance){
+        if($needUpdateBalance && $record->invoice_id){
             $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
             ->where('invoice_id', $record->invoice_id)
             ->where('status', 'completed')->sum('total');

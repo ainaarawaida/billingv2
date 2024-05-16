@@ -3,8 +3,10 @@
 namespace App\Filament\Pages\Tenancy;
 
 use App\Models\Team;
+use App\Models\User;
 use Filament\Forms\Set;
 use Filament\Forms\Form;
+use App\Models\TeamSetting;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Illuminate\Http\Request;
@@ -85,12 +87,26 @@ class RegisterTeam extends RegisterTenant
 
             $team->members()->attach(auth()->user());
 
+            //First Setting
+
+            TeamSetting::create([
+                'team_id' => $team->id,
+                'quotation_prefix_code' => '#Q',
+                'quotation_current_no' => '0',
+                'quotation_template' => '1',
+                'invoice_prefix_code' => '#I',
+                'invoice_current_no' => '0',
+                'invoice_template' => '1',
+                'recurring_invoice_prefix_code' => '#RI',
+                'recurring_invoice_current_no' => '0',
+            ]);
+
             return $team;
       }
 
       public static function canView(): bool
       {
-        $checkteam = collect(DB::select('SELECT * FROM team_user WHERE user_id = ?', [auth()->user()->id]))->count();
+        $checkteam = User::where('id', auth()->user()->id)->first()->teams()->count();
          if($checkteam > 2){
             return false;
          }

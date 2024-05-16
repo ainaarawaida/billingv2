@@ -54,6 +54,11 @@ class Team extends Model implements HasAvatar
         return $this->hasMany(Invoice::class);
     }
 
+    public function recurringInvoices(): HasMany
+    {
+        return $this->hasMany(RecurringInvoice::class);
+    }
+
     public function getFilamentAvatarUrl(): ?string
     {
 

@@ -41,11 +41,13 @@ class Settings extends Page implements HasForms
         $teamSetting = TeamSetting::where('team_id', Filament::getTenant()->id )->first()?->toArray();
         $this->form->fill([
             'quotation_prefix_code' => $teamSetting['quotation_prefix_code'] ?? '#Q',
-            'quotation_current_no' =>  $teamSetting['quotation_current_no'] ?? 1,
+            'quotation_current_no' =>  $teamSetting['quotation_current_no'] ?? 0,
             'quotation_template' => $teamSetting['quotation_template']  ?? 1,
             'invoice_prefix_code' => $teamSetting['invoice_prefix_code']  ?? '#I',
-            'invoice_current_no' => $teamSetting['invoice_current_no']  ?? 1,
-            'invoice_template' => $teamSetting['invoice_template']  ?? 1
+            'invoice_current_no' => $teamSetting['invoice_current_no']  ?? 0,
+            'invoice_template' => $teamSetting['invoice_template']  ?? 1,
+            'recurring_invoice_prefix_code' => $teamSetting['recurring_invoice_prefix_code']  ?? '#RI',
+            'recurring_invoice_current_no' => $teamSetting['recurring_invoice_current_no']  ?? 0,
         ]);
     }
 
@@ -119,6 +121,20 @@ class Settings extends Page implements HasForms
 
                                     ])
                                     ->columns(2)
+
+                               
+                            ]),
+                        Tabs\Tab::make('Recurring Invoice')
+                            ->schema([
+                                // ...
+                                 TextInput::make('recurring_invoice_prefix_code')
+                                    ->prefixIcon('heroicon-o-clipboard-document-check')
+                                    ->required(),
+                                TextInput::make('recurring_invoice_current_no')
+                                    ->prefixIcon('heroicon-o-clipboard-document-check')
+                                    ->numeric()
+                                    ->required(),
+                                
 
                                
                             ]),

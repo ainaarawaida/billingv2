@@ -2,6 +2,7 @@
 
 namespace App\Filament\App\Pages;
 
+use App\Filament\Pages\Tenancy\RegisterTeam;
 use App\Models\Team;
 use Filament\Pages\Page;
 use Filament\Tables\Table;
@@ -57,6 +58,7 @@ class ChooseCompany extends Page implements HasForms, HasTable
     {
         return [
             \Filament\Actions\Action::make('Create Company')
+            ->visible(RegisterTeam::canview())
             ->url(function() {
                     return url('/app/new');
                 }

@@ -21,6 +21,7 @@ use App\Mail\QuotationEmail;
 use App\Models\PaymentMethod;
 use App\Livewire\PaymentTable;
 use Filament\Facades\Filament;
+use Illuminate\Support\Carbon;
 use App\Livewire\PaymentTable2;
 use Filament\Resources\Resource;
 use Illuminate\Support\HtmlString;
@@ -102,6 +103,7 @@ class InvoiceResource extends Resource
                                     Forms\Components\DatePicker::make('invoice_date')
                                     // ->format('d/m/Y')
                                     ->native(false)
+                                    ->live(onBlur: true)
                                     ->displayFormat('d/m/Y')
                                     ->default(now())
                                     ->required(),
@@ -109,6 +111,7 @@ class InvoiceResource extends Resource
                                     ->native(false)
                                     ->displayFormat('d/m/Y')
                                     ->default(now()->addDays(1))
+                                    ->minDate(fn($get)=> Carbon::parse($get('invoice_date')))
                                     ->required(),
     
                                 
@@ -130,17 +133,13 @@ class InvoiceResource extends Resource
                                         ->searchable()
                                         ->preload()
                                         ->required(),
-                                    Forms\Components\Select::make('invoice_type')
-                                        ->options([
-                                            'One Time' => 'One Time',
-                                            'Daily' => 'Daily',
-                                            'Monthly' => 'Monthly',
-                                            'Yearly' => 'Yearly',
-                                        ])
-                                        ->default('One Time')
-                                        ->searchable()
-                                        ->preload()
-                                        ->required(),
+                                   Forms\Components\Placeholder::make('recurring_invoice_id')
+                                        ->visible(fn($record) => $record?->recurringInvoices()->first())
+                                        ->content(function($record){
+                                            $prefix = TeamSetting::where('team_id', Filament::getTenant()->id )->first()->recurring_invoice_prefix_code ?? '#RI' ;
+                                         
+                                            return new HtmlString('<a class="text-primary-500" href="'.RecurringInvoiceResource::getUrl('edit', ['record' => $record->recurring_invoice_id]).'" wire:navigate>'.$prefix.$record->recurringInvoices()->first()->numbering.'</b>');
+                                        }) 
 
                                 ])
                                 ->columns(2),
@@ -525,7 +524,7 @@ class InvoiceResource extends Resource
                 Tables\Columns\TextColumn::make('balance')
                     ->prefix('RM ')
                     ->label(__("Balance"))
-                    ->state(function (Invoice $record): float {
+                    ->state(function (Invoice $record): ?float {
                         return $record->balance ?? $record->final_amount ;
                     })
                     ->numeric()
@@ -620,14 +619,16 @@ class InvoiceResource extends Resource
                                 'numbering' => str_pad(($invoice_current_no + 1), 6, "0", STR_PAD_LEFT),
                                 'invoice_date' => $record->invoice_date,
                                 'pay_before' => $record->pay_before, // Valid days between 7 and 30
-                                'invoice_status' => $record->invoice_status,
-                                'title' => $record->title,
-                                'notes' => $record->notes,
+                                'invoice_status' => 'draft',
+                                'summary' => $record->summary,
                                 'sub_total' => $record->sub_total, // Subtotal between 1000 and 10000
                                 'taxes' => $record->taxes, // Can be calculated based on percentage_tax and sub_total later
                                 'percentage_tax' => $record->percentage_tax, // Tax percentage between 0 and 20
                                 'delivery' => $record->delivery, // Delivery cost between 0 and 100
                                 'final_amount' => $record->final_amount, //
+                                'balance' => $record->balance, //
+                                'terms_conditions' => $record->terms_conditions, //
+                                'footer' => $record->footer, //
                             ]);
                             $item = Item::where('invoice_id', $record->id)->get();
                             foreach ($item as $key => $value) {

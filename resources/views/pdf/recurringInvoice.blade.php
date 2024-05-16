@@ -8,72 +8,28 @@ use App\Models\Product;
 use App\Models\Customer;
 use App\Models\TeamSetting;
 use App\Models\PaymentMethod;
+use App\Models\RecurringInvoice;
 
-if (!isset($record)) {
+if (isset($id)) {
     $hashid = $id;
     $id = str_replace('luqmanahmadnordin', "", base64_decode($id));
-    $record = Invoice::where('id', $id)->first();
-    $team = Team::where('id', $record->team_id)->first();
-    $item = Item::with('product')->where('invoice_id', $record->id)->get();
-    $customer = Customer::where('id', $record->customer_id)->first();
-    $prefix = TeamSetting::where('team_id', $record->team_id)->first()->invoice_prefix_code ?? '#I';
-} elseif (isset($record)) {
-    $hashid = base64_encode('luqmanahmadnordin' . $record->id);
-    $id = $record->id;
-    $record = Invoice::where('id', $id)->first();
-    $team = Team::where('id', $record->team_id)->first();
-    $item = Item::with('product')->where('invoice_id', $record->id)->get();
-    $customer = Customer::where('id', $record->customer_id)->first();
-    $prefix = TeamSetting::where('team_id', $record->team_id)->first()->invoice_prefix_code ?? '#I';
-}
-
-$paymentMethod = PaymentMethod::where('team_id', $record->team_id)
+    $recurring_invoice = RecurringInvoice::where('id', $id)->first();
+    $team = Team::where('id', $recurring_invoice->team_id)->first();
+    $invoices = Invoice::where('recurring_invoice_id', $recurring_invoice->id)->get();
+    $customer = Customer::where('id', $recurring_invoice->customer_id)->first();
+    $prefix = TeamSetting::where('team_id', $recurring_invoice->team_id)->first()->recurring_invoice_prefix_code ?? '#RI';
+    $paymentMethod = PaymentMethod::where('team_id', $recurring_invoice->team_id)
     ->where('status', 1)->get();
 
-
-if (isset($payment_method_id)) {
-    $payment_type = $paymentMethod->where('id', $payment_method_id)->first();
-
-    if ($payment_type->payment_gateway_id == '2') { //toyyibpay
-        if (isset($_GET['billcode'])) {
-            if ($_GET['status_id'] == 1) {
-                $status_payment = 'processing';
-                $status_invoice = 'process';
-            } elseif ($_GET['status_id'] == 2) {
-                $status_payment = 'on_hold';
-                $status_invoice = 'process';
-            } elseif ($_GET['status_id'] == 3) {
-                $status_payment = 'failed';
-                $status_invoice = 'process';
-            } else {
-                $status_payment = 'on_hold';
-                $status_invoice = 'process';
-            }
-
-            $payment = Payment::firstOrCreate(
-                ['reference' => $_GET['transaction_id']],
-                [
-                    'team_id' => $record->team_id,
-                    'invoice_id' => $record->id,
-                    'payment_method_id' => $paymentMethod->where('payment_gateway_id', 2)->first()->id,
-                    'payment_date' => date('Y-m-d'),
-                    'total' => isset($record->balance) ? $record->balance : $record->final_amount,
-                    'notes' => 'billcode:' . $_GET['billcode'] . ' transaction id:' . $_GET['transaction_id'],
-                    'reference' => $_GET['transaction_id'],
-                    'status' => $status_payment,
-                ]
-            );
-            $record->invoice_status = $status_invoice;
-        }
-    }else{
-        $payment_id = str_replace('luqmanahmadnordin', "", base64_decode($_GET['payment_id']));
-        $payment = Payment::where('id', $payment_id)->first();
-    }
+    $totalPayment = 0;
+    $recurring_invoice->balance = 0;
+    // dd($recurring_invoice);
+} else{
+ exit();
 }
 
-$totalPayment = Payment::where('team_id', $record->team_id)
-    ->where('invoice_id', $record->id)
-    ->where('status', 'completed')->sum('total');
+
+
 ?>
 
 <!DOCTYPE html>
@@ -159,7 +115,7 @@ $totalPayment = Payment::where('team_id', $record->team_id)
             <div class="col">
                 <div class="d-flex justify-content-between align-items-center p-2">
                     <img src="{{ $team->photo ? asset('storage/'.$team->photo) : asset('image.psd.png')  }}" alt="User Avatar" class="img-thumbnail" width="100" height="100">
-                    <h2 class="text-right">Invoice </h2>
+                    <h2 class="text-right">Recurring Invoice </h2>
                 </div>
 
             </div>
@@ -187,28 +143,19 @@ $totalPayment = Payment::where('team_id', $record->team_id)
                 </div>
             </div>
             <div class="col d-flex flex-column justify-content-start align-items-end">
-                <p class="h3">{{ $prefix }}{{ $record->numbering }} </p>
-                <div>Invoice Date: {{ date("j F, Y", strtotime($record->invoice_date) ) }}</div>
-                <div>Pay Before: {{ date("j F, Y", strtotime($record->pay_before) ) }}</div>
+                <p class="h3">{{ $prefix }}{{ $recurring_invoice->numbering }} </p>
+                <div>Start Date: {{ date("j F, Y", strtotime($recurring_invoice->start_date) ) }}</div>
+                <div>Stop Date: {{ date("j F, Y", strtotime($recurring_invoice->stop_before) ) }}</div>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col">
-                <strong>Status : </strong>
-                <span class="badge bg-success">
-                    {{ $record->invoice_status ? ucwords($record->invoice_status) : 'Draft' }}
-                </span>
-
-            </div>
-
-        </div>
+        
 
 
 
         <div class="row">
             <div class="col">
-                {{ $record->title }}
+                {{ $recurring_invoice->summary }}
             </div>
         </div>
 
@@ -224,7 +171,8 @@ $totalPayment = Payment::where('team_id', $record->team_id)
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($item as $key => $val) { ?>
+                    @if(isset($item))
+                    <?php foreach ( $item as $key => $val) { ?>
                         <tr>
                             <td>{{ $key +1 }}</td>
                             <td>{{ $val?->title }} {{ $val?->product?->title }}</td>
@@ -233,27 +181,27 @@ $totalPayment = Payment::where('team_id', $record->team_id)
                             <td class="text-right">{{ $val?->total }}</td>
                         </tr>
                     <?php } ?>
-
+                    @endif
 
                     <tr>
                         <td colspan="3"></td>
                         <td><strong>Subtotal</strong></td>
-                        <td class="text-right"><strong>{{ $record->sub_total }}</strong></td>
+                        <td class="text-right"><strong>{{ $recurring_invoice->sub_total }}</strong></td>
                     </tr>
                     <tr>
                         <td colspan="3"></td>
                         <td><strong>Taxes</strong></td>
-                        <td class="text-right"><strong>{{ $record->taxes }}</strong></td>
+                        <td class="text-right"><strong>{{ $recurring_invoice->taxes }}</strong></td>
                     </tr>
                     <tr>
                         <td colspan="3"></td>
                         <td><strong>Percentage tax</strong></td>
-                        <td class="text-right"><strong>{{ $record->percentage_tax }}</strong></td>
+                        <td class="text-right"><strong>{{ $recurring_invoice->percentage_tax }}</strong></td>
                     </tr>
                     <tr>
                         <td colspan="3"></td>
                         <td><strong>Delivery</strong></td>
-                        <td class="text-right"><strong>{{ $record->delivery }}</strong></td>
+                        <td class="text-right"><strong>{{ $recurring_invoice->delivery }}</strong></td>
                     </tr>
                     <tr>
                         <td colspan="3"></td>
@@ -261,7 +209,7 @@ $totalPayment = Payment::where('team_id', $record->team_id)
                             <h5 class="fw-bolder">Final amount</h5>
                         </td>
                         <td class="text-right">
-                            <h5 class="fw-bolder">{{ $record->final_amount }}</h5>
+                            <h5 class="fw-bolder">{{ $recurring_invoice->final_amount }}</h5>
                         </td>
                     </tr>
                     <tr>
@@ -275,7 +223,7 @@ $totalPayment = Payment::where('team_id', $record->team_id)
                             <h5 class="fw-bolder">Balance</h5>
                         </td>
                         <td class="text-right">
-                            <h5 class="fw-bolder">{{ isset($record->balance) ? $record->balance : $record->final_amount }}</h5>
+                            <h5 class="fw-bolder">{{ $recurring_invoice->balance }}</h5>
                         </td>
                     </tr>
                     @if (isset($payment))
@@ -299,8 +247,8 @@ $totalPayment = Payment::where('team_id', $record->team_id)
 
         <div class="row">
             <div class="col">
-                <p>{{ $record->terms_conditions}}</p>
-                <p>{{ $record->footer}}</p>
+                <p>{{ $recurring_invoice->terms_conditions}}</p>
+                <p>{{ $recurring_invoice->footer}}</p>
             </div>
         </div>
 
@@ -373,7 +321,7 @@ $totalPayment = Payment::where('team_id', $record->team_id)
 
     <script>
         window.addEventListener('DOMContentLoaded', () => {
-            let balance = <?php echo json_encode($record->balance); ?>;
+            let balance = <?php echo json_encode($record?->balance ?? 0 ); ?>;
             let myModal = new bootstrap.Modal(document.getElementById('exampleModal'), {
                 keyboard: false
             })

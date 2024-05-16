@@ -23,6 +23,11 @@ return new class extends Migration
             $table->string('invoice_prefix_code')->nullable();
             $table->string('invoice_current_no')->nullable();
             $table->string('invoice_template')->nullable();
+
+            $table->string('recurring_invoice_prefix_code')->nullable();
+            $table->string('recurring_invoice_current_no')->nullable();
+
+
             $table->json('payment_gateway')->nullable();
             $table->timestamps();
         });

@@ -751,13 +751,15 @@ class QuotationResource extends Resource
                                 'invoice_date' => now()->format('Y-m-d'),
                                 'pay_before' => now()->format('Y-m-d'), // Valid days between 7 and 30
                                 'invoice_status' => 'draft',
-                                'title' => $record->title,
-                                'notes' => $record->notes,
+                                'summary' => $record->summary,
                                 'sub_total' => $record->sub_total, // Subtotal between 1000 and 10000
                                 'taxes' => $record->taxes, // Can be calculated based on percentage_tax and sub_total later
                                 'percentage_tax' => $record->percentage_tax, // Tax percentage between 0 and 20
                                 'delivery' => $record->delivery, // Delivery cost between 0 and 100
                                 'final_amount' => $record->final_amount, //
+                                'balance' => $record->final_amount, //
+                                'terms_conditions' => $record->terms_conditions, //
+                                'footer' => $record->footer, //
                             ]);
                             $item = Item::where('quotation_id', $record->id)->get();
                             foreach ($item as $key => $value) {

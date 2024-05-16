@@ -7,6 +7,7 @@ use Filament\Panel;
 use App\Models\Team;
 use Filament\Widgets;
 use Filament\PanelProvider;
+use App\Livewire\ListPayment;
 use Filament\Pages\Dashboard;
 use Filament\Facades\Filament;
 use App\Filament\Pages\Auth\Login;
@@ -33,8 +34,10 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use App\Filament\App\Resources\InvoiceResource\Pages\ListInvoices;
+use App\Filament\App\Resources\PaymentResource\Pages\ListPayments;
 use App\Filament\App\Resources\InvoiceResource\Pages\CreateInvoice;
 use App\Filament\App\Resources\QuotationResource\Pages\ListQuotations;
+use App\Filament\App\Resources\RecurringInvoiceResource\Pages\ListRecurringInvoices;
 
 class AppPanelProvider extends PanelProvider
 {
@@ -97,6 +100,8 @@ class AppPanelProvider extends PanelProvider
                 scopes: [
                     ListQuotations::class,
                     ListInvoices::class,
+                    ListPayments::class,
+                    ListRecurringInvoices::class,
                 ]
             )
             

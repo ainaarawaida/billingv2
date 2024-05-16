@@ -27,6 +27,8 @@ class Note extends Model
             return $this->belongsTo(Quotation::class, 'type_id');
         else if($this->type == 'invoice')
             return $this->belongsTo(Invoice::class, 'type_id');
+        else if($this->type == 'recurring_invoice')
+            return $this->belongsTo(RecurringInvoice::class, 'type_id');
         else if($this->type == 'payment')
             return $this->belongsTo(Payment::class, 'type_id');
         else{

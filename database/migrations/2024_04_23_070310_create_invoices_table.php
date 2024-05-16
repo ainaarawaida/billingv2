@@ -29,7 +29,7 @@ return new class extends Migration
             $table->decimal('delivery', 10, 2)->nullable();
             $table->decimal('final_amount', 10, 2)->nullable();
             $table->decimal('balance', 10, 2)->nullable();
-            $table->json('invoice_type')->nullable();
+            $table->foreignId('recurring_invoice_id')->nullable();
             $table->text('terms_conditions')->nullable();
             $table->text('footer')->nullable();
             $table->json('attachments')->nullable();

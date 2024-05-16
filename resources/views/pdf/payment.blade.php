@@ -9,71 +9,22 @@ use App\Models\Customer;
 use App\Models\TeamSetting;
 use App\Models\PaymentMethod;
 
-if (!isset($record)) {
+if (isset($id)) {
     $hashid = $id;
     $id = str_replace('luqmanahmadnordin', "", base64_decode($id));
-    $record = Invoice::where('id', $id)->first();
-    $team = Team::where('id', $record->team_id)->first();
-    $item = Item::with('product')->where('invoice_id', $record->id)->get();
-    $customer = Customer::where('id', $record->customer_id)->first();
-    $prefix = TeamSetting::where('team_id', $record->team_id)->first()->invoice_prefix_code ?? '#I';
-} elseif (isset($record)) {
-    $hashid = base64_encode('luqmanahmadnordin' . $record->id);
-    $id = $record->id;
-    $record = Invoice::where('id', $id)->first();
-    $team = Team::where('id', $record->team_id)->first();
-    $item = Item::with('product')->where('invoice_id', $record->id)->get();
-    $customer = Customer::where('id', $record->customer_id)->first();
-    $prefix = TeamSetting::where('team_id', $record->team_id)->first()->invoice_prefix_code ?? '#I';
+    $payment = Payment::where('id', $id)->first();
+    $record = Invoice::where('id', $payment->invoice_id)->first();
+    $team = Team::where('id', $payment->team_id)->first();
+
+    $item = Item::with('product')->where('invoice_id', $record?->id)->get();
+    $customer = Customer::where('id', $record?->customer_id)->first();
+    $prefix = TeamSetting::where('team_id', $record?->team_id)->first()->invoice_prefix_code ?? '#I';
+
+    // dd($payment);
+} else{
+    exit();
 }
 
-$paymentMethod = PaymentMethod::where('team_id', $record->team_id)
-    ->where('status', 1)->get();
-
-
-if (isset($payment_method_id)) {
-    $payment_type = $paymentMethod->where('id', $payment_method_id)->first();
-
-    if ($payment_type->payment_gateway_id == '2') { //toyyibpay
-        if (isset($_GET['billcode'])) {
-            if ($_GET['status_id'] == 1) {
-                $status_payment = 'processing';
-                $status_invoice = 'process';
-            } elseif ($_GET['status_id'] == 2) {
-                $status_payment = 'on_hold';
-                $status_invoice = 'process';
-            } elseif ($_GET['status_id'] == 3) {
-                $status_payment = 'failed';
-                $status_invoice = 'process';
-            } else {
-                $status_payment = 'on_hold';
-                $status_invoice = 'process';
-            }
-
-            $payment = Payment::firstOrCreate(
-                ['reference' => $_GET['transaction_id']],
-                [
-                    'team_id' => $record->team_id,
-                    'invoice_id' => $record->id,
-                    'payment_method_id' => $paymentMethod->where('payment_gateway_id', 2)->first()->id,
-                    'payment_date' => date('Y-m-d'),
-                    'total' => isset($record->balance) ? $record->balance : $record->final_amount,
-                    'notes' => 'billcode:' . $_GET['billcode'] . ' transaction id:' . $_GET['transaction_id'],
-                    'reference' => $_GET['transaction_id'],
-                    'status' => $status_payment,
-                ]
-            );
-            $record->invoice_status = $status_invoice;
-        }
-    }else{
-        $payment_id = str_replace('luqmanahmadnordin', "", base64_decode($_GET['payment_id']));
-        $payment = Payment::where('id', $payment_id)->first();
-    }
-}
-
-$totalPayment = Payment::where('team_id', $record->team_id)
-    ->where('invoice_id', $record->id)
-    ->where('status', 'completed')->sum('total');
 ?>
 
 <!DOCTYPE html>
@@ -94,7 +45,7 @@ $totalPayment = Payment::where('team_id', $record->team_id)
 
     <div class="btn-action m-3">
         @if(isset($mailtype))
-        <a href="{{ url('invoicepdf').'/'.base64_encode('luqmanahmadnordin'.$record->id) }}">
+        <a href="{{ url('paymentpdf').'/'.base64_encode('luqmanahmadnordin'.$record->id) }}">
             <button class="btn btn-success btn-print">
                 <i class="bi bi-printer"></i> View
             </button>
@@ -103,54 +54,9 @@ $totalPayment = Payment::where('team_id', $record->team_id)
         <button class="btn btn-success btn-print">
             <i class="bi bi-printer"></i> Print / PDF
         </button>
-        @if(!isset($payment))
-        <div class="btn-group">
-            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
-                <i class="bi bi-credit-card"></i> Pay
-            </button>
-            <ul class="dropdown-menu">
-                @if (count($paymentMethod) > 0)
-                @foreach ($paymentMethod as $paymentMethodData)
-                @if ($paymentMethodData->payment_gateway_id == 1)
-                <li><a href="#" class="dropdown-item">{{ $paymentMethodData->name }}</a></li>
-                @elseif ($paymentMethodData->payment_gateway_id == 2)
-                <li><a href="{{ url('online-payment/toyyibpay/'.$hashid.'/'.$paymentMethodData->id) }}" class="dropdown-item">{{ $paymentMethodData->name }}</a></li>
-                @else
-                <li><a href="#" data-detail="{{ base64_encode(json_encode($paymentMethodData->toArray())) }}" data-url="{{ url('online-payment/manual-payment/'.$hashid.'/'.$paymentMethodData->id) }}" class="dropdown-item payment-list">{{ $paymentMethodData->name }}</a></li>
-                @endif
-
-                @endforeach
-                @else
-                <li><a href="#" class="dropdown-item">No Payment Available</a></li>
-                @endif
-            </ul>
-        </div>
         @endif
 
-        @endif
-
-        @if (Session::has('message'))
-        <div class="mt-2 alert alert-warning alert-dismissible fade show">
-            {{ Session::get('message') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        @elseif (isset($status_payment))
-        <div class="mt-2 alert alert-warning alert-dismissible fade show">
-            {{ $status_payment }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        @endif
-
-        @if ($errors->any())
-            <div class="mt-2 alert alert-danger alert-dismissible fade show">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+      
     </div>
 
 
@@ -159,9 +65,8 @@ $totalPayment = Payment::where('team_id', $record->team_id)
             <div class="col">
                 <div class="d-flex justify-content-between align-items-center p-2">
                     <img src="{{ $team->photo ? asset('storage/'.$team->photo) : asset('image.psd.png')  }}" alt="User Avatar" class="img-thumbnail" width="100" height="100">
-                    <h2 class="text-right">Invoice </h2>
+                    <h2 class="text-right">Payment </h2>
                 </div>
-
             </div>
         </div>
 
@@ -179,17 +84,26 @@ $totalPayment = Payment::where('team_id', $record->team_id)
                 <div class="row">
                     <div class="col-3"><b>To : </b></div>
                     <div class="col-9">
+                        @if($record)
                         {{ $customer->name }} <br>
                         {{ $customer->email }} <br>
                         {{ $customer->phone }} <br>
+                        @else
+                        {{ __('No Customer') }}
+                        @endif
 
                     </div>
                 </div>
             </div>
             <div class="col d-flex flex-column justify-content-start align-items-end">
-                <p class="h3">{{ $prefix }}{{ $record->numbering }} </p>
-                <div>Invoice Date: {{ date("j F, Y", strtotime($record->invoice_date) ) }}</div>
-                <div>Pay Before: {{ date("j F, Y", strtotime($record->pay_before) ) }}</div>
+                <p class="h3">
+                    @if($record)
+                    {{ $prefix }}{{ $record->numbering }} 
+                    @else
+                    {{ __('No Invoice') }}
+                    @endif
+                </p>
+                <div>Payment Date: {{ date("j F, Y", strtotime($payment->payment_date) ) }}</div>
             </div>
         </div>
 
@@ -197,7 +111,7 @@ $totalPayment = Payment::where('team_id', $record->team_id)
             <div class="col">
                 <strong>Status : </strong>
                 <span class="badge bg-success">
-                    {{ $record->invoice_status ? ucwords($record->invoice_status) : 'Draft' }}
+                    {{ $payment->payment_status ? ucwords($payment->payment_status) : 'Draft' }}
                 </span>
 
             </div>
@@ -208,7 +122,7 @@ $totalPayment = Payment::where('team_id', $record->team_id)
 
         <div class="row">
             <div class="col">
-                {{ $record->title }}
+                {{ $payment->notes }}
             </div>
         </div>
 
@@ -224,6 +138,7 @@ $totalPayment = Payment::where('team_id', $record->team_id)
                     </tr>
                 </thead>
                 <tbody>
+                    @if($record)
                     <?php foreach ($item as $key => $val) { ?>
                         <tr>
                             <td>{{ $key +1 }}</td>
@@ -234,7 +149,7 @@ $totalPayment = Payment::where('team_id', $record->team_id)
                         </tr>
                     <?php } ?>
 
-
+                  
                     <tr>
                         <td colspan="3"></td>
                         <td><strong>Subtotal</strong></td>
@@ -266,18 +181,14 @@ $totalPayment = Payment::where('team_id', $record->team_id)
                     </tr>
                     <tr>
                         <td colspan="3"></td>
-                        <td><strong>Total Completed Payment</strong></td>
-                        <td class="text-right"><strong>{{ number_format($totalPayment, 2) }}</strong></td>
-                    </tr>
-                    <tr>
-                        <td colspan="3"></td>
                         <td>
                             <h5 class="fw-bolder">Balance</h5>
                         </td>
                         <td class="text-right">
-                            <h5 class="fw-bolder">{{ isset($record->balance) ? $record->balance : $record->final_amount }}</h5>
+                            <h5 class="fw-bolder">{{ $record->balance ? $record->balance : $record->final_amount }}</h5>
                         </td>
                     </tr>
+                    @endif
                     @if (isset($payment))
                     <tr>
                         <td colspan="3">
@@ -299,8 +210,10 @@ $totalPayment = Payment::where('team_id', $record->team_id)
 
         <div class="row">
             <div class="col">
+                @if($record)
                 <p>{{ $record->terms_conditions}}</p>
                 <p>{{ $record->footer}}</p>
+                @endif
             </div>
         </div>
 
@@ -373,7 +286,7 @@ $totalPayment = Payment::where('team_id', $record->team_id)
 
     <script>
         window.addEventListener('DOMContentLoaded', () => {
-            let balance = <?php echo json_encode($record->balance); ?>;
+            let balance = <?php echo json_encode($record?->balance ?? '0.00'); ?>;
             let myModal = new bootstrap.Modal(document.getElementById('exampleModal'), {
                 keyboard: false
             })

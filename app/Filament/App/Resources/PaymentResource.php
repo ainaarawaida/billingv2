@@ -12,7 +12,10 @@ use App\Models\TeamSetting;
 use App\Models\PaymentMethod;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
+use Illuminate\Support\HtmlString;
 use Filament\Support\Enums\ActionSize;
+use Illuminate\Database\Eloquent\Model;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\App\Resources\PaymentResource\Pages;
@@ -22,7 +25,7 @@ class PaymentResource extends Resource
 {
     protected static ?string $model = Payment::class;
     protected static ?string $navigationGroup = 'Billing';
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 7;
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
 
     public static function form(Form $form): Form
@@ -71,6 +74,8 @@ class PaymentResource extends Resource
                                 ->searchable()
                                 ->preload()
                                 ->required(),
+                        Forms\Components\TextInput::make('reference')
+                                ->required(),    
                         Forms\Components\FileUpload::make('attachments')
                                 ->label(__('Attachments'))
                                 ->directory('payment-attachments')
@@ -103,6 +108,10 @@ class PaymentResource extends Resource
                     ->color('primary')
                     ->prefix($prefix)
                     ->url(fn($record) => isset($record->invoice_id) ? InvoiceResource::getUrl('edit', ['record' => $record->invoice_id]) : false),
+                Tables\Columns\TextColumn::make('reference')
+                    ->badge()
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('payment_method.name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('payment_date')
@@ -142,6 +151,36 @@ class PaymentResource extends Resource
                     Tables\Actions\DeleteAction::make(),
                     Tables\Actions\ForceDeleteAction::make(),
                     Tables\Actions\ViewAction::make(),
+                    Tables\Actions\Action::make('public_url') 
+                        ->label('Public Url')
+                        ->color('success')
+                        ->icon('heroicon-o-globe-alt')
+                        ->action(function (Model $record) {
+                            Notification::make()
+                            ->title('Copy Public Url Successfully')
+                            ->success()
+                            ->send();
+                            
+                        })
+                        ->requiresConfirmation()
+                        ->modalHeading('Public Url')
+                        ->modalDescription( fn (Model $record) => new HtmlString('<button type="button" class="fi-btn" style="padding:10px;background:grey;color:white;border-radius: 10px;"><a target="_blank" href="'.url('paymentpdf')."/".base64_encode("luqmanahmadnordin".$record->id).'">Redirect to Public URL</a></button>'))
+                        ->modalSubmitActionLabel('Copy public URL')
+                        ->extraAttributes(function (Model $record) {
+                           return [
+                                'class' => 'copy-public_url',
+                                'myurl' => url('paymentpdf')."/".base64_encode("luqmanahmadnordin".$record->id),
+                            ] ;
+                            
+                        }),
+                    Tables\Actions\Action::make('pdf') 
+                        ->label('PDF')
+                        ->color('success')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->url(fn ($record): ?string => url('paymentpdf')."/".base64_encode("luqmanahmadnordin".$record->id))
+                        ->openUrlInNewTab(),
+                       
+                    
                 ])
                 ->label('More actions')
                 ->icon('heroicon-m-ellipsis-vertical')

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Invoice extends Model
+class RecurringInvoice extends Model
 {
     use HasFactory;
     use SoftDeletes;
@@ -16,10 +16,15 @@ class Invoice extends Model
     protected $casts = [
         'attachments' => 'array', 
     ];
-
+    
     public function teams(): BelongsTo
     {
         return $this->belongsTo(Team::class, 'team_id');
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class, 'recurring_invoice_id');
     }
 
     public function customer(): BelongsTo
@@ -27,18 +32,9 @@ class Invoice extends Model
         return $this->belongsTo(Customer::class, 'customer_id');
     }
 
-    public function recurringInvoices(): BelongsTo
-    {
-        return $this->belongsTo(RecurringInvoice::class, 'recurring_invoice_id');
-    }
-
     public function items()
     {
         return $this->hasMany(Item::class);
-    }
-
-    public function notes(){
-        return $this->hasMany(Note::class, 'type_id');
     }
 
 }

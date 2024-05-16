@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('quotation_id')->nullable();
             $table->foreignId('invoice_id')->nullable();
+            $table->foreignId('recurring_invoice_id')->nullable();
             $table->foreignId('product_id')->nullable();
             
             $table->text('title')->nullable();
