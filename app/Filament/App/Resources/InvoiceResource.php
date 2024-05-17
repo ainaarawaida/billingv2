@@ -137,8 +137,7 @@ class InvoiceResource extends Resource
                                         ->visible(fn($record) => $record?->recurringInvoices()->first())
                                         ->content(function($record){
                                             $prefix = TeamSetting::where('team_id', Filament::getTenant()->id )->first()->recurring_invoice_prefix_code ?? '#RI' ;
-                                         
-                                            return new HtmlString('<a class="text-primary-500" href="'.RecurringInvoiceResource::getUrl('edit', ['record' => $record->recurring_invoice_id]).'" wire:navigate>'.$prefix.$record->recurringInvoices()->first()->numbering.'</b>');
+                                            return new HtmlString('<a class="text-primary-500" href="'.RecurringInvoiceResource::getUrl('edit', ['record' => $record->recurring_invoice_id]).'" wire:navigate>'.$prefix.$record->recurringInvoices()->first()->numbering.'</a>');
                                         }) 
 
                                 ])
@@ -728,6 +727,9 @@ class InvoiceResource extends Resource
                     Tables\Actions\ForceDeleteBulkAction::make(),
                 ]),
             ])
+            ->recordUrl(
+                fn (Model $record): string => InvoiceResource::getUrl('edit', ['record' => $record->id])
+            )
             ->defaultSort('updated_at', 'desc');
     }
 

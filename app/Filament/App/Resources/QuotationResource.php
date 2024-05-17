@@ -541,7 +541,8 @@ class QuotationResource extends Resource
                         return $record->customer
                             ? CustomerResource::getUrl('edit', ['record' => $record->customer_id])
                             : null;
-                    }),
+                    })
+                    ->wrap(),
                 Tables\Columns\TextColumn::make('quotation_date')
                     ->date('j F, Y')
                     ->sortable()

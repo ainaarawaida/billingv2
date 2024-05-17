@@ -96,7 +96,8 @@ class PaymentMethodResource extends Resource
                         ->onIcon('heroicon-o-check')
                         ->offIcon('heroicon-o-x-mark')
                         ->onColor('success')
-                        ->offColor('danger'),
+                        ->offColor('danger')
+                        ->default(true),
 
 
                 ])

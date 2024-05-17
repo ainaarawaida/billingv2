@@ -128,6 +128,7 @@ class RecurringInvoiceResource extends Resource
                         Forms\Components\DatePicker::make('stop_date')
                             ->native(false)
                             ->displayFormat('d/m/Y')
+                            ->default(now())
                             ->minDate(fn($get)=> Carbon::parse($get('start_date')))
                             ->required(),
                         Forms\Components\Toggle::make('status')
@@ -451,12 +452,12 @@ class RecurringInvoiceResource extends Resource
                         })
                         ->requiresConfirmation()
                         ->modalHeading('Public Url')
-                        ->modalDescription( fn (Model $record) => new HtmlString('<button type="button" class="fi-btn" style="padding:10px;background:grey;color:white;border-radius: 10px;"><a target="_blank" href="'.url('recurringInvoicepdf')."/".base64_encode("luqmanahmadnordin".$record->id).'">Redirect to Public URL</a></button>'))
+                        ->modalDescription( fn (Model $record) => new HtmlString('<button type="button" class="fi-btn" style="padding:10px;background:grey;color:white;border-radius: 10px;"><a target="_blank" href="'.url('recurringInvoicepdf')."/".base64_encode("luqmanahmadnordin".$record->id).'/new">Redirect to Public URL</a></button>'))
                         ->modalSubmitActionLabel('Copy public URL')
                         ->extraAttributes(function (Model $record) {
                         return [
                                 'class' => 'copy-public_url',
-                                'myurl' => url('recurringInvoicepdf')."/".base64_encode("luqmanahmadnordin".$record->id),
+                                'myurl' => url('recurringInvoicepdf')."/".base64_encode("luqmanahmadnordin".$record->id)."/new",
                             ] ;
                             
                         }),
@@ -464,7 +465,7 @@ class RecurringInvoiceResource extends Resource
                         ->label('PDF')
                         ->color('success')
                         ->icon('heroicon-o-arrow-down-tray')
-                        ->url(fn ($record): ?string => url('recurringInvoicepdf')."/".base64_encode("luqmanahmadnordin".$record->id))
+                        ->url(fn ($record): ?string => url('recurringInvoicepdf')."/".base64_encode("luqmanahmadnordin".$record->id)."/new")
                         ->openUrlInNewTab(),
                 ])
                 ->label('More actions')

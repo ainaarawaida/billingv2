@@ -471,7 +471,8 @@ class InvoicesRelationManager extends RelationManager
                     return $record->customer
                         ? CustomerResource::getUrl('edit', ['record' => $record->customer_id])
                         : null;
-                }),
+                })
+                ->wrap(),
             Tables\Columns\TextColumn::make('invoice_date')
                 ->date('j F, Y')
                 ->sortable()
@@ -787,6 +788,10 @@ class InvoicesRelationManager extends RelationManager
                 Tables\Actions\ForceDeleteBulkAction::make(),
             ]),
         ])
+        ->recordUrl(null)
+        ->recordAction(Tables\Actions\EditAction::class) 
         ->defaultSort('updated_at', 'desc');
+
+        // $dispatch('open-modal'
     }
 }

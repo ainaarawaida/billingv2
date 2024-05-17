@@ -15,20 +15,25 @@ if (isset($id)) {
     $id = str_replace('luqmanahmadnordin', "", base64_decode($id));
     $recurring_invoice = RecurringInvoice::where('id', $id)->first();
     $team = Team::where('id', $recurring_invoice->team_id)->first();
-    $invoices = Invoice::where('recurring_invoice_id', $recurring_invoice->id)->get();
+    $invoices = Invoice::where('recurring_invoice_id', $recurring_invoice->id)->where('invoice_status', $status)->get();
     $customer = Customer::where('id', $recurring_invoice->customer_id)->first();
-    $prefix = TeamSetting::where('team_id', $recurring_invoice->team_id)->first()->recurring_invoice_prefix_code ?? '#RI';
+    $prefix = TeamSetting::where('team_id', $recurring_invoice->team_id)->first();
+    $recurring_invoice_prefix = $prefix?->recurring_invoice_prefix ?? '#RI';
+    $invoice_prefix = $prefix?->invoice_prefix_code ?? '#I';
     $paymentMethod = PaymentMethod::where('team_id', $recurring_invoice->team_id)
     ->where('status', 1)->get();
 
     $totalPayment = 0;
     $recurring_invoice->balance = 0;
-    // dd($recurring_invoice);
+    // dd($invoices->toArray());
 } else{
  exit();
 }
 
-
+if(isset($_GET['payment_id'])){
+    $payment_collection = json_decode(str_replace('luqmanahmadnordin', "", base64_decode($_GET['payment_id'])));
+    // dd($payment_collection);
+}
 
 ?>
 
@@ -59,25 +64,38 @@ if (isset($id)) {
         <button class="btn btn-success btn-print">
             <i class="bi bi-printer"></i> Print / PDF
         </button>
-        @if(!isset($payment))
+
+        <div class="btn-group">
+            <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="bi bi-cpu"></i> Status {{ ucwords($status) }}
+            </button>
+            <ul class="dropdown-menu">
+                <li><a href="{{ url('recurringInvoicepdf/'.$hashid).'/draft' }}" class="dropdown-item">Draft</a></li>
+                <li><a href="{{ url('recurringInvoicepdf/'.$hashid).'/new' }}" class="dropdown-item">New</a></li>
+                <li><a href="{{ url('recurringInvoicepdf/'.$hashid).'/process' }}" class="dropdown-item">Process</a></li>
+                <li><a href="{{ url('recurringInvoicepdf/'.$hashid).'/done' }}" class="dropdown-item">Done</a></li>
+            </ul>
+        </div>
+
+        @if(!isset($payment_method_id) && $status == 'new')
         <div class="btn-group">
             <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
                 <i class="bi bi-credit-card"></i> Pay
             </button>
             <ul class="dropdown-menu">
                 @if (count($paymentMethod) > 0)
-                @foreach ($paymentMethod as $paymentMethodData)
-                @if ($paymentMethodData->payment_gateway_id == 1)
-                <li><a href="#" class="dropdown-item">{{ $paymentMethodData->name }}</a></li>
-                @elseif ($paymentMethodData->payment_gateway_id == 2)
-                <li><a href="{{ url('online-payment/toyyibpay/'.$hashid.'/'.$paymentMethodData->id) }}" class="dropdown-item">{{ $paymentMethodData->name }}</a></li>
-                @else
-                <li><a href="#" data-detail="{{ base64_encode(json_encode($paymentMethodData->toArray())) }}" data-url="{{ url('online-payment/manual-payment/'.$hashid.'/'.$paymentMethodData->id) }}" class="dropdown-item payment-list">{{ $paymentMethodData->name }}</a></li>
-                @endif
+                    @foreach ($paymentMethod as $paymentMethodData)
+                        @if ($paymentMethodData->payment_gateway_id == 1)
+                            <li><a href="#" class="dropdown-item">{{ $paymentMethodData->name }}</a></li>
+                        @elseif ($paymentMethodData->payment_gateway_id == 2)
+                            <li><a href="{{ url('online-payment/toyyibpay/'.$hashid.'/'.$paymentMethodData->id) }}" class="dropdown-item">{{ $paymentMethodData->name }}</a></li>
+                        @else
+                        <li><a href="#" data-detail="{{ base64_encode(json_encode($paymentMethodData->toArray())) }}" data-url="{{ url('online-payment/manual-payment-recurring/'.$hashid.'/'.$paymentMethodData->id) }}" class="dropdown-item payment-list">{{ $paymentMethodData->name }}</a></li>
+                        @endif
 
-                @endforeach
-                @else
-                <li><a href="#" class="dropdown-item">No Payment Available</a></li>
+                    @endforeach
+                    @else
+                    <li><a href="#" class="dropdown-item">No Payment Available</a></li>
                 @endif
             </ul>
         </div>
@@ -143,7 +161,7 @@ if (isset($id)) {
                 </div>
             </div>
             <div class="col d-flex flex-column justify-content-start align-items-end">
-                <p class="h3">{{ $prefix }}{{ $recurring_invoice->numbering }} </p>
+                <p class="h3">{{ $recurring_invoice_prefix }}{{ $recurring_invoice->numbering }} </p>
                 <div>Start Date: {{ date("j F, Y", strtotime($recurring_invoice->start_date) ) }}</div>
                 <div>Stop Date: {{ date("j F, Y", strtotime($recurring_invoice->stop_before) ) }}</div>
             </div>
@@ -164,80 +182,74 @@ if (isset($id)) {
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Item / Description</th>
-                        <th>Price </th>
-                        <th>Quantity</th>
-                        <th>Total</th>
+                        <th>Invoices</th>
+                        <th>Date</th>
+                        <th>Summary</th>
+                        <th>Status</th>
+                        <th>Amount (RM)</th>
+                        <th>Balance (RM)</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if(isset($item))
-                    <?php foreach ( $item as $key => $val) { ?>
+                    @if(isset($invoices))
+                    @php
+                        $final_balance = 0 ;
+                    @endphp
+                    <?php foreach ( $invoices as $key => $val) { ?>
                         <tr>
                             <td>{{ $key +1 }}</td>
-                            <td>{{ $val?->title }} {{ $val?->product?->title }}</td>
-                            <td>{{ $val?->price }}</td>
-                            <td>{{ $val?->quantity }} {{ $val?->unit }}</td>
-                            <td class="text-right">{{ $val?->total }}</td>
+                            <td>{{ $invoice_prefix.$val?->numbering }}</td>
+                            <td>{{ date("j F, Y", strtotime($val?->invoice_date))  }}</td>
+                            <td>{{ $val?->summary }}</td>
+                            <td>
+                                <span class="badge bg-success">
+                                {{ ucwords($val?->invoice_status) }}
+                                </span>
+                            </td>
+                            <td class="text-right">{{ $val?->final_amount }}</td>
+                            <td class="text-right">{{ $val?->balance }}</td>
                         </tr>
+
+                        @php
+                            $final_balance += $val?->balance ;
+                        @endphp
                     <?php } ?>
                     @endif
 
+                 
                     <tr>
-                        <td colspan="3"></td>
-                        <td><strong>Subtotal</strong></td>
-                        <td class="text-right"><strong>{{ $recurring_invoice->sub_total }}</strong></td>
-                    </tr>
-                    <tr>
-                        <td colspan="3"></td>
-                        <td><strong>Taxes</strong></td>
-                        <td class="text-right"><strong>{{ $recurring_invoice->taxes }}</strong></td>
-                    </tr>
-                    <tr>
-                        <td colspan="3"></td>
-                        <td><strong>Percentage tax</strong></td>
-                        <td class="text-right"><strong>{{ $recurring_invoice->percentage_tax }}</strong></td>
-                    </tr>
-                    <tr>
-                        <td colspan="3"></td>
-                        <td><strong>Delivery</strong></td>
-                        <td class="text-right"><strong>{{ $recurring_invoice->delivery }}</strong></td>
-                    </tr>
-                    <tr>
-                        <td colspan="3"></td>
+                        <td colspan="5"></td>
                         <td>
-                            <h5 class="fw-bolder">Final amount</h5>
+                            <h5 class="fw-bolder">Final Balance</h5>
                         </td>
                         <td class="text-right">
-                            <h5 class="fw-bolder">{{ $recurring_invoice->final_amount }}</h5>
+                            <h5 class="fw-bolder">{{ $final_balance }}</h5>
                         </td>
                     </tr>
+                  
+                    @if (isset($payment_collection))
+                    @foreach($payment_collection AS $key2 => $val2)
                     <tr>
-                        <td colspan="3"></td>
-                        <td><strong>Total Completed Payment</strong></td>
-                        <td class="text-right"><strong>{{ number_format($totalPayment, 2) }}</strong></td>
-                    </tr>
-                    <tr>
-                        <td colspan="3"></td>
-                        <td>
-                            <h5 class="fw-bolder">Balance</h5>
-                        </td>
-                        <td class="text-right">
-                            <h5 class="fw-bolder">{{ $recurring_invoice->balance }}</h5>
-                        </td>
-                    </tr>
-                    @if (isset($payment))
-                    <tr>
-                        <td colspan="3">
+                        <td colspan="5">
                             <span class="badge bg-success">
-                                {{ ucwords($payment->status) }}
-                            </span> Paid On {{ date("j F, Y H:i:s", strtotime($payment->updated_at) ) }}, {{ $payment->notes }}
+                                {{ ucwords($val2->status) }}
+                            </span> Paid {{ $invoice_prefix.collect($invoices)->where('id', $val2->invoice_id)->first()->numbering}} On {{ date("j F, Y H:i:s", strtotime($val2->updated_at) ) }}, {{ $val2->notes }}
                         </td>
                         <td>
-                            <h5 class="fw-bolder">Paid</h5>
+                            Paid
                         </td>
                         <td class="text-right">
-                            <h5 class="fw-bolder">{{ number_format($payment->total, 2)  }}</h5>
+                            {{ number_format($val2->total, 2)  }}
+                        </td>
+                    </tr>
+                    @endforeach
+                    <tr>
+                        <td colspan="5"></td>
+                        <td>
+                            <h5 class="fw-bolder">Total Paid</h5>
+                        </td>
+                        <td class="text-right">
+                            <h5 class="fw-bolder">{{ number_format(collect($payment_collection)->sum('total'), 2)  }}</h5>
                         </td>
                     </tr>
                     @endif
@@ -321,7 +333,7 @@ if (isset($id)) {
 
     <script>
         window.addEventListener('DOMContentLoaded', () => {
-            let balance = <?php echo json_encode($record?->balance ?? 0 ); ?>;
+            let final_balance = <?php echo json_encode($final_balance ?? 0 ); ?>;
             let myModal = new bootstrap.Modal(document.getElementById('exampleModal'), {
                 keyboard: false
             })
@@ -347,7 +359,7 @@ if (isset($id)) {
                 document?.querySelector('#mp-form').setAttribute('action', actionurl);
                 document.querySelector('#mp-name').value = detail.name;
                 document.querySelector('#mp-bank_account').value = detail.bank_account;
-                document.querySelector('#mp-amount').value = balance;
+                document.querySelector('#mp-amount').value = final_balance;
                 myModal.toggle();
             });
 

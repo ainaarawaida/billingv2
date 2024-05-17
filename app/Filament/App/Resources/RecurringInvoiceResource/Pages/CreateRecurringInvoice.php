@@ -87,7 +87,7 @@ class CreateRecurringInvoice extends CreateRecord
                 'numbering' => str_pad(($invoice_current_no + 1), 6, "0", STR_PAD_LEFT),
                 'invoice_date' => $record->start_date,
                 'pay_before' => $record->stop_date, // Valid days between 7 and 30
-                'invoice_status' => 'process',
+                'invoice_status' => 'new',
                 'summary' => 'Recurring Invoice: '. $prefix.$record->numbering,
                 'sub_total' =>  $getData['sub_total'], // Subtotal between 1000 and 10000
                 'taxes' => $getData['taxes'], // Can be calculated based on percentage_tax and sub_total later

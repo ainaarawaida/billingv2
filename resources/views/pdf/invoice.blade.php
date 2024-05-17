@@ -103,7 +103,7 @@ $totalPayment = Payment::where('team_id', $record->team_id)
         <button class="btn btn-success btn-print">
             <i class="bi bi-printer"></i> Print / PDF
         </button>
-        @if(!isset($payment))
+        @if(!isset($payment) && $record->invoice_status == 'new')
         <div class="btn-group">
             <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
                 <i class="bi bi-credit-card"></i> Pay

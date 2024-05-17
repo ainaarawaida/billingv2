@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('team_id')->nullable();
             $table->foreignId('invoice_id')->nullable();
+            $table->foreignId('recurring_invoice_id')->nullable();
             $table->string('payment_method_id')->nullable();
             $table->date('payment_date')->nullable();
             $table->string('total')->nullable();

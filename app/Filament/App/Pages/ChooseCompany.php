@@ -2,7 +2,6 @@
 
 namespace App\Filament\App\Pages;
 
-use App\Filament\Pages\Tenancy\RegisterTeam;
 use App\Models\Team;
 use Filament\Pages\Page;
 use Filament\Tables\Table;
@@ -10,7 +9,9 @@ use Filament\Tables\Actions\Action;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Tables\Columns\ImageColumn;
+use App\Filament\Pages\Tenancy\RegisterTeam;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
 
@@ -51,7 +52,10 @@ class ChooseCompany extends Page implements HasForms, HasTable
             ])
             ->bulkActions([
                 // ...
-            ]);
+            ])
+            ->recordUrl(
+                fn (Model $record): string => url('/app/'.$record->slug)
+            );
     }
 
     protected function getHeaderActions(): array

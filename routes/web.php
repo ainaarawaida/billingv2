@@ -41,14 +41,13 @@ Route::get('/invoicepdf/{id}/{payment_method_id?}', function ($id, $payment_meth
     return view('pdf.invoice', ['id' => $id, 'payment_method_id' => $payment_method_id]); // View name 'about'
   })->name('pdf.invoice');
 
+Route::get('/recurringInvoicepdf/{id}/{status?}/{payment_method_id?}', function ($id, $status = 'new', $payment_method_id = null) {
+    return view('pdf.recurringInvoice', ['id' => $id, 'status' => $status, 'payment_method_id' => $payment_method_id]); // View name 'about'
+  })->name('pdf.recurringInvoice');  
+
 Route::get('/paymentpdf/{id}', function ($id) {
     return view('pdf.payment', ['id' => $id]); // View name 'about'
   })->name('pdf.payment');  
-
-Route::get('/recurringInvoicepdf/{id}', function ($id) {
-    return view('pdf.recurringInvoice', ['id' => $id]); // View name 'about'
-  })->name('pdf.recurringInvoice');  
-
 // Route::get('/public-invoice/{id}', PublicInvoice::class)->name('public.invoice');
   
 //toyyibpay
@@ -58,4 +57,6 @@ Route::post('/online-payment/toyyibpay-callback/{id}', [Toyyibpay::class, 'callb
 
 //manual payment
 Route::post('/online-payment/manual-payment/{id}/{payment_method_id?}', [ManualPayment::class, 'index']);
+Route::post('/online-payment/manual-payment-recurring/{id}/{payment_method_id?}', [ManualPayment::class, 'recurring']);
+
 
