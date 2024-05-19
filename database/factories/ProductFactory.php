@@ -23,7 +23,7 @@ class ProductFactory extends Factory
             'team_id' => $this->faker->randomElement(Team::all()->pluck('id')->toArray()), // Set to null for now (can be overridden later)
             'tax' => $this->faker->numberBetween(0, 1), // Generate random tax between 0 and 20 (2 decimal places)
             'quantity' => $this->faker->numberBetween(1, 5), // Generate random quantity between 0 and 100
-            'price' => $this->faker->numberBetween(1, 500), // Generate random 5-digit price (assuming whole numbers)
+            'price' => $this->faker->numberBetween(1, 100), // Generate random 5-digit price (assuming whole numbers)
         ];
     }
 }

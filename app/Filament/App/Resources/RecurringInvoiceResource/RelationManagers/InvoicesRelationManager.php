@@ -529,7 +529,7 @@ class InvoicesRelationManager extends RelationManager
                 ->prefix('RM ')
                 ->label(__("Balance"))
                 ->state(function (Invoice $record): ?float {
-                    return $record?->balance ?? $record->final_amount ;
+                    return $record?->balance ;
                 })
                 ->numeric()
                 ->sortable(),

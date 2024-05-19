@@ -45,6 +45,7 @@ class InvoiceFactory extends Factory
             'percentage_tax' => $this->faker->numberBetween(0, 20), // Tax percentage between 0 and 20
             'delivery' => $this->faker->randomFloat(2, 0, 100), // Delivery cost between 0 and 100
             'final_amount' => null, //
+            'balance' => null, //
             'recurring_invoice_id' => null,
             'terms_conditions' => $this->faker->sentence,
             'footer' => $this->faker->sentence,

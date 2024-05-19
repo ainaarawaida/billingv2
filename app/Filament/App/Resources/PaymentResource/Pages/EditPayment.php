@@ -17,8 +17,8 @@ class EditPayment extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\ViewAction::make(),
-            Actions\DeleteAction::make(),
+            // Actions\ViewAction::make(),
+            // Actions\DeleteAction::make(),
             Actions\ForceDeleteAction::make(),
             Actions\RestoreAction::make(),
         ];
@@ -52,6 +52,8 @@ class EditPayment extends EditRecord
             $invoice->balance = $invoice->final_amount - $totalPayment; 
             if($invoice->balance == 0){
                 $invoice->invoice_status = 'paid';
+            }elseif($invoice->invoice_status == 'done'){
+                $invoice->invoice_status = 'new' ;
             }
 
             $invoice->update();
@@ -65,6 +67,8 @@ class EditPayment extends EditRecord
             $invoice->balance = $invoice->final_amount - $totalPayment; 
             if($invoice->balance == 0){
                 $invoice->invoice_status = 'paid';
+            }elseif($invoice->invoice_status == 'done'){
+                $invoice->invoice_status = 'new' ;
             }
             $invoice->update();
 

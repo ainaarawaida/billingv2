@@ -22,7 +22,7 @@ class ManualPayment extends Controller
 
         $validatedData = request()->validate([
             'attachments' => 'required|file|mimes:pdf,jpg,jpeg,png|max:9048',
-            'total' => 'required|numeric', // Adjust validation rules as needed
+            'amount' => 'required|numeric', // Adjust validation rules as needed
         ]);
         $fileName = time() . '.' . request()->file('attachments')->getClientOriginalExtension();
         $path = [Storage::disk('public')->put('payment-attachments', request()->file('attachments'))] ;
@@ -33,7 +33,7 @@ class ManualPayment extends Controller
                 'invoice_id' => $record->id,
                 'payment_method_id' => $payment_method_id,
                 'payment_date' => date('Y-m-d'),
-                'total' => request()->post('total'),
+                'total' => request()->post('amount'),
                 'notes' => request()->post('notes'),
                 'reference' => request()->post('reference'),
                 'status' => 'processing',
@@ -52,17 +52,18 @@ class ManualPayment extends Controller
         $hashid = $id;
         $id = str_replace('luqmanahmadnordin', "", base64_decode($id));
         $recurring_invoice = RecurringInvoice::where('id', $id)->first(); 
-        $invoice = Invoice::where('recurring_invoice_id',$id)->get();
+        $invoice_id_all = json_decode(base64_decode(request()->post('id-all'))) ;
+        $invoice = Invoice::whereIn('id',$invoice_id_all)->get();
 
 
         $validatedData = request()->validate([
             'attachments' => 'required|file|mimes:pdf,jpg,jpeg,png|max:9048',
-            'total' => 'required|numeric', // Adjust validation rules as needed
+            'amount' => 'required|numeric', // Adjust validation rules as needed
         ]);
         $fileName = time() . '.' . request()->file('attachments')->getClientOriginalExtension();
         $path = [Storage::disk('public')->put('payment-attachments', request()->file('attachments'))] ;
         // dd("tak siap");
-        $total_payment = request()->post('total') ; 
+        $total_payment = request()->post('amount') ; 
         $payment_collection = [];
         $lastInvoice = count($invoice)-1;
         foreach($invoice AS $key => $val){
@@ -91,7 +92,7 @@ class ManualPayment extends Controller
                     'attachments' => $path ,
                 ]
             );
-            $payment_collection[] = $payment->toArray(); ;
+            $payment_collection[] = $payment->toArray() ;
             $val->invoice_status = 'process';
             $val->save();
 
@@ -99,6 +100,6 @@ class ManualPayment extends Controller
 
         }
 
-        return redirect('/recurringInvoicepdf/'.$hashid.'/'.$payment_method_id.'/?payment_id='.base64_encode('luqmanahmadnordin' . json_encode($payment_collection)))->with(['message' => 'Success Manual Payment', 'payment' => $payment ]);
+        return redirect('/recurringInvoicepdf/'.$hashid.'/?payment_method_id='.$payment_method_id.'&payment_id='.base64_encode('luqmanahmadnordin' . json_encode($payment_collection)))->with(['message' => 'Success Manual Payment', 'payment' => $payment ]);
     }
 }

@@ -4,8 +4,10 @@ namespace App\Livewire;
 
 use Filament\Forms ;
 use Filament\Tables;
+use Livewire\Component as Livewire;
 use App\Models\Payment;
 use Filament\Forms\Get;
+use Filament\Forms\Components\Component;
 use Filament\Tables\Table;
 use App\Models\TeamSetting;
 use App\Models\PaymentMethod;
@@ -50,11 +52,12 @@ class PaymentTable2 extends BaseWidget
                         ->where('status', 'completed')->sum('total');
                         $this->record->balance = $this->record->final_amount - $totalPayment; 
                         if($this->record->balance == 0){
-                            $this->record->invoice_status = 'done';
-                            $this->dispatch('invoiceUpdateStatus', $this->record->invoice_status); 
+                            $this->record->invoice_status = 'done'; 
+                        }elseif($this->record->invoice_status == 'done'){
+                            $this->record->invoice_status = 'new' ;
                         }
-                        
                         $this->record->update();
+                        $this->dispatch('invoiceUpdateStatus', $this->record);
                        
 
                         return $payment;
@@ -104,13 +107,20 @@ class PaymentTable2 extends BaseWidget
             ])
             ->actions([
                 Tables\Actions\DeleteAction::make()
-                    ->after(function (array $data) {
+                    ->after(function () {
                          //update balance on invoice
                         $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
                         ->where('invoice_id', $this->record->id)
                         ->where('status', 'completed')->sum('total');
                         $this->record->balance = $this->record->final_amount - $totalPayment; 
+                        if($this->record->balance == 0){
+                            $this->record->invoice_status = 'done'; 
+                        }elseif($this->record->invoice_status == 'done'){
+                            $this->record->invoice_status = 'new' ;
+                        }
                         $this->record->update();
+                        $this->dispatch('invoiceUpdateStatus', $this->record);
+                        
                     }),
                 Tables\Actions\EditAction::make()
                     ->record($this->record)
@@ -129,12 +139,12 @@ class PaymentTable2 extends BaseWidget
                         $this->record->balance = $this->record->final_amount - $totalPayment; 
 
                         if($this->record->balance == 0){
-                            $this->record->invoice_status = 'done';
-                            $this->dispatch('invoiceUpdateStatus', $this->record->invoice_status); 
+                            $this->record->invoice_status = 'done'; 
+                        }elseif($this->record->invoice_status == 'done'){
+                            $this->record->invoice_status = 'new' ;
                         }
-                        
                         $this->record->update();
-
+                        $this->dispatch('invoiceUpdateStatus', $this->record);
                         return $record;
                     }),
             ])
@@ -167,7 +177,7 @@ class PaymentTable2 extends BaseWidget
                         ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
                         ->formatStateUsing(fn (?string $state): ?string => number_format($state, 2))
                         ->dehydrateStateUsing(fn (?string $state): ?string => (float)str_replace(",", "", $state))
-                        ->default($this->record->balance ? $this->record->balance : $this->record->final_amount),
+                        ->default($this->record->balance),
                     Forms\Components\Select::make('status')
                             ->options([
                                 'draft' => 'Draft',

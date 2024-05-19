@@ -33,11 +33,12 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             TeamSeeder::class,
+            PaymentMethodSeeder::class,
             CustomerSeeder::class, // Example seeder class
             ProductSeeder::class,
             QuotationSeeder::class, 
             InvoiceSeeder::class,   // Example seeder class
-            // ... Add more seeder classes here
+            RecurringInvoiceSeeder::class,
         ]);
 
     }

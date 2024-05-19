@@ -9,6 +9,7 @@ use App\Models\Invoice;
 use App\Models\TeamSetting;
 use Filament\Facades\Filament;
 use App\Models\RecurringInvoice;
+use Filament\Actions\Action;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\App\Resources\RecurringInvoiceResource;
@@ -132,5 +133,17 @@ class CreateRecurringInvoice extends CreateRecord
 
         return $resource::getUrl('index');
     }
+
+    protected function getCreateFormAction(): Action
+    {
+        return Action::make('create')
+            ->label(__('filament-panels::resources/pages/create-record.form.actions.create.label'))
+            ->keyBindings(['mod+s'])
+            ->action(function () {
+                $this->create();
+            });
+    }
+
+    
 
 }

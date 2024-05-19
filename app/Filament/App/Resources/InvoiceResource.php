@@ -2,6 +2,7 @@
 
 namespace App\Filament\App\Resources;
 
+use Closure;
 use stdClass;
 use Filament\Forms;
 use App\Models\Item;
@@ -120,6 +121,7 @@ class InvoiceResource extends Resource
                             Forms\Components\Group::make()
                                 ->schema([
                                     Forms\Components\Select::make('invoice_status')
+                                        ->label('Invoice Status')
                                         ->options([
                                             'draft' => 'Draft',
                                             'new' => 'New',
@@ -132,7 +134,15 @@ class InvoiceResource extends Resource
                                         ->default('draft')
                                         ->searchable()
                                         ->preload()
-                                        ->required(),
+                                        ->required()
+                                        ->rules([
+                                            fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
+                                                if ( $value == 'done' && $get('balance') != 0 ) {
+                                                    $fail("The :attribute is invalid. The balance is not zero for status Done.");
+                                                }
+                                             
+                                            },
+                                        ]),
                                    Forms\Components\Placeholder::make('recurring_invoice_id')
                                         ->visible(fn($record) => $record?->recurringInvoices()->first())
                                         ->content(function($record){
@@ -329,7 +339,12 @@ class InvoiceResource extends Resource
                                 ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
                                 ->prefix('RM')
                                 ->readonly()
-                                ->live(onBlur: true)
+                                ->default(0.00),
+                            Forms\Components\TextInput::make('balance')
+                                ->formatStateUsing(fn ( $state)  => number_format($state, 2))
+                                ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
+                                ->prefix('RM')
+                                ->readonly()
                                 ->default(0.00),
                                 
 
@@ -357,10 +372,16 @@ class InvoiceResource extends Resource
                                     
                                 }
 
+                                $before_final_amount = (float)str_replace(",", "", $get("final_amount"));
+                                $final_amount = $sub_total + (float)str_replace(",", "", $get("taxes")) + (float)str_replace(",", "", $get("delivery"));
+                                $additional_amount = $final_amount - $before_final_amount;
+                                $current_balance = (float)str_replace(",", "", $get("balance"));
                                 $set('sub_total', number_format($sub_total, 2));
                                 $set('taxes', number_format($taxes, 2));
-                                $set('final_amount', number_format($sub_total + (float)str_replace(",", "", $get("taxes")) + (float)str_replace(",", "", $get("delivery")), 2));
+                                $set('balance', number_format($current_balance + $additional_amount, 2));
+                                $set('final_amount', number_format($final_amount, 2));
 
+                                
                                 return ;
                                 // return $sub_total." ".(float)$get("taxes"). " ". (float)$get("delivery")." ".$sub_total + (float)$get("taxes") + (float)$get("delivery")  ;
                             }),
@@ -467,7 +488,8 @@ class InvoiceResource extends Resource
                         return $record->customer
                             ? CustomerResource::getUrl('edit', ['record' => $record->customer_id])
                             : null;
-                    }),
+                    })
+                    ->wrap(),
                 Tables\Columns\TextColumn::make('invoice_date')
                     ->date('j F, Y')
                     ->sortable()
@@ -524,7 +546,7 @@ class InvoiceResource extends Resource
                     ->prefix('RM ')
                     ->label(__("Balance"))
                     ->state(function (Invoice $record): ?float {
-                        return $record->balance ?? $record->final_amount ;
+                        return $record->balance ;
                     })
                     ->numeric()
                     ->sortable(),

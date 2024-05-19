@@ -22,14 +22,20 @@ use App\Http\Controllers\OnlinePayment\ManualPayment;
 */
 
 // Route::get('/', Home::class)->name('home');
-Route::get('/article/{post:slug}', PostShow::class)->name('post.show');
+// Route::get('/article/{post:slug}', PostShow::class)->name('post.show');
 
 
 // Route::get('/mydownload', function () {
-//     return Pdf::view('pdf', [])
-//     ->format('a4')
-//     ->noSandbox()
-//     ->save('invoice.pdf');
+//   $ali = 0;
+//   $ahmad = 0 ;
+//   if($ahmad == 0){
+//     $ali = 1;
+//    dump("salam", $ali);
+//   }
+//   if($ali == 1){
+//     dd("salam2");
+//   }
+  
 // });
 
 
@@ -53,7 +59,10 @@ Route::get('/paymentpdf/{id}', function ($id) {
 //toyyibpay
 Route::get('/online-payment/toyyibpay/{id}/{payment_method_id?}', [Toyyibpay::class, 'index']);
 Route::post('/online-payment/toyyibpay-callback/{id}', [Toyyibpay::class, 'callback'])
-->withoutMiddleware([VerifyCsrfToken::class]);;
+->withoutMiddleware([VerifyCsrfToken::class]);
+Route::get('/online-payment/toyyibpay-recurring/{id}/{payment_method_id?}', [Toyyibpay::class, 'recurring']);
+Route::post('/online-payment/toyyibpay-recurring-callback/{id}', [Toyyibpay::class, 'recurring_callback'])
+->withoutMiddleware([VerifyCsrfToken::class]);
 
 //manual payment
 Route::post('/online-payment/manual-payment/{id}/{payment_method_id?}', [ManualPayment::class, 'index']);

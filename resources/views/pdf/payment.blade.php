@@ -185,7 +185,7 @@ if (isset($id)) {
                             <h5 class="fw-bolder">Balance</h5>
                         </td>
                         <td class="text-right">
-                            <h5 class="fw-bolder">{{ $record->balance ? $record->balance : $record->final_amount }}</h5>
+                            <h5 class="fw-bolder">{{ $record->balance }}</h5>
                         </td>
                     </tr>
                     @endif
@@ -286,7 +286,7 @@ if (isset($id)) {
 
     <script>
         window.addEventListener('DOMContentLoaded', () => {
-            let balance = <?php echo json_encode($record?->balance ?? '0.00'); ?>;
+            let balance = <?php echo json_encode($record?->balance ); ?>;
             let myModal = new bootstrap.Modal(document.getElementById('exampleModal'), {
                 keyboard: false
             })

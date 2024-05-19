@@ -25,14 +25,24 @@ if (isset($id)) {
 
     $totalPayment = 0;
     $recurring_invoice->balance = 0;
-    // dd($invoices->toArray());
 } else{
  exit();
 }
 
 if(isset($_GET['payment_id'])){
+    $payment_method = PaymentMethod::where('id', $_GET['payment_method_id'])->first();
     $payment_collection = json_decode(str_replace('luqmanahmadnordin', "", base64_decode($_GET['payment_id'])));
-    // dd($payment_collection);
+   
+    if(collect($payment_collection)->pluck(['invoice_id'])->first()){
+        $invoice_id_all = collect($payment_collection)->pluck(['invoice_id']) ;
+        $invoices = Invoice::whereIn('id', $invoice_id_all->all())->get();
+    }else{
+        $invoice_id_all = collect($payment_collection)->first()->invoice_id_all ;
+        $invoices = Invoice::whereIn('id', $invoice_id_all)->get();
+    }
+ 
+  
+    
 }
 
 ?>
@@ -55,52 +65,51 @@ if(isset($_GET['payment_id'])){
 
     <div class="btn-action m-3">
         @if(isset($mailtype))
-        <a href="{{ url('invoicepdf').'/'.base64_encode('luqmanahmadnordin'.$record->id) }}">
-            <button class="btn btn-success btn-print">
-                <i class="bi bi-printer"></i> View
-            </button>
-        </a>
+            <a href="{{ url('invoicepdf').'/'.base64_encode('luqmanahmadnordin'.$record->id) }}">
+                <button class="btn btn-success btn-print">
+                    <i class="bi bi-printer"></i> View
+                </button>
+            </a>
         @else
-        <button class="btn btn-success btn-print">
-            <i class="bi bi-printer"></i> Print / PDF
-        </button>
-
-        <div class="btn-group">
-            <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                <i class="bi bi-cpu"></i> Status {{ ucwords($status) }}
+            <button class="btn btn-success btn-print">
+                <i class="bi bi-printer"></i> Print / PDF
             </button>
-            <ul class="dropdown-menu">
-                <li><a href="{{ url('recurringInvoicepdf/'.$hashid).'/draft' }}" class="dropdown-item">Draft</a></li>
-                <li><a href="{{ url('recurringInvoicepdf/'.$hashid).'/new' }}" class="dropdown-item">New</a></li>
-                <li><a href="{{ url('recurringInvoicepdf/'.$hashid).'/process' }}" class="dropdown-item">Process</a></li>
-                <li><a href="{{ url('recurringInvoicepdf/'.$hashid).'/done' }}" class="dropdown-item">Done</a></li>
-            </ul>
-        </div>
+            @if (!isset($_GET['payment_id']))
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-cpu"></i> Status {{ ucwords($status) }}
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{ url('recurringInvoicepdf/'.$hashid).'/draft' }}" class="dropdown-item">Draft</a></li>
+                        <li><a href="{{ url('recurringInvoicepdf/'.$hashid).'/new' }}" class="dropdown-item">New</a></li>
+                        <li><a href="{{ url('recurringInvoicepdf/'.$hashid).'/process' }}" class="dropdown-item">Process</a></li>
+                        <li><a href="{{ url('recurringInvoicepdf/'.$hashid).'/done' }}" class="dropdown-item">Done</a></li>
+                    </ul>
+                </div>
+                @if(!isset($payment_method_id) && $status == 'new' && $invoices->count() > 0)
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-credit-card"></i> Pay
+                    </button>
+                    <ul class="dropdown-menu">
+                        @if (count($paymentMethod) > 0)
+                            @foreach ($paymentMethod as $paymentMethodData)
+                                @if ($paymentMethodData->payment_gateway_id == 1)
+                                    <li><a href="#" class="dropdown-item">{{ $paymentMethodData->name }}</a></li>
+                                @elseif ($paymentMethodData->payment_gateway_id == 2)
+                                    <li><a href="{{ url('online-payment/toyyibpay-recurring/'.$hashid.'/'.$paymentMethodData->id) }}" class="dropdown-item">{{ $paymentMethodData->name }}</a></li>
+                                @else
+                                    <li><a href="#" data-detail="{{ base64_encode(json_encode($paymentMethodData->toArray())) }}" data-url="{{ url('online-payment/manual-payment-recurring/'.$hashid.'/'.$paymentMethodData->id) }}" class="dropdown-item payment-list">{{ $paymentMethodData->name }}</a></li>
+                                @endif
 
-        @if(!isset($payment_method_id) && $status == 'new')
-        <div class="btn-group">
-            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
-                <i class="bi bi-credit-card"></i> Pay
-            </button>
-            <ul class="dropdown-menu">
-                @if (count($paymentMethod) > 0)
-                    @foreach ($paymentMethod as $paymentMethodData)
-                        @if ($paymentMethodData->payment_gateway_id == 1)
-                            <li><a href="#" class="dropdown-item">{{ $paymentMethodData->name }}</a></li>
-                        @elseif ($paymentMethodData->payment_gateway_id == 2)
-                            <li><a href="{{ url('online-payment/toyyibpay/'.$hashid.'/'.$paymentMethodData->id) }}" class="dropdown-item">{{ $paymentMethodData->name }}</a></li>
-                        @else
-                        <li><a href="#" data-detail="{{ base64_encode(json_encode($paymentMethodData->toArray())) }}" data-url="{{ url('online-payment/manual-payment-recurring/'.$hashid.'/'.$paymentMethodData->id) }}" class="dropdown-item payment-list">{{ $paymentMethodData->name }}</a></li>
+                            @endforeach
+                            @else
+                            <li><a href="#" class="dropdown-item">No Payment Available</a></li>
                         @endif
-
-                    @endforeach
-                    @else
-                    <li><a href="#" class="dropdown-item">No Payment Available</a></li>
+                    </ul>
+                </div>
                 @endif
-            </ul>
-        </div>
-        @endif
-
+            @endif
         @endif
 
         @if (Session::has('message'))
@@ -229,11 +238,22 @@ if(isset($_GET['payment_id'])){
                   
                     @if (isset($payment_collection))
                     @foreach($payment_collection AS $key2 => $val2)
+                    <?php
+                           
+                    ?>
                     <tr>
                         <td colspan="5">
                             <span class="badge bg-success">
-                                {{ ucwords($val2->status) }}
-                            </span> Paid {{ $invoice_prefix.collect($invoices)->where('id', $val2->invoice_id)->first()->numbering}} On {{ date("j F, Y H:i:s", strtotime($val2->updated_at) ) }}, {{ $val2->notes }}
+                                {{ ucwords($val2?->status ?? 'Processing') }}
+                              
+                            </span> 
+                            @if($val2->invoice_id ?? false)
+                                Paid using {{ $payment_method->name }} {{ $invoice_prefix.collect($invoices)->where('id', $val2->invoice_id)->first()->numbering  }} On {{ date("j F, Y H:i:s", strtotime($val2->updated_at) ) }}, {{ $val2->notes }}
+                            @else
+                                Paid using {{ $payment_method->name }} On {{ date("j F, Y H:i:s", strtotime($val2->updated_at) ) }}
+                            @endif
+
+                        
                         </td>
                         <td>
                             Paid
@@ -279,17 +299,18 @@ if(isset($_GET['payment_id'])){
                     </div>
                     <div class="modal-body">
                         @csrf
+                        <input type="hidden" id="mp-id-all" name="id-all">
                         <div class="mb-3">
                             <label for="recipient-name" class="col-form-label">Payment Name</label>
-                            <input type="text" readonly class="form-control" id="mp-name">
+                            <input type="text" readonly class="form-control" id="mp-name" name="name">
                         </div>
                         <div class="mb-3">
                             <label for="recipient-name" class="col-form-label">Bank Account</label>
-                            <input type="text" readonly class="form-control" id="mp-bank_account">
+                            <input type="text" readonly class="form-control" id="mp-bank_account" name="bank_account">
                         </div>
                         <div class="mb-3">
                             <label for="recipient-name" class="col-form-label">Amount <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" required class="form-control" id="mp-amount" name="total" id="amount">
+                            <input type="number" step="0.01" required class="form-control" id="mp-amount" name="amount">
                             @if ($errors->has('total'))
                                 <span class="text-danger">{{ $errors->first('total') }}</span>
                             @endif
@@ -333,7 +354,8 @@ if(isset($_GET['payment_id'])){
 
     <script>
         window.addEventListener('DOMContentLoaded', () => {
-            let final_balance = <?php echo json_encode($final_balance ?? 0 ); ?>;
+            let final_balance = <?php echo json_encode($final_balance ); ?>;
+            let id_all = <?php echo json_encode(base64_encode(json_encode($invoices->pluck('id')->all())) ?? null ); ?>;
             let myModal = new bootstrap.Modal(document.getElementById('exampleModal'), {
                 keyboard: false
             })
@@ -355,11 +377,12 @@ if(isset($_GET['payment_id'])){
             document?.querySelector('.payment-list')?.addEventListener('click', (e) => {
                 let detail = JSON.parse(atob(e.target.getAttribute('data-detail')));
                 let actionurl = e.target.getAttribute('data-url');
-                console.log(detail, actionurl);
+                // console.log(detail, actionurl);
                 document?.querySelector('#mp-form').setAttribute('action', actionurl);
                 document.querySelector('#mp-name').value = detail.name;
+                document.querySelector('#mp-id-all').value = id_all;
                 document.querySelector('#mp-bank_account').value = detail.bank_account;
-                document.querySelector('#mp-amount').value = final_balance;
+                document.querySelector('#mp-amount').value = final_balance.toFixed(2);
                 myModal.toggle();
             });
 

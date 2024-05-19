@@ -4,9 +4,11 @@ namespace Database\Seeders;
 
 use App\Models\Item;
 use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\TeamSetting;
 use Faker\Factory as Faker;
+use App\Models\PaymentMethod;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
@@ -88,8 +90,48 @@ class InvoiceSeeder extends Seeder
                 'sub_total' => $sub_total,
                 'taxes' => $taxes,
                 'final_amount' => $final_amount,
+                'balance' => $final_amount,
             
             ]);
+
+           
+            $payment_method = PaymentMethod::where('team_id', $invoice->team_id)->first();
+            if($invoice->invoice_status == 'process'){
+                $payment = Payment::Create(
+                    [
+                        'team_id' => $invoice->team_id,
+                        'invoice_id' => $invoice->id,
+                        'payment_method_id' => $payment_method->id,
+                        'payment_date' => date('Y-m-d'),
+                        'total' => $invoice->balance,
+                        'notes' => $faker->sentence,
+                        'reference' => $faker->randomNumber(8, true),
+                        'status' => 'processing',
+                        'attachments' => null ,
+                    ]
+                );
+               
+
+            }elseif($invoice->invoice_status == 'done'){
+                $payment = Payment::Create(
+                    [
+                        'team_id' => $invoice->team_id,
+                        'invoice_id' => $invoice->id,
+                        'payment_method_id' => $payment_method->id,
+                        'payment_date' => date('Y-m-d'),
+                        'total' => $invoice->balance,
+                        'notes' => $faker->sentence,
+                        'reference' => $faker->randomNumber(8, true),
+                        'status' => 'completed',
+                        'attachments' => null ,
+                    ]
+                );
+                $invoice->balance = 0;
+                $invoice->save();
+        
+                
+            }
+           
 
 
 

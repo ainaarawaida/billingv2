@@ -27,7 +27,11 @@ class QuotationSeeder extends Seeder
             $lastid = Quotation::where('team_id', $quotation->team_id)->count('id') ;
             $numbering = str_pad($lastid, 6, "0", STR_PAD_LEFT) ;
             $team_setting = TeamSetting::where('team_id', $quotation->team_id )->first();
-            $quotation_current_no = $team_setting->quotation_current_no ?? '0' ;
+            $team_setting = TeamSetting::firstOrCreate(
+                ['team_id' =>  $quotation->team_id ],
+                ['quotation_current_no' => 0]
+            );
+            $quotation_current_no = $team_setting?->quotation_current_no ?? '0' ;
             $team_setting->quotation_current_no = $quotation_current_no + 1 ;
             $team_setting->save();
 
@@ -82,17 +86,12 @@ class QuotationSeeder extends Seeder
 
             $final_amount = ($sub_total + $taxes + $quotation->delivery);
 
-
-
             $quotation->update([
                 'sub_total' => $sub_total,
                 'taxes' => $taxes,
                 'final_amount' => $final_amount,
             
             ]);
-
-
-
         }
     }
 }

@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Model;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Forms\Components\Actions\Action;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\App\Resources\RecurringInvoiceResource\Pages;
@@ -141,6 +142,7 @@ class RecurringInvoiceResource extends Resource
                     ])->columns(2),
 
                 Forms\Components\Section::make('Reference Invoice')
+                ->visible(fn(string $operation) => $operation == 'create')
                 ->schema([
                     Forms\Components\Section::make()
                         ->schema([
@@ -404,16 +406,32 @@ class RecurringInvoiceResource extends Resource
                     ->color('primary')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('customer.name')
-                    ->numeric()
-                    ->sortable(),
+                    ->label(__('Customer'))
+                    ->formatStateUsing(fn (string $state): string => __("<b>{$state}</b>"))
+                    ->html()
+                    ->searchable()
+                    ->url(function ($record) {
+                        return $record->customer
+                            ? CustomerResource::getUrl('edit', ['record' => $record->customer_id])
+                            : null;
+                    })
+                    ->wrap(),
                 Tables\Columns\TextColumn::make('start_date')
-                    ->date()
+                    ->date('j F, Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('stop_date')
-                    ->date()
-                    ->sortable(),
+                    ->date('j F, Y')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('every')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('invoices_sum_final_amount')
+                    ->wrapHeader()
+                    ->sum('invoices', 'final_amount'),
+                Tables\Columns\TextColumn::make('invoices_sum_balance')
+                    ->wrapHeader()
+                    ->sum('invoices', 'balance')
+                    ->summarize(Sum::make()->label('Total')),
                 Tables\Columns\ToggleColumn::make('status')
                     ->disabled()
                     ->searchable(),

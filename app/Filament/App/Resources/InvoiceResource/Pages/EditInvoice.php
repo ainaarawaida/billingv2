@@ -58,8 +58,19 @@ class EditInvoice extends EditRecord
     }
 
     #[On('invoiceUpdateStatus')] 
-    public function invoiceUpdateStatus($invoiceStatus = 'draft')
+    public function invoiceUpdateStatus($invoice)
     {
-        $this->data['invoice_status'] = $invoiceStatus;
+        $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
+        ->where('invoice_id', $invoice['id'])
+        ->where('status', 'completed')->sum('total');
+        $invoice['balance'] = $this->data['final_amount'] - $totalPayment; 
+        if($invoice['balance'] == 0){
+            $invoice['invoice_status'] = 'done'; 
+        }elseif($invoice['invoice_status'] == 'done'){
+            $invoice['invoice_status'] = 'new' ;
+        }
+
+        $this->data['invoice_status'] = $invoice['invoice_status'];
+        $this->data['balance'] = $invoice['balance'];
     }
 }

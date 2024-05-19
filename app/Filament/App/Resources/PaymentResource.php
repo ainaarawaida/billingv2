@@ -4,6 +4,7 @@ namespace App\Filament\App\Resources;
 
 use Filament\Forms;
 use Filament\Tables;
+use App\Models\Invoice;
 use App\Models\Payment;
 use Filament\Forms\Get;
 use Filament\Forms\Form;
@@ -17,6 +18,7 @@ use Filament\Support\Enums\ActionSize;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\App\Resources\PaymentResource\Pages;
 use App\Filament\App\Resources\PaymentResource\RelationManagers;
@@ -148,7 +150,24 @@ class PaymentResource extends Resource
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\EditAction::make(),
-                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\DeleteAction::make()
+                        ->after(function (array $data, Model $record) {
+                            //update balance on invoice
+                            if($record->invoice_id){
+                                $invoice = Invoice::find($record->invoice_id);
+                                $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
+                                ->where('invoice_id', $invoice->id)
+                                ->where('status', 'completed')->sum('total');
+                                $invoice->balance = $invoice->final_amount - $totalPayment; 
+                                if($invoice->balance == 0){
+                                    $invoice->invoice_status = 'done'; 
+                                }elseif($invoice->invoice_status == 'done'){
+                                    $invoice->invoice_status = 'new' ;
+                                }
+                                $invoice->update();
+                                
+                            }
+                        }),
                     Tables\Actions\ForceDeleteAction::make(),
                     Tables\Actions\ViewAction::make(),
                     Tables\Actions\Action::make('public_url') 

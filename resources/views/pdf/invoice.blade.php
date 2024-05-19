@@ -57,7 +57,7 @@ if (isset($payment_method_id)) {
                     'invoice_id' => $record->id,
                     'payment_method_id' => $paymentMethod->where('payment_gateway_id', 2)->first()->id,
                     'payment_date' => date('Y-m-d'),
-                    'total' => isset($record->balance) ? $record->balance : $record->final_amount,
+                    'total' => $record->balance,
                     'notes' => 'billcode:' . $_GET['billcode'] . ' transaction id:' . $_GET['transaction_id'],
                     'reference' => $_GET['transaction_id'],
                     'status' => $status_payment,
@@ -275,7 +275,7 @@ $totalPayment = Payment::where('team_id', $record->team_id)
                             <h5 class="fw-bolder">Balance</h5>
                         </td>
                         <td class="text-right">
-                            <h5 class="fw-bolder">{{ isset($record->balance) ? $record->balance : $record->final_amount }}</h5>
+                            <h5 class="fw-bolder">{{ $record->balance }}</h5>
                         </td>
                     </tr>
                     @if (isset($payment))
@@ -321,15 +321,15 @@ $totalPayment = Payment::where('team_id', $record->team_id)
                         @csrf
                         <div class="mb-3">
                             <label for="recipient-name" class="col-form-label">Payment Name</label>
-                            <input type="text" readonly class="form-control" id="mp-name">
+                            <input type="text" readonly class="form-control" id="mp-name" name="name">
                         </div>
                         <div class="mb-3">
                             <label for="recipient-name" class="col-form-label">Bank Account</label>
-                            <input type="text" readonly class="form-control" id="mp-bank_account">
+                            <input type="text" readonly class="form-control" id="mp-bank_account" name="bank_account">
                         </div>
                         <div class="mb-3">
                             <label for="recipient-name" class="col-form-label">Amount <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" required class="form-control" id="mp-amount" name="total" id="amount">
+                            <input type="number" step="0.01" required class="form-control" id="mp-amount" name="amount" >
                             @if ($errors->has('total'))
                                 <span class="text-danger">{{ $errors->first('total') }}</span>
                             @endif
@@ -399,7 +399,7 @@ $totalPayment = Payment::where('team_id', $record->team_id)
                 document?.querySelector('#mp-form').setAttribute('action', actionurl);
                 document.querySelector('#mp-name').value = detail.name;
                 document.querySelector('#mp-bank_account').value = detail.bank_account;
-                document.querySelector('#mp-amount').value = balance;
+                document.querySelector('#mp-amount').value = parseFloat(balance).toFixed(2);
                 myModal.toggle();
             });
 
