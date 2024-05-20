@@ -131,6 +131,7 @@ class PaymentTable2 extends BaseWidget
                         return $data;
                     })
                     ->using(function (Model $record, array $data): Model {
+                        // dd($record,$data, $this->record);
                         $record->update($data);
                         //update balance on invoice
                         $totalPayment = Payment::where('team_id', Filament::getTenant()->id)

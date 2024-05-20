@@ -15,7 +15,7 @@ use App\Filament\App\Resources\InvoiceResource;
 class EditInvoice extends EditRecord
 {
     protected static string $resource = InvoiceResource::class;
-    public $customer_id ;
+    // public $customer_id ;
 
     protected function getHeaderActions(): array
     {
@@ -60,6 +60,7 @@ class EditInvoice extends EditRecord
     #[On('invoiceUpdateStatus')] 
     public function invoiceUpdateStatus($invoice)
     {
+        // dd($this->data, $this->getRecord());
         $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
         ->where('invoice_id', $invoice['id'])
         ->where('status', 'completed')->sum('total');
