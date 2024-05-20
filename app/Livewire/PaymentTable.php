@@ -2,59 +2,175 @@
 
 namespace App\Livewire;
 
-use Filament\Forms;
+use Filament\Forms ;
 use Filament\Tables;
 use App\Models\Payment;
 use Filament\Forms\Get;
-use Livewire\Component;
-use Filament\Forms\Form;
+use Filament\Tables\Table;
 use App\Models\TeamSetting;
 use Livewire\Attributes\On;
 use App\Models\PaymentMethod;
 use Filament\Facades\Filament;
-use Illuminate\Contracts\View\View;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Components\Fieldset;
-use Filament\Tables\Contracts\HasTable;
-use Filament\Forms\Components\TextInput;
+use Livewire\Component as Livewire;
+use Filament\Forms\Components\Section;
+use Illuminate\Database\Eloquent\Model;
+use Filament\Forms\Components\Component;
 use Illuminate\Database\Eloquent\Builder;
-use App\Filament\App\Resources\PaymentResource;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Tables\Concerns\InteractsWithTable;
+use App\Filament\App\Resources\InvoiceResource;
+use Filament\Widgets\TableWidget as BaseWidget;
 
-
-class PaymentTable extends Component implements HasForms 
+class PaymentTable extends BaseWidget
 {
 
-    use InteractsWithForms;
-  
-    public $record;
-    public $showCreateModal = false;
-    public $items = [];
-    public $newItem = '';
-    public $type ;
-    public $payment_method_id ;
-    public $payment_date ;
-    public $total ;
-    public $notes ;
-    public $status ;
-
-    public ?array $paymentData = [];
-    public ?array $openPaymentForm = [];
-
-    protected function getForms(): array
+    public ?Model $record = null;
+    // public $currentFormInput = 2;
+    
+    public function table(Table $table): Table
     {
-        return [
-            'form',
-            'paymentForm',
-        ];
+        $prefix = TeamSetting::where('team_id', Filament::getTenant()->id )->first()->invoice_prefix_code ?? '#I' ;
+        
+        return $table
+            ->heading(false)
+            ->query(
+                Payment::query()
+                ->where('team_id', Filament::getTenant()->id)
+                ->where('invoice_id', $this->record->id)
+            )
+            ->headerActions([
+                Tables\Actions\CreateAction::make()
+                    ->model(Payment::class)
+                    ->form($this->paymentForm())
+                    ->mutateFormDataUsing(function (array $data): array {
+                        $data['invoice_id'] = $this->record->id;
+                        $data['team_id'] = Filament::getTenant()->id;
+                        return $data;
+                    })
+                    ->using(function (array $data, string $model): Model {
+                      
+                        $payment = $model::create($data);
+                        //update balance on invoice
+                        $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
+                        ->where('invoice_id', $this->record->id)
+                        ->where('status', 'completed')->sum('total');
+                        $this->record->balance = $this->record->final_amount - $totalPayment; 
+                        if($this->record->balance == 0){
+                            $this->record->invoice_status = 'done'; 
+                        }elseif($this->record->invoice_status == 'done'){
+                            $this->record->invoice_status = 'new' ;
+                        }
+                        $this->record->update();
+                        $this->dispatch('invoiceUpdateStatus', $this->record);
+                       
+
+                        return $payment;
+                    }), // Add the custom action button
+            ])
+            ->columns([
+                Tables\Columns\TextColumn::make('invoice.numbering')
+                    ->numeric()
+                    ->sortable()
+                    ->searchable()
+                    ->formatStateUsing(function(string $state, $record): string {
+                            return "{$state}";
+                        } 
+                    )
+                    ->color('primary')
+                    ->prefix($prefix)
+                    ->url(fn($record) => InvoiceResource::getUrl('edit', ['record' => $record->invoice_id])),
+                Tables\Columns\TextColumn::make('payment_method.name')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('payment_date')
+                    ->date('j F, Y')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('total')
+                    ->prefix('RM ')
+                    ->numeric()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('notes')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('status')
+                    ->badge()
+                    ->searchable()
+                    ->formatStateUsing(fn (string $state): string => __(ucwords($state))),
+                Tables\Columns\TextColumn::make('deleted_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->actions([
+                Tables\Actions\DeleteAction::make()
+                    ->after(function () {
+                         //update balance on invoice
+                        $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
+                        ->where('invoice_id', $this->record->id)
+                        ->where('status', 'completed')->sum('total');
+                        $this->record->balance = $this->record->final_amount - $totalPayment; 
+                        if($this->record->balance == 0){
+                            $this->record->invoice_status = 'done'; 
+                        }elseif($this->record->invoice_status == 'done'){
+                            $this->record->invoice_status = 'new' ;
+                        }
+                        $this->record->update();
+                        $this->dispatch('invoiceUpdateStatus', $this->record);
+                        
+                    }),
+                Tables\Actions\EditAction::make()
+                    ->record($this->record)
+                    ->form($this->paymentForm())
+                    ->mutateRecordDataUsing(function (array $data): array {
+                        $data['invoice_id'] = $this->record->id;
+                        $data['team_id'] = Filament::getTenant()->id;
+                        return $data;
+                    })
+                    ->using(function (Model $record, array $data): Model {
+                        // dd($record,$data, $this->record);
+                        $record->update($data);
+                        //update balance on invoice
+                        $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
+                        ->where('invoice_id', $this->record->id)
+                        ->where('status', 'completed')->sum('total');
+                        $this->record->balance = $this->record->final_amount - $totalPayment; 
+
+                        if($this->record->balance == 0){
+                            $this->record->invoice_status = 'done'; 
+                        }elseif($this->record->invoice_status == 'done'){
+                            $this->record->invoice_status = 'new' ;
+                        }
+                        $this->record->update();
+                        $this->dispatch('invoiceUpdateStatus', $this->record);
+                        return $record;
+                    }),
+            ])
+            ->defaultSort('updated_at', 'desc');
     }
 
-    public function paymentForm(Form $form): Form
-    {
-        return $form
-        ->schema([
-            Forms\Components\Section::make()
+    // public function mount()
+    // {
+    //     // dd($this->currentFormInput->getState());
+    //     $this->currentFormInput = $this->record->getAttributes() ;
+    // //     $this->currentFormInput['balance'] = '12';
+    // }
+
+    // #[On('updateCurrentFormInput')] 
+    // public function updateCurrentFormInput($data){
+    //     $this->currentFormInput = $data['balance'] ;
+    // }
+
+
+    function paymentForm(){
+        // dd($this->record);
+        return [
+            Section::make()
                 ->schema([
                     Forms\Components\Select::make('payment_method_id')
                         ->label("Payment Method")
@@ -73,9 +189,19 @@ class PaymentTable extends Component implements HasForms
                         ->required()
                         ->prefix('RM')
                         ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
-                        ->formatStateUsing(fn (string $state): string => number_format($state, 2))
-                        ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
-                        ->default(0.00),
+                        // ->formatStateUsing(fn (?string $state): ?string => number_format($state, 2))
+                        ->formatStateUsing(function(?string $state, string $operation){
+                            // if($operation == 'create'){
+                            //     return number_format($this->currentFormInput, 2); 
+                            // }
+                            return number_format($state, 2);
+
+                        })
+                        ->dehydrateStateUsing(fn (?string $state): ?string => (float)str_replace(",", "", $state))
+                        ->default($this->record->balance),
+                        // ->default($this->currentFormInput),
+                        // ->default( fn (?string $state, ?Model $record, Get $get): ?string => dd($record, $get)),
+                       
                     Forms\Components\Select::make('status')
                             ->options([
                                 'draft' => 'Draft',
@@ -91,6 +217,14 @@ class PaymentTable extends Component implements HasForms
                             ->searchable()
                             ->preload()
                             ->required(),
+                    Forms\Components\TextInput::make('reference')
+                                ->required(),    
+                    Forms\Components\FileUpload::make('attachments')
+                                ->label(__('Attachments'))
+                                ->directory('payment-attachments')
+                                ->multiple()
+                                ->downloadable(),
+                        
                     Forms\Components\Textarea::make('notes')
                         ->maxLength(65535)
                         ->columnSpanFull(),
@@ -98,75 +232,9 @@ class PaymentTable extends Component implements HasForms
                     
                 ])
                 ->columns(2),
-        ])
-        ->statePath('paymentData')
-        ->model(Payment::class);
+        
+                            ];
     }
 
-    public function form(Form $form): Form
-    {
-        return $form
-        ->schema([
-            Forms\Components\Section::make()
-                ->schema([
-                    Forms\Components\Actions::make([
-                        Forms\Components\Actions\Action::make('Add Payment')
-                            ->label(__('Add Payment'))
-                            ->action(function (array $data, $record): void {
-                                $this->showCreateModal = true;
-                                $this->dispatch('open-modal', id: 'payment-form');
-                                
-                            })
-                    ]),
-                    
-                ])
-                ->columns(2),
-        ])
-        ->statePath('openPaymentForm')
-        ->model(Payment::class);
-    }
-
-    // public function validate($rules = null, $messages = [], $attributes = []){
-     
-    //     dd("ff",$this->form->getState());
-    // }
-
- 
     
-
-    #[On('refreshPaymentTable')] 
-    public function mount()
-    {
-       $this->items = Payment::query()
-       ->where('team_id', Filament::getTenant()->id)
-       ->where('invoice_id', $this->record->id)
-       ->get();
-
-       $this->form->fill();
-       $this->paymentForm->fill();
-
-    }
-
-
-    public function delete($id)
-    {
-        Payment::destroy($id);
-        $payment = Payment::where('team_id', Filament::getTenant()->id)
-        ->where('invoice_id', $this->record->id) ;
-
-        $this->items = $payment->get();
-
-         //update balance on invoice
-         $totalPayment = $payment
-         ->where('status', 'completed')->sum('total');
-
-         $this->record->balance = $this->record->final_amount - $totalPayment; 
-         $this->record->update();
-
-    }
-
-    public function render()
-    {
-        return view('livewire.payment-table');
-    }
 }

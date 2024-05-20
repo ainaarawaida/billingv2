@@ -32,12 +32,14 @@ class PaymentResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $prefix = TeamSetting::where('team_id', Filament::getTenant()->id )->first()->invoice_prefix_code ?? '#I' ;
+        
         return $form
             ->schema([
                 Forms\Components\Section::make()
                     ->schema([
                         Forms\Components\Select::make('invoice_id')
-                            ->prefix('#I')
+                            ->prefix($prefix)
                             ->relationship('invoice', 'numbering', modifyQueryUsing: fn (Builder $query) => $query->whereBelongsTo(Filament::getTenant(), 'teams'))
                             ->searchable()
                             ->preload(),
@@ -158,7 +160,11 @@ class PaymentResource extends Resource
                                 $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
                                 ->where('invoice_id', $invoice->id)
                                 ->where('status', 'completed')->sum('total');
-                                $invoice->balance = $invoice->final_amount - $totalPayment; 
+                                $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
+                                ->where('invoice_id', $record->id)
+                                ->where('status', 'refunded')->sum('total');
+
+                                $invoice->balance = $invoice->final_amount - $totalPayment + $totalRefunded ; 
                                 if($invoice->balance == 0){
                                     $invoice->invoice_status = 'done'; 
                                 }elseif($invoice->invoice_status == 'done'){

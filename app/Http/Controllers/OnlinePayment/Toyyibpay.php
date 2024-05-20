@@ -116,7 +116,11 @@ class Toyyibpay extends Controller
           $totalPayment = Payment::where('team_id',  $invoice->team_id)
             ->where('invoice_id', $invoice->id)
             ->where('status', 'completed')->sum('total');
-            $invoice->balance = $invoice->final_amount - $totalPayment;
+          $totalRefunded = Payment::where('team_id', $invoice->team_id)
+            ->where('invoice_id', $invoice->id)
+            ->where('status', 'refunded')->sum('total');
+
+            $invoice->balance = $invoice->final_amount - $totalPayment + $totalRefunded;
             if($invoice->balance == 0){
               $invoice->invoice_status = 'done';
             }
@@ -260,7 +264,11 @@ class Toyyibpay extends Controller
               $totalPayment = Payment::where('team_id',  $invoice->team_id)
                 ->where('invoice_id', $invoice->id)
                 ->where('status', 'completed')->sum('total');
-                $invoice->balance = $invoice->final_amount - $totalPayment;
+              $totalRefunded = Payment::where('team_id', $invoice->team_id)
+                ->where('invoice_id', $invoice->id)
+                ->where('status', 'refunded')->sum('total');
+
+                $invoice->balance = $invoice->final_amount - $totalPayment + $totalRefunded ;
                 if($invoice->balance == 0){
                   $invoice->invoice_status = 'done';
                 }

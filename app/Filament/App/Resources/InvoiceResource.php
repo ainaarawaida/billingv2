@@ -20,10 +20,9 @@ use App\Livewire\NoteTable;
 use App\Models\TeamSetting;
 use App\Mail\QuotationEmail;
 use App\Models\PaymentMethod;
-use App\Livewire\PaymentTable;
 use Filament\Facades\Filament;
 use Illuminate\Support\Carbon;
-use App\Livewire\PaymentTable2;
+use App\Livewire\PaymentTable;
 use Filament\Resources\Resource;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
@@ -44,6 +43,7 @@ use Filament\Forms\Components\Actions\Action;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\App\Resources\InvoiceResource\Pages;
 use App\Filament\App\Resources\InvoiceResource\RelationManagers;
+use Filament\Forms\Components\Section;
 
 class InvoiceResource extends Resource
 {
@@ -380,7 +380,6 @@ class InvoiceResource extends Resource
                                 $set('taxes', number_format($taxes, 2));
                                 $set('balance', number_format($current_balance + $additional_amount, 2));
                                 $set('final_amount', number_format($final_amount, 2));
-
                                 
                                 return ;
                                 // return $sub_total." ".(float)$get("taxes"). " ". (float)$get("delivery")." ".$sub_total + (float)$get("taxes") + (float)$get("delivery")  ;
@@ -424,7 +423,7 @@ class InvoiceResource extends Resource
                                         ->label(__('Payment'))
                                         ->hidden(fn (?Model $record): bool => $record === null)
                                         ->schema([
-                                            Forms\Components\Livewire::make(PaymentTable2::class,[])
+                                            Forms\Components\Livewire::make(PaymentTable::class,[])
                                             ->key('PaymentTable')
                                         ])
 
@@ -622,6 +621,37 @@ class InvoiceResource extends Resource
                     Tables\Actions\DeleteAction::make(),
                     Tables\Actions\ForceDeleteAction::make(),
                     Tables\Actions\ViewAction::make(),
+                    Tables\Actions\Action::make('payment')
+                        ->label(__('Payment'))
+                        ->icon('heroicon-m-credit-card')
+                        ->color('info')
+                        ->form(self::paymentForm())
+                        ->mutateFormDataUsing(function (Model $record, Component $livewire, array $data): array {
+                            $data['invoice_id'] = $record->id;
+                            $data['team_id'] = Filament::getTenant()->id;
+                            return $data;
+                        })
+                        ->action(function (array $data, Model $record) {
+                            $payment = Payment::create($data);
+                            //update balance on invoice
+                            $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
+                            ->where('invoice_id', $record->id)
+                            ->where('status', 'completed')->sum('total');
+                            $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
+                            ->where('invoice_id', $record->id)
+                            ->where('status', 'refunded')->sum('total');
+
+                            $record->balance = $record->final_amount - $totalPayment + $totalRefunded; 
+                            if($record->balance == 0){
+                                $record->invoice_status = 'done'; 
+                            }elseif($record->invoice_status == 'done'){
+                                $record->invoice_status = 'new' ;
+                            }
+                            $record->update();
+                        }), // Add the custom action button
+                    
+                    
+                    
                     Tables\Actions\Action::make('replicate')
                         ->label(__('Replicate'))
                         ->icon('heroicon-m-square-2-stack')
@@ -866,5 +896,73 @@ class InvoiceResource extends Resource
         ]);
     }
 
+
+
+
+
+
+    public static function paymentForm(){
+        $prefix = TeamSetting::where('team_id', Filament::getTenant()->id )->first()->invoice_prefix_code ?? '#I' ;
+        
+        return [
+            Section::make()
+                ->schema([
+                    Forms\Components\TextInput::make('invoice_id')
+                        ->label(__('Invoice Number'))
+                        ->prefix($prefix)
+                        ->default(fn(Model $record) => $record->numbering)
+                        ->readonly(),
+                    Forms\Components\Select::make('payment_method_id')
+                        ->label("Payment Method")
+                        ->options(function (Get $get, string $operation){
+                            $payment_method = PaymentMethod::where('team_id', Filament::getTenant()->id)
+                            ->where('status', 1)->get()->pluck('name', 'id');
+                            return $payment_method ;
+                        })
+                        ->searchable()
+                        ->preload()
+                        ->required(),
+                    Forms\Components\DatePicker::make('payment_date')
+                        ->required()
+                        ->default(now()),
+                    Forms\Components\TextInput::make('total')
+                        ->required()
+                        ->prefix('RM')
+                        ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
+                        ->formatStateUsing(fn (?string $state): ?string => number_format($state, 2))
+                        ->dehydrateStateUsing(fn (?string $state): ?string => (float)str_replace(",", "", $state))
+                        ->default(fn(Model $record) => abs($record->balance)),
+                    Forms\Components\Select::make('status')
+                            ->options([
+                                'draft' => 'Draft',
+                                'pending_payment' => 'Pending payment',
+                                'on_hold' => 'On hold',
+                                'processing ' => 'Processing ',
+                                'completed' => 'Completed',
+                                'failed' => 'Failed',
+                                'canceled' => 'Canceled',
+                                'refunded' => 'Refunded',
+                            ])
+                            ->default(fn(Model $record) => $record->balance < 0 ? 'refunded' : 'completed')
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+                    Forms\Components\TextInput::make('reference')
+                            ->required(),    
+                    Forms\Components\FileUpload::make('attachments')
+                            ->label(__('Attachments'))
+                            ->directory('payment-attachments')
+                            ->multiple()
+                            ->downloadable(),
+                    Forms\Components\Textarea::make('notes')
+                        ->maxLength(65535)
+                        ->columnSpanFull(),
+
+                    
+                ])
+                ->columns(2),
+        
+        ];
+    }
 
 }

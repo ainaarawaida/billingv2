@@ -17,7 +17,7 @@ use Filament\Tables\Table;
 use App\Livewire\NoteTable;
 use App\Models\TeamSetting;
 use Filament\Facades\Filament;
-use App\Livewire\PaymentTable2;
+use App\Livewire\PaymentTable;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
 use Filament\Tables\Filters\Filter;
@@ -404,7 +404,7 @@ class InvoicesRelationManager extends RelationManager
                                     ->label(__('Payment'))
                                     ->hidden(fn (?Model $record): bool => $record === null)
                                     ->schema([
-                                        Forms\Components\Livewire::make(PaymentTable2::class,[])
+                                        Forms\Components\Livewire::make(PaymentTable::class,[])
                                         ->key('PaymentTable')
                                     ])
 
@@ -653,7 +653,11 @@ class InvoicesRelationManager extends RelationManager
                         $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
                         ->where('invoice_id', $record->id)
                         ->where('status', 'completed')->sum('total');
-                        $data['balance'] = $data['final_amount'] - $totalPayment;
+                        $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
+                        ->where('invoice_id', $record->id)
+                        ->where('status', 'refunded')->sum('total');
+            
+                        $data['balance'] = $data['final_amount'] - $totalPayment + $totalRefunded ;
                         if($data['balance'] == 0){
                             $data['invoice_status'] = 'done';
                         }

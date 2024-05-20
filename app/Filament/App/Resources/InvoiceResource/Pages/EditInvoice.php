@@ -12,8 +12,10 @@ use Illuminate\Database\Eloquent\Model;
 use Filament\Resources\Pages\EditRecord;
 use App\Filament\App\Resources\InvoiceResource;
 
+
 class EditInvoice extends EditRecord
 {
+    
     protected static string $resource = InvoiceResource::class;
     // public $customer_id ;
 
@@ -38,7 +40,11 @@ class EditInvoice extends EditRecord
         $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
         ->where('invoice_id', $record->id)
         ->where('status', 'completed')->sum('total');
-        $data['balance'] = $data['final_amount'] - $totalPayment;
+        $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
+        ->where('invoice_id', $record->id)
+        ->where('status', 'refunded')->sum('total');
+
+        $data['balance'] = $data['final_amount'] - $totalPayment + $totalRefunded;
         if($data['balance'] == 0){
             $data['invoice_status'] = 'done';
         }
@@ -64,7 +70,11 @@ class EditInvoice extends EditRecord
         $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
         ->where('invoice_id', $invoice['id'])
         ->where('status', 'completed')->sum('total');
-        $invoice['balance'] = $this->data['final_amount'] - $totalPayment; 
+        $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
+        ->where('invoice_id', $invoice['id'])
+        ->where('status', 'refunded')->sum('total');
+
+        $invoice['balance'] = $this->data['final_amount'] - $totalPayment + $totalRefunded; 
         if($invoice['balance'] == 0){
             $invoice['invoice_status'] = 'done'; 
         }elseif($invoice['invoice_status'] == 'done'){
@@ -74,4 +84,12 @@ class EditInvoice extends EditRecord
         $this->data['invoice_status'] = $invoice['invoice_status'];
         $this->data['balance'] = $invoice['balance'];
     }
+
+
+    // public function updated($name, $value)
+    // {
+    //    $this->dispatch('updateCurrentFormInput', $this->data); 
+    // }
+
+ 
 }

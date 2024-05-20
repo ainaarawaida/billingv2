@@ -12,7 +12,7 @@ use App\Livewire\NoteTable;
 use App\Models\TeamSetting;
 use Filament\Facades\Filament;
 use Illuminate\Support\Carbon;
-use App\Livewire\PaymentTable2;
+use App\Livewire\PaymentTable;
 use App\Models\RecurringInvoice;
 use Filament\Resources\Resource;
 use Illuminate\Support\HtmlString;

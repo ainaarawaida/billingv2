@@ -54,8 +54,12 @@ class CreatePayment extends CreateRecord
              $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
              ->where('invoice_id', $record->invoice_id)
              ->where('status', 'completed')->sum('total');
+             $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
+             ->where('invoice_id', $record->invoice_id)
+             ->where('status', 'refunded')->sum('total');
+
              $invoice = Invoice::find($record->invoice_id);
-             $invoice->balance = $invoice->final_amount - $totalPayment; 
+             $invoice->balance = $invoice->final_amount - $totalPayment + $totalRefunded; 
             if($invoice->balance == 0){
                 $invoice->invoice_status = 'paid';
             }elseif($invoice->invoice_status == 'done'){
