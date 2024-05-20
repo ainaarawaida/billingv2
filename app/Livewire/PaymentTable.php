@@ -46,7 +46,6 @@ class PaymentTable extends BaseWidget
                         return $data;
                     })
                     ->using(function (array $data, string $model): Model {
-                      
                         $payment = $model::create($data);
                         //update balance on invoice
                         $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
@@ -165,21 +164,8 @@ class PaymentTable extends BaseWidget
             ->defaultSort('updated_at', 'desc');
     }
 
-    // public function mount()
-    // {
-    //     // dd($this->currentFormInput->getState());
-    //     $this->currentFormInput = $this->record->getAttributes() ;
-    // //     $this->currentFormInput['balance'] = '12';
-    // }
-
-    // #[On('updateCurrentFormInput')] 
-    // public function updateCurrentFormInput($data){
-    //     $this->currentFormInput = $data['balance'] ;
-    // }
-
 
     function paymentForm(){
-        // dd($this->record);
         return [
             Section::make()
                 ->schema([
@@ -200,19 +186,9 @@ class PaymentTable extends BaseWidget
                         ->required()
                         ->prefix('RM')
                         ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
-                        // ->formatStateUsing(fn (?string $state): ?string => number_format($state, 2))
-                        ->formatStateUsing(function(?string $state, string $operation){
-                            // if($operation == 'create'){
-                            //     return number_format($this->currentFormInput, 2); 
-                            // }
-                            return number_format($state, 2);
-
-                        })
+                        ->formatStateUsing(fn (?string $state): ?string => number_format($state, 2))
                         ->dehydrateStateUsing(fn (?string $state): ?string => (float)str_replace(",", "", $state))
                         ->default($this->record->balance),
-                        // ->default($this->currentFormInput),
-                        // ->default( fn (?string $state, ?Model $record, Get $get): ?string => dd($record, $get)),
-                       
                     Forms\Components\Select::make('status')
                             ->options([
                                 'draft' => 'Draft',
@@ -244,7 +220,7 @@ class PaymentTable extends BaseWidget
                 ])
                 ->columns(2),
         
-                            ];
+        ];
     }
 
     

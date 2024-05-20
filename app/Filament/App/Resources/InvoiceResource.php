@@ -366,8 +366,6 @@ class InvoiceResource extends Resource
                                     
                                     if($get("items.{$key}.tax") == true){
                                         $taxes = $taxes + ((int)$get('percentage_tax') / 100 * (float)str_replace(",", "", $get("items.{$key}.total"))) ;
-                                    }else{
-
                                     }
                                     
                                 }
