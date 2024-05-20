@@ -6,6 +6,7 @@ use Filament\Forms ;
 use Filament\Tables;
 use App\Models\Payment;
 use Filament\Forms\Get;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\TeamSetting;
 use Livewire\Attributes\On;
@@ -23,7 +24,6 @@ class PaymentTable extends BaseWidget
 {
 
     public ?Model $record = null;
-    // public $currentFormInput = 2;
     
     public function table(Table $table): Table
     {
@@ -60,7 +60,6 @@ class PaymentTable extends BaseWidget
                         }
                         $this->record->update();
                         $this->dispatch('invoiceUpdateStatus', $this->record);
-                       
 
                         return $payment;
                     }), // Add the custom action button

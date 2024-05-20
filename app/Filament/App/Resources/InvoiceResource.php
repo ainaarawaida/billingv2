@@ -381,6 +381,7 @@ class InvoiceResource extends Resource
                                 $set('balance', number_format($current_balance + $additional_amount, 2));
                                 $set('final_amount', number_format($final_amount, 2));
                                 
+                               
                                 return ;
                                 // return $sub_total." ".(float)$get("taxes"). " ". (float)$get("delivery")." ".$sub_total + (float)$get("taxes") + (float)$get("delivery")  ;
                             }),
