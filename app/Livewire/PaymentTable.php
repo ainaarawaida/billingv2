@@ -52,7 +52,11 @@ class PaymentTable extends BaseWidget
                         $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
                         ->where('invoice_id', $this->record->id)
                         ->where('status', 'completed')->sum('total');
-                        $this->record->balance = $this->record->final_amount - $totalPayment; 
+                        $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
+                        ->where('invoice_id', $this->record->id)
+                        ->where('status', 'refunded')->sum('total');
+
+                        $this->record->balance = $this->record->final_amount - $totalPayment + $totalRefunded; 
                         if($this->record->balance == 0){
                             $this->record->invoice_status = 'done'; 
                         }elseif($this->record->invoice_status == 'done'){
@@ -113,7 +117,11 @@ class PaymentTable extends BaseWidget
                         $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
                         ->where('invoice_id', $this->record->id)
                         ->where('status', 'completed')->sum('total');
-                        $this->record->balance = $this->record->final_amount - $totalPayment; 
+                        $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
+                        ->where('invoice_id', $this->record->id)
+                        ->where('status', 'refunded')->sum('total');
+
+                        $this->record->balance = $this->record->final_amount - $totalPayment + $totalRefunded; 
                         if($this->record->balance == 0){
                             $this->record->invoice_status = 'done'; 
                         }elseif($this->record->invoice_status == 'done'){
@@ -138,7 +146,11 @@ class PaymentTable extends BaseWidget
                         $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
                         ->where('invoice_id', $this->record->id)
                         ->where('status', 'completed')->sum('total');
-                        $this->record->balance = $this->record->final_amount - $totalPayment; 
+                        $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
+                        ->where('invoice_id', $this->record->id)
+                        ->where('status', 'refunded')->sum('total');
+
+                        $this->record->balance = $this->record->final_amount - $totalPayment + $totalRefunded; 
 
                         if($this->record->balance == 0){
                             $this->record->invoice_status = 'done'; 
