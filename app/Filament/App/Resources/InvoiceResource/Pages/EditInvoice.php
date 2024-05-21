@@ -85,11 +85,5 @@ class EditInvoice extends EditRecord
         $this->data['balance'] = $invoice['balance'];
     }
 
-
-    // public function updated($name, $value)
-    // {
-    //    $this->dispatch('updateCurrentFormInput', $this->data); 
-    // }
-
  
 }
