@@ -660,7 +660,8 @@ class InvoicesRelationManager extends RelationManager
                     return $invoice; 
 
                 })
-                ->modalWidth(MaxWidth::SevenExtraLarge), 
+                ->modalWidth(MaxWidth::SevenExtraLarge)
+                ->closeModalByClickingAway(false), 
         ])
         ->actions([
             Tables\Actions\ActionGroup::make([
