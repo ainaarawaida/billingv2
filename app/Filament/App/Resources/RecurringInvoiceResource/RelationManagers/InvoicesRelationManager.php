@@ -24,6 +24,7 @@ use Filament\Facades\Filament;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
 use Filament\Tables\Filters\Filter;
+use Filament\Support\Enums\MaxWidth;
 use Illuminate\Support\Facades\Mail;
 use Filament\Support\Enums\ActionSize;
 use Filament\Forms\Components\Textarea;
@@ -656,10 +657,10 @@ class InvoicesRelationManager extends RelationManager
                         ]);
 
                     }
-
                     return $invoice; 
 
-                }), 
+                })
+                ->modalWidth(MaxWidth::SevenExtraLarge), 
         ])
         ->actions([
             Tables\Actions\ActionGroup::make([
@@ -682,7 +683,8 @@ class InvoicesRelationManager extends RelationManager
                         }
                         $record->update($data);
                         return $record;
-                    }),
+                    })
+                    ->modalWidth(MaxWidth::SevenExtraLarge),
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\ForceDeleteAction::make(),
                 Tables\Actions\ViewAction::make(),
@@ -814,8 +816,35 @@ class InvoicesRelationManager extends RelationManager
         ->recordUrl(null)
         ->recordAction(Tables\Actions\EditAction::class) 
         ->defaultSort('updated_at', 'desc');
+    }
 
-        // $dispatch('open-modal'
+    #[On('invoiceUpdateStatus')] 
+    public function invoiceUpdateStatus($invoice)
+    {
+        foreach ($this->getCachedForms() as $key => $form) {
+            if($key == 'mountedTableActionForm'){
+                $livewire = $form->getLivewire();
+                $statePath = $form->getStatePath();
+                $currentData = $form->getState();
+                $final_amount = data_get($livewire, 'mountedTableActionsData.0.final_amount');
+                $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
+                ->where('invoice_id', $invoice['id'])
+                ->where('status', 'completed')->sum('total');
+                $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
+                ->where('invoice_id', $invoice['id'])
+                ->where('status', 'refunded')->sum('total');
+
+                $invoice['balance'] = $currentData['final_amount'] - $totalPayment + $totalRefunded; 
+                if($invoice['balance'] == 0){
+                    $invoice['invoice_status'] = 'done'; 
+                }elseif($invoice['invoice_status'] == 'done'){
+                    $invoice['invoice_status'] = 'new' ;
+                }
+
+                data_set($livewire, 'mountedTableActionsData.0.invoice_status', $invoice['invoice_status']);
+                data_set($livewire, 'mountedTableActionsData.0.balance', $invoice['balance']);
+            }
+        }
     }
 
  

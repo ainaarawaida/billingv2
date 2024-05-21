@@ -2,10 +2,11 @@
 
 namespace App\Filament\App\Resources\RecurringInvoiceResource\Pages;
 
-use App\Filament\App\Resources\RecurringInvoiceResource;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
+use Livewire\Attributes\On;
 use Filament\Actions\Action;
+use Filament\Resources\Pages\EditRecord;
+use App\Filament\App\Resources\RecurringInvoiceResource;
 
 class EditRecurringInvoice extends EditRecord
 {
@@ -30,4 +31,6 @@ class EditRecurringInvoice extends EditRecord
                 $this->save();
             });
     }
+
+    
 }

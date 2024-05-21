@@ -13,6 +13,7 @@ use Livewire\Attributes\On;
 use App\Models\PaymentMethod;
 use Filament\Facades\Filament;
 use Livewire\Component as Livewire;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Forms\Components\Section;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\Component;
@@ -65,7 +66,8 @@ class PaymentTable extends BaseWidget
                         $this->dispatch('invoiceUpdateStatus', $this->record);
 
                         return $payment;
-                    }), // Add the custom action button
+                    })
+                    ->modalWidth(MaxWidth::SevenExtraLarge), // Add the custom action button
             ])
             ->columns([
                 Tables\Columns\TextColumn::make('invoice.numbering')
@@ -159,7 +161,8 @@ class PaymentTable extends BaseWidget
                         $this->record->update();
                         $this->dispatch('invoiceUpdateStatus', $this->record);
                         return $record;
-                    }),
+                    })
+                    ->modalWidth(MaxWidth::SevenExtraLarge),
             ])
             ->defaultSort('updated_at', 'desc');
     }
