@@ -8,12 +8,15 @@ use App\Models\Team;
 use Filament\Widgets;
 use Filament\PanelProvider;
 use App\Livewire\ListPayment;
-use Filament\Pages\Dashboard;
+
 use Filament\Facades\Filament;
+use App\Livewire\StatsOverview;
+
 use App\Filament\Pages\Auth\Login;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\View\View;
+use App\Filament\App\Pages\Dashboard;
 use Illuminate\Support\Facades\Blade;
 use Filament\Navigation\NavigationItem;
 use App\Filament\Pages\Auth\EditProfile;
@@ -138,11 +141,12 @@ class AppPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\\Filament\\App\\Resources')
             ->discoverPages(in: app_path('Filament/App/Pages'), for: 'App\\Filament\\App\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/App/Widgets'), for: 'App\\Filament\\App\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
+                StatsOverview::class,
                 // Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([

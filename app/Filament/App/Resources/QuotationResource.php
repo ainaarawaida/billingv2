@@ -836,7 +836,10 @@ class QuotationResource extends Resource
                     Tables\Actions\ForceDeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('updated_at', 'desc');
+            ->defaultSort('updated_at', 'desc')
+            ->recordUrl(
+                fn (Model $record): string => QuotationResource::getUrl('edit', ['record' => $record->id])
+            );
     }
 
     public static function getRelations(): array
