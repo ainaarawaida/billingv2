@@ -19,6 +19,7 @@ use Filament\Tables\Table;
 use App\Livewire\NoteTable;
 use App\Models\TeamSetting;
 use Livewire\Attributes\On;
+use App\Models\PaymentMethod;
 use App\Livewire\PaymentTable;
 use Filament\Facades\Filament;
 use Illuminate\Support\HtmlString;
@@ -26,6 +27,7 @@ use Filament\Forms\Components\Tabs;
 use Filament\Tables\Filters\Filter;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Support\Facades\Mail;
+use Filament\Forms\Components\Section;
 use Filament\Support\Enums\ActionSize;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Contracts\HasTable;
@@ -689,6 +691,35 @@ class InvoicesRelationManager extends RelationManager
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\ForceDeleteAction::make(),
                 Tables\Actions\ViewAction::make(),
+                Tables\Actions\Action::make('payment')
+                        ->label(__('Payment'))
+                        ->icon('heroicon-m-credit-card')
+                        ->color('info')
+                        ->form(self::paymentForm())
+                        ->mutateFormDataUsing(function (array $data, $record) {
+                            $data['invoice_id'] = $record->id;
+                            $data['team_id'] = Filament::getTenant()->id;
+                            return $data;
+                        })
+                        ->action(function (array $data, Model $record) {
+                            $payment = Payment::create($data);
+                            //update balance on invoice
+                            $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
+                            ->where('invoice_id', $record->id)
+                            ->where('status', 'completed')->sum('total');
+                            $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
+                            ->where('invoice_id', $record->id)
+                            ->where('status', 'refunded')->sum('total');
+
+                            $record->balance = $record->final_amount - $totalPayment + $totalRefunded; 
+                            if($record->balance == 0){
+                                $record->invoice_status = 'done'; 
+                            }elseif($record->invoice_status == 'done'){
+                                $record->invoice_status = 'new' ;
+                            }
+                            $record->update();
+                        }), // Add the custom action button
+                    
                 Tables\Actions\Action::make('replicate')
                     ->label(__('Replicate'))
                     ->icon('heroicon-m-square-2-stack')
@@ -826,7 +857,7 @@ class InvoicesRelationManager extends RelationManager
             if($key == 'mountedTableActionForm'){
                 $livewire = $form->getLivewire();
                 $statePath = $form->getStatePath();
-                $currentData = $form->getState();
+                // $currentData = $form->getState();
                 $final_amount = data_get($livewire, 'mountedTableActionsData.0.final_amount');
                 $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
                 ->where('invoice_id', $invoice['id'])
@@ -835,7 +866,7 @@ class InvoicesRelationManager extends RelationManager
                 ->where('invoice_id', $invoice['id'])
                 ->where('status', 'refunded')->sum('total');
 
-                $invoice['balance'] = $currentData['final_amount'] - $totalPayment + $totalRefunded; 
+                $invoice['balance'] = $final_amount - $totalPayment + $totalRefunded; 
                 if($invoice['balance'] == 0){
                     $invoice['invoice_status'] = 'done'; 
                 }elseif($invoice['invoice_status'] == 'done'){
@@ -846,6 +877,71 @@ class InvoicesRelationManager extends RelationManager
                 data_set($livewire, 'mountedTableActionsData.0.balance', $invoice['balance']);
             }
         }
+    }
+
+
+    public static function paymentForm(){
+        $prefix = TeamSetting::where('team_id', Filament::getTenant()->id )->first()->invoice_prefix_code ?? '#I' ;
+        
+        return [
+            Section::make()
+                ->schema([
+                    Forms\Components\TextInput::make('invoice_id')
+                        ->label(__('Invoice Number'))
+                        ->prefix($prefix)
+                        ->default(fn(Model $record) => $record->numbering)
+                        ->readonly(),
+                    Forms\Components\Select::make('payment_method_id')
+                        ->label("Payment Method")
+                        ->options(function (Get $get, string $operation){
+                            $payment_method = PaymentMethod::where('team_id', Filament::getTenant()->id)
+                            ->where('status', 1)->get()->pluck('name', 'id');
+                            return $payment_method ;
+                        })
+                        ->searchable()
+                        ->preload()
+                        ->required(),
+                    Forms\Components\DatePicker::make('payment_date')
+                        ->required()
+                        ->default(now()),
+                    Forms\Components\TextInput::make('total')
+                        ->required()
+                        ->prefix('RM')
+                        ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
+                        ->formatStateUsing(fn (?string $state): ?string => number_format($state, 2))
+                        ->dehydrateStateUsing(fn (?string $state): ?string => (float)str_replace(",", "", $state))
+                        ->default(fn(Model $record) => abs($record->balance)),
+                    Forms\Components\Select::make('status')
+                            ->options([
+                                'draft' => 'Draft',
+                                'pending_payment' => 'Pending payment',
+                                'on_hold' => 'On hold',
+                                'processing ' => 'Processing ',
+                                'completed' => 'Completed',
+                                'failed' => 'Failed',
+                                'canceled' => 'Canceled',
+                                'refunded' => 'Refunded',
+                            ])
+                            ->default(fn(Model $record) => $record->balance < 0 ? 'refunded' : 'completed')
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+                    Forms\Components\TextInput::make('reference')
+                            ->required(),    
+                    Forms\Components\FileUpload::make('attachments')
+                            ->label(__('Attachments'))
+                            ->directory('payment-attachments')
+                            ->multiple()
+                            ->downloadable(),
+                    Forms\Components\Textarea::make('notes')
+                        ->maxLength(65535)
+                        ->columnSpanFull(),
+
+                    
+                ])
+                ->columns(2),
+        
+        ];
     }
 
  
