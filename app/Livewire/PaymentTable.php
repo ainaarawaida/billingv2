@@ -188,7 +188,7 @@ class PaymentTable extends BaseWidget
                         ->regex('/^[0-9]*(?:\.[0-9]*)?(?:,[0-9]*(?:\.[0-9]*)?)*$/')
                         ->formatStateUsing(fn (?string $state): ?string => number_format($state, 2))
                         ->dehydrateStateUsing(fn (?string $state): ?string => (float)str_replace(",", "", $state))
-                        ->default($this->record->balance),
+                        ->default(abs($this->record->balance)),
                     Forms\Components\Select::make('status')
                             ->options([
                                 'draft' => 'Draft',
@@ -200,7 +200,7 @@ class PaymentTable extends BaseWidget
                                 'canceled' => 'Canceled',
                                 'refunded' => 'Refunded',
                             ])
-                            ->default('draft')
+                            ->default($this->record->balance < 0 ? 'refunded' : 'completed')
                             ->searchable()
                             ->preload()
                             ->required(),

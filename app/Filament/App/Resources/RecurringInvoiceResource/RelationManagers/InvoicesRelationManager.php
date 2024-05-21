@@ -2,6 +2,7 @@
 
 namespace App\Filament\App\Resources\RecurringInvoiceResource\RelationManagers;
 
+use Closure;
 use stdClass;
 use Filament\Forms;
 use App\Models\Item;
@@ -10,14 +11,16 @@ use Filament\Tables;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Product;
+use Filament\Forms\Get;
 use App\Models\Customer;
 use Filament\Forms\Form;
 use App\Mail\InvoiceEmail;
 use Filament\Tables\Table;
 use App\Livewire\NoteTable;
 use App\Models\TeamSetting;
-use Filament\Facades\Filament;
+use Livewire\Attributes\On;
 use App\Livewire\PaymentTable;
+use Filament\Facades\Filament;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
 use Filament\Tables\Filters\Filter;
@@ -138,7 +141,15 @@ class InvoicesRelationManager extends RelationManager
                                     ->default('draft')
                                     ->searchable()
                                     ->preload()
-                                    ->required(),
+                                    ->required()
+                                    ->rules([
+                                        fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
+                                            if ( $value == 'done' && $get('balance') != 0 ) {
+                                                $fail("The :attribute is invalid. The balance is not zero for status Done.");
+                                            }
+                                         
+                                        },
+                                    ]),
                               
 
                             ])
@@ -332,6 +343,13 @@ class InvoicesRelationManager extends RelationManager
                             ->readonly()
                             ->live(onBlur: true)
                             ->default(0.00),
+                        Forms\Components\TextInput::make('balance')
+                            ->formatStateUsing(fn ( $state)  => number_format($state, 2))
+                            ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
+                            ->prefix('RM')
+                            ->readonly()
+                            ->helperText( fn(?Model $record, string $operation) => $operation == 'edit' ? 'On changes balance will be updated after save. Original balance: ' . $record->balance : '')
+                            ->default(0.00),
                             
 
                     ])
@@ -358,12 +376,14 @@ class InvoicesRelationManager extends RelationManager
                                 
                             }
 
-                            $set('sub_total', number_format($sub_total, 2));
-                            $set('taxes', number_format($taxes, 2));
-                            $set('final_amount', number_format($sub_total + (float)str_replace(",", "", $get("taxes")) + (float)str_replace(",", "", $get("delivery")), 2));
-
-                            return ;
-                            // return $sub_total." ".(float)$get("taxes"). " ". (float)$get("delivery")." ".$sub_total + (float)$get("taxes") + (float)$get("delivery")  ;
+                                $before_final_amount = (float)str_replace(",", "", $get("final_amount"));
+                                $final_amount = $sub_total + (float)str_replace(",", "", $get("taxes")) + (float)str_replace(",", "", $get("delivery"));
+                                $additional_amount = $final_amount - $before_final_amount;
+                                $current_balance = (float)str_replace(",", "", $get("balance"));
+                                $set('sub_total', number_format($sub_total, 2));
+                                $set('taxes', number_format($taxes, 2));
+                                $set('balance', number_format($current_balance + $additional_amount, 2));
+                                $set('final_amount', number_format($final_amount, 2));
                         }),
 
                 ]),
@@ -639,7 +659,6 @@ class InvoicesRelationManager extends RelationManager
 
                     return $invoice; 
 
-
                 }), 
         ])
         ->actions([
@@ -798,4 +817,6 @@ class InvoicesRelationManager extends RelationManager
 
         // $dispatch('open-modal'
     }
+
+ 
 }

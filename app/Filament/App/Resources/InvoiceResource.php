@@ -345,6 +345,7 @@ class InvoiceResource extends Resource
                                 ->dehydrateStateUsing(fn (string $state): string => (float)str_replace(",", "", $state))
                                 ->prefix('RM')
                                 ->readonly()
+                                ->helperText( fn(?Model $record, string $operation) => $operation == 'edit' ? 'On changes balance will be updated after save. Original balance: ' . $record->balance : '')
                                 ->default(0.00),
                                 
 
