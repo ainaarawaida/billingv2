@@ -3,11 +3,15 @@
 namespace App\Filament\App\Resources\PaymentResource\Widgets;
 
 use App\Models\Payment;
+use Filament\Forms\Get;
 use Flowframe\Trend\Trend;
 use Filament\Facades\Filament;
 use Illuminate\Support\Carbon;
 use Flowframe\Trend\TrendValue;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\HtmlString;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\DatePicker;
 use Illuminate\Contracts\Support\Htmlable;
 
 class PaymentChart extends ChartWidget
@@ -40,8 +44,10 @@ class PaymentChart extends ChartWidget
         }
     }
 
+    
     protected function getFilters(): ?array
     {
+        
         $currentYear = date('Y'); // Get the current year as a four-digit integer
         $pastYears = array_reverse(range($currentYear - 3, $currentYear)); 
         $yearRange = array_merge($pastYears); 
@@ -90,6 +96,8 @@ class PaymentChart extends ChartWidget
             'labels' => $data1->map(fn (TrendValue $value) => Carbon::parse($value->date)->format('M')),
         ];
     }
+
+
 
 
 
