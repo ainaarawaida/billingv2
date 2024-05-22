@@ -5,7 +5,6 @@ namespace App\Providers\Filament;
 use Filament\Pages;
 use Filament\Panel;
 use App\Models\Team;
-use Filament\Widgets;
 use Filament\PanelProvider;
 use App\Livewire\ListPayment;
 
@@ -21,6 +20,7 @@ use Illuminate\Support\Facades\Blade;
 use Filament\Navigation\NavigationItem;
 use App\Filament\Pages\Auth\EditProfile;
 use Filament\Navigation\NavigationGroup;
+use App\Filament\App\Widgets\AccountWidget;
 use Filament\Http\Middleware\Authenticate;
 use App\Filament\Pages\Tenancy\RegisterTeam;
 use App\Filament\Pages\Tenancy\EditTeamProfile;
@@ -39,6 +39,7 @@ use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use App\Filament\App\Resources\InvoiceResource\Pages\ListInvoices;
 use App\Filament\App\Resources\PaymentResource\Pages\ListPayments;
 use App\Filament\App\Resources\InvoiceResource\Pages\CreateInvoice;
+use App\Filament\App\Resources\PaymentResource\Widgets\PaymentChart;
 use App\Filament\App\Resources\QuotationResource\Pages\ListQuotations;
 use App\Filament\App\Resources\RecurringInvoiceResource\Pages\ListRecurringInvoices;
 
@@ -145,9 +146,9 @@ class AppPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/App/Widgets'), for: 'App\\Filament\\App\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
+                AccountWidget::class,
                 StatsOverview::class,
-                // Widgets\FilamentInfoWidget::class,
+                PaymentChart::class,
             ])
             ->middleware([
                 EncryptCookies::class,
