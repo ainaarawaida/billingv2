@@ -39,6 +39,7 @@ class DatabaseSeeder extends Seeder
             QuotationSeeder::class, 
             InvoiceSeeder::class,   // Example seeder class
             RecurringInvoiceSeeder::class,
+            PaymentSeeder::class,
         ]);
 
     }

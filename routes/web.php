@@ -38,6 +38,10 @@ use App\Http\Controllers\OnlinePayment\ManualPayment;
   
 // });
 
+Route::get('login', function () {
+    return redirect(url('app/login')); 
+})->name('login');
+
 
 Route::get('/quotationpdf/{id}', function ($id) {
     return view('pdf.quotation', ['id' => $id]); // View name 'about'

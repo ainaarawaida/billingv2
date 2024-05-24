@@ -37,13 +37,13 @@ class StatsOverview extends BaseWidget
         $waiting = Payment::where('team_id', Filament::getTenant()->id)
         ->whereIn('status', ['pending_payment','on_hold','processing'])->whereYear('payment_date', $this->filter)->sum('total');
         return [
-            Stat::make(__('Payment Received (RM)'), number_format($received, 2) )
+            Stat::make(__('Payment Completed (RM)'), number_format($received, 2) )
             ->description($this->filter)
             ->color('success'),
-            Stat::make(__('Waiting Payment (RM)'), number_format($waiting, 2))
+            Stat::make(__('Payment Pending/On Hold/Processing (RM)'), number_format($waiting, 2))
             ->description($this->filter)
             ->color('success'),
-            // Stat::make('Average time on page', '3:12'),
+           
         ];
     }
 

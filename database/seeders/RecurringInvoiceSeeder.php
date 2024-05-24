@@ -33,8 +33,7 @@ class RecurringInvoiceSeeder extends Seeder
             $recurring_invoice_current_no = $team_setting?->recurring_invoice_current_no ?? '0' ;
             $team_setting->recurring_invoice_current_no = $recurring_invoice_current_no + 1 ;
             $team_setting->save();
-
-
+            
             $recurring_invoice->update(['numbering' => $numbering]);
 
             //generate invoice recurring

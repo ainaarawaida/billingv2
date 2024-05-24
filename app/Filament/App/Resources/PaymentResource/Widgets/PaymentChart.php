@@ -81,13 +81,13 @@ class PaymentChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => __('Payment Received (RM)'),
+                    'label' => __('Payment Completed (RM)'),
                     'backgroundColor' => 'rgba(255, 99, 132, 0.2)',
                     'borderColor' => 'rgba(255, 99, 132, 1)',
                     'data' => $data1->map(fn (TrendValue $value) => $value->aggregate),
                 ],
                 [
-                    'label' => __('Waiting Payment (RM)'),
+                    'label' => __('Payment Pending/On Hold/Processing (RM)'),
                     'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
                     'borderColor' => 'rgba(54, 162, 235, 1)',
                     'data' => $data2->map(fn (TrendValue $value) => $value->aggregate),
