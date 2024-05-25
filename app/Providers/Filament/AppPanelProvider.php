@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Blade;
 use Filament\Navigation\NavigationItem;
 use App\Filament\Pages\Auth\EditProfile;
 use Filament\Navigation\NavigationGroup;
-use App\Filament\App\Widgets\AccountWidget;
+use App\Livewire\AccountWidget;
 use Filament\Http\Middleware\Authenticate;
 use App\Filament\Pages\Tenancy\RegisterTeam;
 use App\Filament\Pages\Tenancy\EditTeamProfile;
@@ -146,7 +146,7 @@ class AppPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/App/Widgets'), for: 'App\\Filament\\App\\Widgets')
             ->widgets([
-                AccountWidget::class,
+                // AccountWidget::class,
                 StatsOverview::class,
                 PaymentChart::class,
             ])

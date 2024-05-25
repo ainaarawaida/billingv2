@@ -25,6 +25,7 @@ use Filament\Resources\Resource;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
 use Filament\Tables\Filters\Filter;
+use Filament\Support\Enums\MaxWidth;
 use Illuminate\Support\Facades\Mail;
 use Filament\Forms\Components\Select;
 use Illuminate\Support\Facades\Blade;
@@ -86,7 +87,7 @@ class QuotationResource extends Resource
                                         return $action
                                             ->modalHeading('Create customer')
                                             ->modalSubmitActionLabel('Create customer')
-                                            ->modalWidth('7xl');
+                                            ->modalWidth(MaxWidth::FiveExtraLarge);
                                     })
                                     ->native(false),
 

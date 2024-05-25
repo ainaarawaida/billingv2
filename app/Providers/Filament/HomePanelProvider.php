@@ -29,6 +29,7 @@ class HomePanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
+            ->viteTheme('resources/css/filament/home/theme.css')
             ->renderHook(
                 PanelsRenderHook::GLOBAL_SEARCH_AFTER ,
                 function(): string {
