@@ -78,7 +78,8 @@ class InvoicesRelationManager extends RelationManager
                                     return $action
                                         ->modalHeading('Create customer')
                                         ->modalSubmitActionLabel('Create customer')
-                                        ->modalWidth('7xl');
+                                        ->modalWidth(MaxWidth::Screen)
+                                        ->slideOver();
                                 })
                                 ->native(false),
 
@@ -238,7 +239,8 @@ class InvoicesRelationManager extends RelationManager
                                 return $action
                                     // ->modalHeading('Create customer')
                                     // ->modalSubmitActionLabel('Create customer')
-                                    ->modalWidth('Screen');
+                                    ->modalWidth(MaxWidth::Screen)
+                                    ->slideOver();
                             })
                             ->afterStateUpdated(function ($state, $set, $get ){
                                 
@@ -662,8 +664,8 @@ class InvoicesRelationManager extends RelationManager
                     return $invoice; 
 
                 })
-                ->modalWidth(MaxWidth::SevenExtraLarge)
-                ->closeModalByClickingAway(false), 
+                ->modalWidth(MaxWidth::Screen)
+                ->slideOver(), 
         ])
         ->actions([
             Tables\Actions\ActionGroup::make([
@@ -687,7 +689,8 @@ class InvoicesRelationManager extends RelationManager
                         $record->update($data);
                         return $record;
                     })
-                    ->modalWidth(MaxWidth::SevenExtraLarge),
+                    ->modalWidth(MaxWidth::Screen)
+                    ->slideOver(),
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\ForceDeleteAction::make(),
                 Tables\Actions\ViewAction::make(),

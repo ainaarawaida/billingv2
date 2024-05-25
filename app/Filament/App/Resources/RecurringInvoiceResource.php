@@ -10,13 +10,14 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Livewire\NoteTable;
 use App\Models\TeamSetting;
+use App\Livewire\PaymentTable;
 use Filament\Facades\Filament;
 use Illuminate\Support\Carbon;
-use App\Livewire\PaymentTable;
 use App\Models\RecurringInvoice;
 use Filament\Resources\Resource;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Support\Enums\ActionSize;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Contracts\HasTable;
@@ -68,7 +69,8 @@ class RecurringInvoiceResource extends Resource
                                             return $action
                                                 ->modalHeading('Create customer')
                                                 ->modalSubmitActionLabel('Create customer')
-                                                ->modalWidth('7xl');
+                                                ->modalWidth(MaxWidth::Screen)
+                                                ->slideOver();
                                         })
                                         ->native(false),
     
@@ -191,7 +193,8 @@ class RecurringInvoiceResource extends Resource
                                                 return $action
                                                     // ->modalHeading('Create customer')
                                                     // ->modalSubmitActionLabel('Create customer')
-                                                    ->modalWidth('Screen');
+                                                    ->modalWidth(MaxWidth::Screen)
+                                                    ->slideOver();
                                             })
                                             ->afterStateUpdated(function ($state, $set, $get ){
                                                 

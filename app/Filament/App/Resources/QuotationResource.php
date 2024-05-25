@@ -87,7 +87,8 @@ class QuotationResource extends Resource
                                         return $action
                                             ->modalHeading('Create customer')
                                             ->modalSubmitActionLabel('Create customer')
-                                            ->modalWidth(MaxWidth::FiveExtraLarge);
+                                            ->modalWidth(MaxWidth::SevenExtraLarge)
+                                            ->slideOver();
                                     })
                                     ->native(false),
 
@@ -175,8 +176,7 @@ class QuotationResource extends Resource
                                 Forms\Components\Group::make()
                                     ->schema([
                                         Forms\Components\Textarea::make('title')
-                                            ->required()
-                                            ->columnSpan(1),
+                                            ->required(),
                                         Forms\Components\Select::make('product_id')
                                             ->relationship('product', 'title', modifyQueryUsing: fn (Builder $query) => $query->whereBelongsTo(Filament::getTenant(), 'teams'))
                                             ->searchable()
@@ -212,7 +212,8 @@ class QuotationResource extends Resource
                                                 return $action
                                                     // ->modalHeading('Create customer')
                                                     // ->modalSubmitActionLabel('Create customer')
-                                                    ->modalWidth('Screen');
+                                                    ->modalWidth(MaxWidth::Screen)
+                                                    ->slideOver();
                                             })
                                             ->afterStateUpdated(function ($state, $set, $get ){
                                                 
@@ -224,9 +225,7 @@ class QuotationResource extends Resource
                                                 // dd((float)$product?->price,number_format((float)str_replace(",", "", $product?->price), 2), $product?->quantity, $get('price'), (float)$get('price'));
                                                 $set('total', number_format((int)$product?->quantity*(float)str_replace(",", "", $get('price')), 2)  );
                                             
-                                            })
-                                            // ->live(onBlur: true)
-                                            ->columnSpan(1),
+                                            }),
                                     
                                     ])
                                 ->columns(2),
@@ -908,8 +907,7 @@ class QuotationResource extends Resource
                 Forms\Components\Group::make()
                     ->schema([
                         Forms\Components\TextInput::make('company')
-                            ->maxLength(255)
-                            ->columnSpan(2),
+                            ->maxLength(255),
                         Forms\Components\TextInput::make('ssm')
                             ->label('SSM No.')
                             ->maxLength(255),
@@ -919,10 +917,14 @@ class QuotationResource extends Resource
             ]),
             Forms\Components\Section::make('Address')
                 ->schema([
-                    Forms\Components\TextInput::make('address')
-                        ->maxLength(255)
-                        ->columnSpan(3),
-                    Forms\Components\TextInput::make('poscode')
+                    Forms\Components\Group::make()
+                    ->schema([  
+                        Forms\Components\TextInput::make('address')
+                            ->maxLength(255),
+                    ]),
+                    Forms\Components\Group::make()
+                    ->schema([
+                        Forms\Components\TextInput::make('poscode')
                         ->maxLength(255),
                     Forms\Components\TextInput::make('city')
                         ->maxLength(255),
@@ -948,9 +950,14 @@ class QuotationResource extends Resource
                                 ->searchable()
                                 ->preload()
 
+                    ])->columns(3),
+
+                  
+                    
+
                         
             ])
-            ->columns(3)
+           
            
             
         ]);

@@ -48,8 +48,7 @@ class RegisterTeam extends RegisterTenant
                               ->label('SSM No.')
                               ->maxLength(255),
                               TextInput::make('address')
-                              ->maxLength(255)
-                              ->columnSpan(2),
+                              ->maxLength(255),
                           TextInput::make('poscode')
                               ->maxLength(255),
                           TextInput::make('city')
@@ -78,7 +77,7 @@ class RegisterTeam extends RegisterTenant
   
                
 
-                  ])->columns(2);
+                  ]);
       }
 
       protected function handleRegistration(array $data): Team

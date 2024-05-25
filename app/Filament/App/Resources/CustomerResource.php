@@ -57,8 +57,7 @@ class CustomerResource extends Resource
                     Group::make()
                         ->schema([
                             Forms\Components\TextInput::make('company')
-                                ->maxLength(255)
-                                ->columnSpan(2),
+                                ->maxLength(255),
                             Forms\Components\TextInput::make('ssm')
                                 ->label('SSM No.')
                                 ->maxLength(255),
@@ -69,8 +68,7 @@ class CustomerResource extends Resource
                 Section::make('Address')
                     ->schema([
                         Forms\Components\TextInput::make('address')
-                            ->maxLength(255)
-                            ->columnSpan(3),
+                            ->maxLength(255),
                         Forms\Components\TextInput::make('poscode')
                             ->maxLength(255),
                         Forms\Components\TextInput::make('city')

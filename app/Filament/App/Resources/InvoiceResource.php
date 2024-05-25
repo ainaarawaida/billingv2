@@ -20,14 +20,16 @@ use App\Livewire\NoteTable;
 use App\Models\TeamSetting;
 use App\Mail\QuotationEmail;
 use App\Models\PaymentMethod;
+use App\Livewire\PaymentTable;
 use Filament\Facades\Filament;
 use Illuminate\Support\Carbon;
-use App\Livewire\PaymentTable;
 use Filament\Resources\Resource;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
 use Filament\Tables\Filters\Filter;
+use Filament\Support\Enums\MaxWidth;
 use Illuminate\Support\Facades\Mail;
+use Filament\Forms\Components\Section;
 use Filament\Support\Enums\ActionSize;
 use Filament\Forms\Components\Livewire;
 use Filament\Forms\Components\Textarea;
@@ -43,7 +45,6 @@ use Filament\Forms\Components\Actions\Action;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\App\Resources\InvoiceResource\Pages;
 use App\Filament\App\Resources\InvoiceResource\RelationManagers;
-use Filament\Forms\Components\Section;
 
 class InvoiceResource extends Resource
 {
@@ -81,7 +82,8 @@ class InvoiceResource extends Resource
                                         return $action
                                             ->modalHeading('Create customer')
                                             ->modalSubmitActionLabel('Create customer')
-                                            ->modalWidth('7xl');
+                                            ->modalWidth(MaxWidth::Screen)
+                                            ->slideOver();
                                     })
                                     ->native(false),
 
@@ -233,7 +235,8 @@ class InvoiceResource extends Resource
                                     return $action
                                         // ->modalHeading('Create customer')
                                         // ->modalSubmitActionLabel('Create customer')
-                                        ->modalWidth('Screen');
+                                        ->modalWidth(MaxWidth::Screen)
+                                        ->slideOver();
                                 })
                                 ->afterStateUpdated(function ($state, $set, $get ){
                                     
@@ -848,8 +851,7 @@ class InvoiceResource extends Resource
                 Forms\Components\Group::make()
                     ->schema([
                         Forms\Components\TextInput::make('company')
-                            ->maxLength(255)
-                            ->columnSpan(2),
+                            ->maxLength(255),
                         Forms\Components\TextInput::make('ssm')
                             ->label('SSM No.')
                             ->maxLength(255),
@@ -858,39 +860,47 @@ class InvoiceResource extends Resource
                     ->columns(3),
             ]),
             Forms\Components\Section::make('Address')
-                ->schema([
+            ->schema([
+                Forms\Components\Group::make()
+                ->schema([  
                     Forms\Components\TextInput::make('address')
-                        ->maxLength(255)
-                        ->columnSpan(3),
+                        ->maxLength(255),
+                ]),
+                Forms\Components\Group::make()
+                ->schema([
                     Forms\Components\TextInput::make('poscode')
-                        ->maxLength(255),
-                    Forms\Components\TextInput::make('city')
-                        ->maxLength(255),
-                    Forms\Components\Select::make('state')
-                                ->options([
-                                    'JHR' => 'Johor',
-                                    'KDH' => 'Kedah',
-                                    'KTN' => 'Kelantan',
-                                    'MLK' => 'Melaka',
-                                    'NSN' => 'Negeri Sembilan',
-                                    'PHG' => 'Pahang',
-                                    'PRK' => 'Perak',
-                                    'PLS' => 'Perlis',
-                                    'PNG' => 'Pulau Pinang',
-                                    'SBH' => 'Sabah',
-                                    'SWK' => 'Sarawak',
-                                    'SGR' => 'Selangor',
-                                    'TRG' => 'Terengganu',
-                                    'KUL' => 'W.P. Kuala Lumpur',
-                                    'LBN' => 'W.P. Labuan',
-                                    'PJY' => 'W.P. Putrajaya'
-                                ])
-                                ->searchable()
-                                ->preload()
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('city')
+                    ->maxLength(255),
+                Forms\Components\Select::make('state')
+                            ->options([
+                                'JHR' => 'Johor',
+                                'KDH' => 'Kedah',
+                                'KTN' => 'Kelantan',
+                                'MLK' => 'Melaka',
+                                'NSN' => 'Negeri Sembilan',
+                                'PHG' => 'Pahang',
+                                'PRK' => 'Perak',
+                                'PLS' => 'Perlis',
+                                'PNG' => 'Pulau Pinang',
+                                'SBH' => 'Sabah',
+                                'SWK' => 'Sarawak',
+                                'SGR' => 'Selangor',
+                                'TRG' => 'Terengganu',
+                                'KUL' => 'W.P. Kuala Lumpur',
+                                'LBN' => 'W.P. Labuan',
+                                'PJY' => 'W.P. Putrajaya'
+                            ])
+                            ->searchable()
+                            ->preload()
 
-                        
+                ])->columns(3),
+
+              
+                
+
+                    
             ])
-            ->columns(3)
            
             
         ]);

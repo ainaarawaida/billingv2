@@ -31,8 +31,7 @@ class EditProfile extends BaseEditProfile
                                     ->relationship('user_detail')
                                     ->schema([
                                         Components\TextInput::make('address')
-                                                ->maxLength(255)
-                                                ->columnSpan(2),
+                                                ->maxLength(255),
                                         Components\TextInput::make('poscode')
                                                 ->maxLength(255),
                                         Components\TextInput::make('city')
@@ -73,8 +72,7 @@ class EditProfile extends BaseEditProfile
                                             ->directory('photo')
                                             ->avatar()
                                             ->imageEditor()
-                                            ->circleCropper()
-                                            ->columnSpan(2),
+                                            ->circleCropper(),
                                 ])->columns(2),
                         ]),
                     ])

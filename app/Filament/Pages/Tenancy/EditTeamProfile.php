@@ -61,8 +61,7 @@ class EditTeamProfile extends EditTenantProfile
                                                 ->label('SSM No.')
                                                 ->maxLength(255),
                                                 TextInput::make('address')
-                                                ->maxLength(255)
-                                                ->columnSpan(2),
+                                                ->maxLength(255),
                                           TextInput::make('poscode')
                                                 ->maxLength(255),
                                           TextInput::make('city')

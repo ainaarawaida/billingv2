@@ -67,7 +67,8 @@ class PaymentTable extends BaseWidget
 
                         return $payment;
                     })
-                    ->modalWidth(MaxWidth::SevenExtraLarge), // Add the custom action button
+                    ->modalWidth(MaxWidth::Screen)
+                    ->slideOver(), // Add the custom action button
             ])
             ->columns([
                 Tables\Columns\TextColumn::make('invoice.numbering')
@@ -162,7 +163,8 @@ class PaymentTable extends BaseWidget
                         $this->dispatch('invoiceUpdateStatus', $this->record);
                         return $record;
                     })
-                    ->modalWidth(MaxWidth::SevenExtraLarge),
+                    ->modalWidth(MaxWidth::Screen)
+                    ->slideOver(),
             ])
             ->defaultSort('updated_at', 'desc');
     }

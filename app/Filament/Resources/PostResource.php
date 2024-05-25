@@ -62,7 +62,6 @@ class PostResource extends Resource
                     ->columns(3)
                     ->schema([
                         Forms\Components\Section::make()
-                            ->columnSpan(2)
                             ->schema([
                                 Forms\Components\TextInput::make('title')
                                     ->placeholder('Enter a title')
@@ -115,7 +114,6 @@ class PostResource extends Resource
                             ]),
 
                         Forms\Components\Section::make()
-                            ->columnSpan(1)
                             ->schema([
                                 Forms\Components\TextInput::make('slug')
                                     ->placeholder('Enter a slug')
