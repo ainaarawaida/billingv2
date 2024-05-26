@@ -22,7 +22,9 @@ class InvoiceFactory extends Factory
         $team_id = $this->faker->randomElement(Team::all()->pluck('id')->toArray());
         $customer_id = $this->faker->randomElement(Customer::where('team_id', $team_id)->pluck('id')->toArray());
     
-        $invoice_date = $this->faker->date();
+        $invoice_date = Carbon::createFromTimestamp(rand(strtotime('2020-01-01'), 
+        strtotime(date('Y-m-d', strtotime("next year January 1 - 1 day"))))) ;
+        
         $pay_before = Carbon::parse($invoice_date)->addDays($this->faker->numberBetween(7, 30));
         return [
             //

@@ -22,6 +22,7 @@ return new class extends Migration
             $table->date('start_date')->nullable();
             $table->date('stop_date')->nullable();
             $table->string('every')->nullable();
+            $table->string('generate_before')->nullable();
             $table->string('status')->nullable();
             $table->text('terms_conditions')->nullable();
             $table->text('footer')->nullable();

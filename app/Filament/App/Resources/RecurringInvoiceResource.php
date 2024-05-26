@@ -86,7 +86,9 @@ class RecurringInvoiceResource extends Resource
                         ]),
                         Forms\Components\Group::make()
                         ->schema([
-                            Forms\Components\TextInput::make('numbering')
+                            Forms\Components\Group::make()
+                            ->schema([
+                                Forms\Components\TextInput::make('numbering')
                                 ->hiddenLabel()
                                 ->disabled(fn (string $operation): string => $operation == 'create')
                                 // ->readOnly()
@@ -106,7 +108,10 @@ class RecurringInvoiceResource extends Resource
                                         return $record->numbering ;
                                     }
                                 }),
-                            Forms\Components\Select::make('every')
+                            ]),
+                            Forms\Components\Group::make()
+                            ->schema([
+                                Forms\Components\Select::make('every')
                                 ->options([
                                     'One Time' => 'One Time',
                                     'Daily' => 'Daily',
@@ -117,6 +122,20 @@ class RecurringInvoiceResource extends Resource
                                 ->searchable()
                                 ->preload()
                                 ->required(),
+
+                            Forms\Components\TextInput::make('generate_before')
+                                ->label(__('Generate Before Invoice Days'))
+                                ->default(0)
+                                ->numeric()
+                                ->regex('/^[0-9]+$/')
+                                ->minValue(0)
+                                ->required(),
+
+                            ])
+                            ->columns(2),
+
+                         
+                       
                         ]),
                         Forms\Components\Textarea::make('summary')
                             ->maxLength(65535)
