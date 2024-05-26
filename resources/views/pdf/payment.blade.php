@@ -132,9 +132,9 @@ if (isset($id)) {
                     <tr>
                         <th>#</th>
                         <th>Item / Description</th>
-                        <th>Price </th>
+                        <th>Price (RM)</th>
                         <th>Quantity</th>
-                        <th>Total</th>
+                        <th>Total (RM)</th>
                     </tr>
                 </thead>
                 <tbody>

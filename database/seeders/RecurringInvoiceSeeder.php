@@ -24,7 +24,7 @@ class RecurringInvoiceSeeder extends Seeder
         for ($i = 0; $i < 30; $i++) {
             $recurring_invoice = RecurringInvoice::factory()->create();
             $lastid = RecurringInvoice::where('team_id', $recurring_invoice->team_id)->count('id') ;
-            $numbering = str_pad($lastid, 6, "0", STR_PAD_LEFT) ;
+        
             $team_setting = TeamSetting::where('team_id', $recurring_invoice->team_id )->first();
             $team_setting = TeamSetting::firstOrCreate(
                 ['team_id' =>  $recurring_invoice->team_id ],
@@ -33,7 +33,7 @@ class RecurringInvoiceSeeder extends Seeder
             $recurring_invoice_current_no = $team_setting?->recurring_invoice_current_no ?? '0' ;
             $team_setting->recurring_invoice_current_no = $recurring_invoice_current_no + 1 ;
             $team_setting->save();
-            
+            $numbering = str_pad($recurring_invoice_current_no + 1, 6, "0", STR_PAD_LEFT) ;
             $recurring_invoice->update(['numbering' => $numbering]);
 
             //generate invoice recurring
@@ -44,7 +44,15 @@ class RecurringInvoiceSeeder extends Seeder
 
             for($j = 0 ; $j < $gen_recur ; $j++) {
                 $lastid = Invoice::where('team_id', $recurring_invoice->team_id)->count('id') ;
-                $numbering = str_pad($lastid, 6, "0", STR_PAD_LEFT) ;
+                $team_setting = TeamSetting::where('team_id', $recurring_invoice->team_id )->first();
+                $team_setting = TeamSetting::firstOrCreate(
+                    ['team_id' =>  $recurring_invoice->team_id ],
+                    ['invoice_current_no' => 0]
+                );
+                $invoice_current_no = $team_setting?->invoice_current_no ?? '0' ;
+                $team_setting->invoice_current_no = $invoice_current_no + 1 ;
+                $team_setting->save();
+                $numbering = str_pad($invoice_current_no + 1, 6, "0", STR_PAD_LEFT) ;
                
                 if($j == 0){
 

@@ -88,7 +88,8 @@ class PaymentMethodResource extends Resource
                     Forms\Components\TextInput::make('name')
                         ->readonly(fn (Get $get) => $get('type') == 'payment_gateway')
                         ->maxLength(255)
-                        ->required(),
+                        ->required()
+                        ->default('Bank Provider - Account Name'),
                     Forms\Components\TextInput::make('bank_account')
                         ->maxLength(255)
                         ->required(),
