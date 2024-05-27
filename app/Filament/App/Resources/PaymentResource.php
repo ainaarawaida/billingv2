@@ -221,7 +221,10 @@ class PaymentResource extends Resource
                     Tables\Actions\RestoreBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('updated_at', 'desc');
+            ->defaultSort('updated_at', 'desc')
+            ->recordUrl(
+                fn (Model $record): string => PaymentResource::getUrl('edit', ['record' => $record->id])
+            );
     }
 
     public static function getRelations(): array
