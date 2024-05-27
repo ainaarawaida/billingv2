@@ -32,6 +32,7 @@ use Filament\Support\Enums\ActionSize;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Contracts\HasTable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Session;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Tables\Enums\FiltersLayout;
@@ -43,6 +44,7 @@ use Filament\Tables\Columns\Layout\Component;
 use App\Filament\App\Resources\InvoiceResource;
 use App\Filament\App\Resources\CustomerResource;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\App\Resources\RecurringInvoiceResource;
 use Filament\Resources\RelationManagers\RelationManager;
 
 class InvoicesRelationManager extends RelationManager
@@ -625,72 +627,84 @@ class InvoicesRelationManager extends RelationManager
                 }),
         ], layout: FiltersLayout::AboveContentCollapsible)
         ->headerActions([
-            Tables\Actions\CreateAction::make()
-                ->mutateFormDataUsing(function (array $data, RelationManager $livewire): array {
-                    $data['team_id'] = Filament::getTenant()->id;
-                    $data['recurring_invoice_id'] = $livewire->getOwnerRecord()->id;
-                    $data['balance'] = $data['final_amount'];
-                    return $data;
-                })
-                ->using(function (array $data, string $model): Model {
-                    $tenant_id = Filament::getTenant()->id ;
-                    $team_setting = TeamSetting::where('team_id', $tenant_id )->first();
-                    $invoice_current_no = $team_setting->invoice_current_no ?? '0' ;    
-                    if($team_setting){
-                        $team_setting->invoice_current_no = $invoice_current_no + 1 ;
-                        $team_setting->save();
-                    }else{
-                        $team_setting = TeamSetting::create([
-                            'team_id' => $tenant_id,
-                            'invoice_current_no' => Invoice::where('team_id', $tenant_id)->count('id') + 1 ,
-                        ]);
-                    }   
-                    $data['numbering'] = str_pad(($invoice_current_no + 1), 6, "0", STR_PAD_LEFT) ;
-                    $data['balance'] = $data['final_amount'] ;
+            Tables\Actions\Action::make('create')
+                ->label('New Invoice')
+                ->action(function (array $data, RelationManager $livewire) {
+                        $livewire->redirect(InvoiceResource::getUrl('create'), navigate:true);
+                    }),
+            // Tables\Actions\CreateAction::make()
+            //     ->mutateFormDataUsing(function (array $data, RelationManager $livewire): array {
+            //         $data['team_id'] = Filament::getTenant()->id;
+            //         $data['recurring_invoice_id'] = $livewire->getOwnerRecord()->id;
+            //         $data['balance'] = $data['final_amount'];
+            //         return $data;
+            //     })
+            //     ->using(function (array $data, string $model): Model {
+            //         $tenant_id = Filament::getTenant()->id ;
+            //         $team_setting = TeamSetting::where('team_id', $tenant_id )->first();
+            //         $invoice_current_no = $team_setting->invoice_current_no ?? '0' ;    
+            //         if($team_setting){
+            //             $team_setting->invoice_current_no = $invoice_current_no + 1 ;
+            //             $team_setting->save();
+            //         }else{
+            //             $team_setting = TeamSetting::create([
+            //                 'team_id' => $tenant_id,
+            //                 'invoice_current_no' => Invoice::where('team_id', $tenant_id)->count('id') + 1 ,
+            //             ]);
+            //         }   
+            //         $data['numbering'] = str_pad(($invoice_current_no + 1), 6, "0", STR_PAD_LEFT) ;
+            //         $data['balance'] = $data['final_amount'] ;
 
                  
-                    $invoice = $model::create($data);
-                     //save note
-                    if($data['content'] != ''){
-                        Note::create([
-                            'user_id' => auth()->user()->id,
-                            'team_id' => Filament::getTenant()->id,
-                            'type' => 'invoice',
-                            'type_id' => $invoice->id,
-                            'content' =>  $data['content'],
-                        ]);
+            //         $invoice = $model::create($data);
+            //          //save note
+            //         if($data['content'] != ''){
+            //             Note::create([
+            //                 'user_id' => auth()->user()->id,
+            //                 'team_id' => Filament::getTenant()->id,
+            //                 'type' => 'invoice',
+            //                 'type_id' => $invoice->id,
+            //                 'content' =>  $data['content'],
+            //             ]);
 
-                    }
-                    return $invoice; 
+            //         }
+            //         return $invoice; 
 
-                })
-                ->modalWidth(MaxWidth::Screen)
-                ->slideOver(), 
+            //     })
+            //     ->modalWidth(MaxWidth::Screen)
+            //     ->slideOver(), 
         ])
         ->actions([
             Tables\Actions\ActionGroup::make([
-                Tables\Actions\EditAction::make()
-                    ->mutateFormDataUsing(function (array $data): array {
-                        return $data;
-                    })
-                    ->using(function (Model $record, array $data): Model {
-                         //update balance 
-                        $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
-                        ->where('invoice_id', $record->id)
-                        ->where('status', 'completed')->sum('total');
-                        $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
-                        ->where('invoice_id', $record->id)
-                        ->where('status', 'refunded')->sum('total');
+                Tables\Actions\Action::make('edit')
+                ->label('Edit')
+                ->icon('heroicon-m-pencil-square')
+                ->color('grey')
+                ->action(function (Model $record, RelationManager $livewire) {
+                        $livewire->redirect(InvoiceResource::getUrl('edit', ['record' => $record->id]), navigate:true);
+                    }),
+                // Tables\Actions\EditAction::make()
+                //     ->mutateFormDataUsing(function (array $data): array {
+                //         return $data;
+                //     })
+                //     ->using(function (Model $record, array $data): Model {
+                //          //update balance 
+                //         $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
+                //         ->where('invoice_id', $record->id)
+                //         ->where('status', 'completed')->sum('total');
+                //         $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
+                //         ->where('invoice_id', $record->id)
+                //         ->where('status', 'refunded')->sum('total');
             
-                        $data['balance'] = $data['final_amount'] - $totalPayment + $totalRefunded ;
-                        if($data['balance'] == 0){
-                            $data['invoice_status'] = 'done';
-                        }
-                        $record->update($data);
-                        return $record;
-                    })
-                    ->modalWidth(MaxWidth::Screen)
-                    ->slideOver(),
+                //         $data['balance'] = $data['final_amount'] - $totalPayment + $totalRefunded ;
+                //         if($data['balance'] == 0){
+                //             $data['invoice_status'] = 'done';
+                //         }
+                //         $record->update($data);
+                //         return $record;
+                //     })
+                //     ->modalWidth(MaxWidth::Screen)
+                //     ->slideOver(),
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\ForceDeleteAction::make(),
                 Tables\Actions\ViewAction::make(),
@@ -898,7 +912,7 @@ class InvoicesRelationManager extends RelationManager
                         ->label("Payment Method")
                         ->options(function (Get $get, string $operation){
                             $payment_method = PaymentMethod::where('team_id', Filament::getTenant()->id)
-                            ->where('status', 1)->get()->pluck('name', 'id');
+                            ->where('status', 1)->get()->pluck('bank_name', 'id');
                             return $payment_method ;
                         })
                         ->searchable()

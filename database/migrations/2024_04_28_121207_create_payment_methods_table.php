@@ -17,7 +17,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('team_id')->nullable();  
             $table->string('type')->nullable();
-            $table->string('name')->nullable();
+            $table->string('bank_name')->nullable();
+            $table->string('account_name')->nullable();
             $table->string('bank_account')->nullable();
             $table->foreignId('payment_gateway_id')->nullable();  
             $table->string('status')->nullable();

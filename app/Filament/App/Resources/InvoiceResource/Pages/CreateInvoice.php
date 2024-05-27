@@ -9,6 +9,7 @@ use App\Models\TeamSetting;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Session;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\App\Resources\InvoiceResource;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -52,7 +53,8 @@ class CreateInvoice extends CreateRecord
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        return $this->previousUrl;
+        // return $this->getResource()::getUrl('index');
     }
 
     protected function associateRecordWithTenant(Model $record, Model $tenant): Model

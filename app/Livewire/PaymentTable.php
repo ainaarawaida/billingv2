@@ -82,7 +82,7 @@ class PaymentTable extends BaseWidget
                     ->color('primary')
                     ->prefix($prefix)
                     ->url(fn($record) => InvoiceResource::getUrl('edit', ['record' => $record->invoice_id])),
-                Tables\Columns\TextColumn::make('payment_method.name')
+                Tables\Columns\TextColumn::make('payment_method.bank_name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('payment_date')
                     ->date('j F, Y')
@@ -113,58 +113,61 @@ class PaymentTable extends BaseWidget
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->actions([
-                Tables\Actions\DeleteAction::make()
-                    ->after(function () {
-                         //update balance on invoice
-                        $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
-                        ->where('invoice_id', $this->record->id)
-                        ->where('status', 'completed')->sum('total');
-                        $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
-                        ->where('invoice_id', $this->record->id)
-                        ->where('status', 'refunded')->sum('total');
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\DeleteAction::make()
+                        ->after(function () {
+                             //update balance on invoice
+                            $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
+                            ->where('invoice_id', $this->record->id)
+                            ->where('status', 'completed')->sum('total');
+                            $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
+                            ->where('invoice_id', $this->record->id)
+                            ->where('status', 'refunded')->sum('total');
+    
+                            $this->record->balance = $this->record->final_amount - $totalPayment + $totalRefunded; 
+                            if($this->record->balance == 0){
+                                $this->record->invoice_status = 'done'; 
+                            }elseif($this->record->invoice_status == 'done'){
+                                $this->record->invoice_status = 'new' ;
+                            }
+                            $this->record->update();
+                            $this->dispatch('invoiceUpdateStatus', $this->record);
+                            
+                        }),
+                    Tables\Actions\EditAction::make()
+                        ->record($this->record)
+                        ->form($this->paymentForm())
+                        ->mutateRecordDataUsing(function (array $data): array {
+                            $data['invoice_id'] = $this->record->id;
+                            $data['team_id'] = Filament::getTenant()->id;
+                            return $data;
+                        })
+                        ->using(function (Model $record, array $data): Model {
+                            // dd($record,$data, $this->record);
+                            $record->update($data);
+                            //update balance on invoice
+                            $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
+                            ->where('invoice_id', $this->record->id)
+                            ->where('status', 'completed')->sum('total');
+                            $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
+                            ->where('invoice_id', $this->record->id)
+                            ->where('status', 'refunded')->sum('total');
+    
+                            $this->record->balance = $this->record->final_amount - $totalPayment + $totalRefunded; 
+    
+                            if($this->record->balance == 0){
+                                $this->record->invoice_status = 'done'; 
+                            }elseif($this->record->invoice_status == 'done'){
+                                $this->record->invoice_status = 'new' ;
+                            }
+                            $this->record->update();
+                            $this->dispatch('invoiceUpdateStatus', $this->record);
+                            return $record;
+                        })
+                        ->modalWidth(MaxWidth::Screen)
+                        ->slideOver(),
 
-                        $this->record->balance = $this->record->final_amount - $totalPayment + $totalRefunded; 
-                        if($this->record->balance == 0){
-                            $this->record->invoice_status = 'done'; 
-                        }elseif($this->record->invoice_status == 'done'){
-                            $this->record->invoice_status = 'new' ;
-                        }
-                        $this->record->update();
-                        $this->dispatch('invoiceUpdateStatus', $this->record);
-                        
-                    }),
-                Tables\Actions\EditAction::make()
-                    ->record($this->record)
-                    ->form($this->paymentForm())
-                    ->mutateRecordDataUsing(function (array $data): array {
-                        $data['invoice_id'] = $this->record->id;
-                        $data['team_id'] = Filament::getTenant()->id;
-                        return $data;
-                    })
-                    ->using(function (Model $record, array $data): Model {
-                        // dd($record,$data, $this->record);
-                        $record->update($data);
-                        //update balance on invoice
-                        $totalPayment = Payment::where('team_id', Filament::getTenant()->id)
-                        ->where('invoice_id', $this->record->id)
-                        ->where('status', 'completed')->sum('total');
-                        $totalRefunded = Payment::where('team_id', Filament::getTenant()->id)
-                        ->where('invoice_id', $this->record->id)
-                        ->where('status', 'refunded')->sum('total');
-
-                        $this->record->balance = $this->record->final_amount - $totalPayment + $totalRefunded; 
-
-                        if($this->record->balance == 0){
-                            $this->record->invoice_status = 'done'; 
-                        }elseif($this->record->invoice_status == 'done'){
-                            $this->record->invoice_status = 'new' ;
-                        }
-                        $this->record->update();
-                        $this->dispatch('invoiceUpdateStatus', $this->record);
-                        return $record;
-                    })
-                    ->modalWidth(MaxWidth::Screen)
-                    ->slideOver(),
+                ])
             ])
             ->defaultSort('updated_at', 'desc');
     }
@@ -178,7 +181,7 @@ class PaymentTable extends BaseWidget
                         ->label("Payment Method")
                         ->options(function (Get $get, string $operation){
                             $payment_method = PaymentMethod::where('team_id', Filament::getTenant()->id)
-                            ->where('status', 1)->get()->pluck('name', 'id');
+                            ->where('status', 1)->get()->pluck('bank_name', 'id');
                             return $payment_method ;
                         })
                         ->searchable()

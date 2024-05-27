@@ -13,6 +13,8 @@ use App\Models\UserSetting;
 use App\Models\PaymentMethod;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Select;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\App\Resources\PaymentMethodResource\Pages;
@@ -58,11 +60,18 @@ class PaymentMethodResource extends Resource
                                 $temp = collect($team_setting)->where('status', true)->pluck('name', 'id');
                                 return $temp ;
                             })
-                        ->disableOptionWhen(function (string $value): bool {
+                        ->disableOptionWhen(function (string $value, string $operation, ?Model $record): bool {
                             $payment_method = PaymentMethod::where('team_id', Filament::getTenant()->id)
                             ->pluck('payment_gateway_id')->toArray();
+                            if($operation == 'edit'){
+                                $payment_method = PaymentMethod::where('team_id', Filament::getTenant()->id)
+                                ->where('payment_gateway_id', '!=', $record->payment_gateway_id)
+                                ->pluck('payment_gateway_id')->toArray();
+                            }
                             return in_array($value, $payment_method) ;
+                            
                         })
+                        ->in(fn (Select $component): array => array_keys($component->getEnabledOptions()))
                         // ->formatStateUsing(function (?string $state): ?string {
                         //     $payment_method = PaymentMethod::where('status', 1)
                         //     ->where('team_id', Filament::getTenant()->id)
@@ -79,18 +88,23 @@ class PaymentMethodResource extends Resource
                             $team_setting = TeamSetting::where('team_id', Filament::getTenant()->id)->first()->payment_gateway;
                             $temp = collect($team_setting)->where('id', $state)->first();
                             if($temp && isset($temp['name'])){
-                                $set('name', 'Payment Gateway:'.$temp['name']);
+                                $set('bank_name', 'Payment Gateway:'.$temp['name']);
 
                             }else{
-                                $set('name', '');
+                                $set('bank_name', '');
                             }
                         }),
-                    Forms\Components\TextInput::make('name')
+                    Forms\Components\TextInput::make('bank_name')
                         ->readonly(fn (Get $get) => $get('type') == 'payment_gateway')
                         ->maxLength(255)
-                        ->required()
-                        ->default('Bank Provider - Account Name'),
+                        ->required(),
+                    Forms\Components\TextInput::make('account_name')
+                        ->hidden(fn (Get $get) => $get('type') == 'payment_gateway')
+                        ->maxLength(255)
+                        ->required(),
                     Forms\Components\TextInput::make('bank_account')
+                        ->label('No Bank Account')
+                        ->hidden(fn (Get $get) => $get('type') == 'payment_gateway')
                         ->maxLength(255)
                         ->required(),
                     Forms\Components\Toggle::make('status')
@@ -110,10 +124,14 @@ class PaymentMethodResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                Tables\Columns\TextColumn::make('bank_name')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('account_name')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('bank_account')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('type')
                         ->badge()
                         ->formatStateUsing(function(string $state, $record): string {
@@ -151,7 +169,10 @@ class PaymentMethodResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->recordUrl(
+                fn (Model $record): string => PaymentMethodResource::getUrl('edit', ['record' => $record->id])
+            );
     }
 
     public static function getRelations(): array

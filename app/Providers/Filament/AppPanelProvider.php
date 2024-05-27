@@ -9,8 +9,9 @@ use Filament\PanelProvider;
 use App\Livewire\ListPayment;
 
 use Filament\Facades\Filament;
-use App\Livewire\StatsOverview;
+use App\Livewire\AccountWidget;
 
+use App\Livewire\StatsOverview;
 use App\Filament\Pages\Auth\Login;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
@@ -20,7 +21,6 @@ use Illuminate\Support\Facades\Blade;
 use Filament\Navigation\NavigationItem;
 use App\Filament\Pages\Auth\EditProfile;
 use Filament\Navigation\NavigationGroup;
-use App\Livewire\AccountWidget;
 use Filament\Http\Middleware\Authenticate;
 use App\Filament\Pages\Tenancy\RegisterTeam;
 use App\Filament\Pages\Tenancy\EditTeamProfile;
@@ -41,7 +41,9 @@ use App\Filament\App\Resources\PaymentResource\Pages\ListPayments;
 use App\Filament\App\Resources\InvoiceResource\Pages\CreateInvoice;
 use App\Filament\App\Resources\PaymentResource\Widgets\PaymentChart;
 use App\Filament\App\Resources\QuotationResource\Pages\ListQuotations;
+use App\Filament\App\Resources\RecurringInvoiceResource\Pages\EditRecurringInvoice;
 use App\Filament\App\Resources\RecurringInvoiceResource\Pages\ListRecurringInvoices;
+use App\Filament\App\Resources\RecurringInvoiceResource\Pages\CreateRecurringInvoice;
 
 class AppPanelProvider extends PanelProvider
 {
@@ -98,6 +100,7 @@ class AppPanelProvider extends PanelProvider
                             }
                           
                         })
+
                     </script>
                 
                 '),
@@ -108,7 +111,6 @@ class AppPanelProvider extends PanelProvider
                     ListRecurringInvoices::class,
                 ]
             )
-            
             ->sidebarCollapsibleOnDesktop()
             ->tenantRegistration(RegisterTeam::class)
             ->tenantProfile(EditTeamProfile::class)

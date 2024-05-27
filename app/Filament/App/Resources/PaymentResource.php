@@ -47,7 +47,7 @@ class PaymentResource extends Resource
                             ->label("Payment Method")
                             ->options(function (Get $get, string $operation){
                                 $payment_method = PaymentMethod::where('team_id', Filament::getTenant()->id)
-                                ->where('status', 1)->get()->pluck('name', 'id');
+                                ->where('status', 1)->get()->pluck('bank_name', 'id');
                                 return $payment_method ;
                             })
                             ->searchable()
@@ -116,7 +116,7 @@ class PaymentResource extends Resource
                     ->badge()
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('payment_method.name')
+                Tables\Columns\TextColumn::make('payment_method.bank_name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('payment_date')
                     ->date('j F, Y')

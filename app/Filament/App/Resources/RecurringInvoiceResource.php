@@ -124,7 +124,7 @@ class RecurringInvoiceResource extends Resource
                                 ->required(),
 
                             Forms\Components\TextInput::make('generate_before')
-                                ->label(__('Generate Before Invoice Days'))
+                                ->label(__('Generate Before Days'))
                                 ->default(0)
                                 ->numeric()
                                 ->regex('/^[0-9]+$/')

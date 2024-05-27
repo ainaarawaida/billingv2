@@ -95,11 +95,11 @@ if(isset($_GET['payment_id'])){
                         @if (count($paymentMethod) > 0)
                             @foreach ($paymentMethod as $paymentMethodData)
                                 @if ($paymentMethodData->payment_gateway_id == 1)
-                                    <li><a href="#" class="dropdown-item">{{ $paymentMethodData->name }}</a></li>
+                                    <li><a href="#" class="dropdown-item">{{ $paymentMethodData->bank_name }}</a></li>
                                 @elseif ($paymentMethodData->payment_gateway_id == 2)
-                                    <li><a href="{{ url('online-payment/toyyibpay-recurring/'.$hashid.'/'.$paymentMethodData->id) }}" class="dropdown-item">{{ $paymentMethodData->name }}</a></li>
+                                    <li><a href="{{ url('online-payment/toyyibpay-recurring/'.$hashid.'/'.$paymentMethodData->id) }}" class="dropdown-item">{{ $paymentMethodData->bank_name }}</a></li>
                                 @else
-                                    <li><a href="#" data-detail="{{ base64_encode(json_encode($paymentMethodData->toArray())) }}" data-url="{{ url('online-payment/manual-payment-recurring/'.$hashid.'/'.$paymentMethodData->id) }}" class="dropdown-item payment-list">{{ $paymentMethodData->name }}</a></li>
+                                    <li><a href="#" data-detail="{{ base64_encode(json_encode($paymentMethodData->toArray())) }}" data-url="{{ url('online-payment/manual-payment-recurring/'.$hashid.'/'.$paymentMethodData->id) }}" class="dropdown-item payment-list">{{ $paymentMethodData->bank_name }}</a></li>
                                 @endif
 
                             @endforeach
@@ -172,7 +172,7 @@ if(isset($_GET['payment_id'])){
             <div class="col d-flex flex-column justify-content-start align-items-end">
                 <p class="h3">{{ $recurring_invoice_prefix }}{{ $recurring_invoice->numbering }} </p>
                 <div>Start Date: {{ date("j F, Y", strtotime($recurring_invoice->start_date) ) }}</div>
-                <div>Stop Date: {{ date("j F, Y", strtotime($recurring_invoice->stop_before) ) }}</div>
+                <div>Stop Date: {{ date("j F, Y", strtotime($recurring_invoice->stop_date) ) }}</div>
             </div>
         </div>
 
@@ -301,8 +301,12 @@ if(isset($_GET['payment_id'])){
                         @csrf
                         <input type="hidden" id="mp-id-all" name="id-all">
                         <div class="mb-3">
-                            <label for="recipient-name" class="col-form-label">Payment Name</label>
-                            <input type="text" readonly class="form-control" id="mp-name" name="name">
+                            <label for="recipient-bank_name" class="col-form-label">Bank Name</label>
+                            <input type="text" readonly class="form-control" id="mp-bank_name" name="bank_name">
+                        </div>
+                        <div class="mb-3">
+                            <label for="recipient-account_name" class="col-form-label">Account Name</label>
+                            <input type="text" readonly class="form-control" id="mp-account_name" name="account_name">
                         </div>
                         <div class="mb-3">
                             <label for="recipient-name" class="col-form-label">Bank Account</label>
@@ -379,7 +383,8 @@ if(isset($_GET['payment_id'])){
                 let actionurl = e.target.getAttribute('data-url');
                 // console.log(detail, actionurl);
                 document?.querySelector('#mp-form').setAttribute('action', actionurl);
-                document.querySelector('#mp-name').value = detail.name;
+                document.querySelector('#mp-bank_name').value = detail.bank_name;
+                document.querySelector('#mp-account_name').value = detail.account_name;
                 document.querySelector('#mp-id-all').value = id_all;
                 document.querySelector('#mp-bank_account').value = detail.bank_account;
                 document.querySelector('#mp-amount').value = final_balance.toFixed(2);

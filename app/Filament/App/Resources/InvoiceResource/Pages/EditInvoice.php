@@ -31,7 +31,8 @@ class EditInvoice extends EditRecord
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        return $this->previousUrl;
+        // return $this->getResource()::getUrl('index');
     }
 
     protected function handleRecordUpdate(Model $record, array $data): Model
