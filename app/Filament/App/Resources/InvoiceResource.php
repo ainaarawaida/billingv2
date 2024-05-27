@@ -52,6 +52,7 @@ class InvoiceResource extends Resource
     protected static ?string $navigationGroup = 'Billing';
     protected static ?int $navigationSort = 5;
     protected static ?string $navigationIcon = 'heroicon-o-newspaper';
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function form(Form $form): Form
     {
@@ -815,7 +816,8 @@ class InvoiceResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::whereBelongsTo(Filament::getTenant(), 'teams')->count();
+        return static::getModel()::whereBelongsTo(Filament::getTenant(), 'teams')
+        ->where('invoice_status', 'new')->count();
         
     }
 
@@ -950,7 +952,7 @@ class InvoiceResource extends Resource
                                 'processing ' => 'Processing ',
                                 'completed' => 'Completed',
                                 'failed' => 'Failed',
-                                'canceled' => 'Canceled',
+                                'cancelled' => 'Cancelled',
                                 'refunded' => 'Refunded',
                             ])
                             ->default(fn(Model $record) => $record->balance < 0 ? 'refunded' : 'completed')

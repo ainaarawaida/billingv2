@@ -5,12 +5,15 @@ namespace App\Providers\Filament;
 use Filament\Pages;
 use Filament\Panel;
 use App\Models\Team;
-use Filament\PanelProvider;
-use App\Livewire\ListPayment;
+use App\Models\Invoice;
+use App\Models\Payment;
 
+use App\Models\Quotation;
+use Filament\PanelProvider;
+
+use App\Livewire\ListPayment;
 use Filament\Facades\Filament;
 use App\Livewire\AccountWidget;
-
 use App\Livewire\StatsOverview;
 use App\Filament\Pages\Auth\Login;
 use Filament\Support\Colors\Color;
@@ -23,6 +26,8 @@ use App\Filament\Pages\Auth\EditProfile;
 use Filament\Navigation\NavigationGroup;
 use Filament\Http\Middleware\Authenticate;
 use App\Filament\Pages\Tenancy\RegisterTeam;
+use App\Filament\App\Resources\InvoiceResource;
+use App\Filament\App\Resources\PaymentResource;
 use App\Filament\Pages\Tenancy\EditTeamProfile;
 use Illuminate\Session\Middleware\StartSession;
 use App\Filament\Pages\Tenancy\EditTeamProfile2;
@@ -134,8 +139,33 @@ class AppPanelProvider extends PanelProvider
                     ->label('Setting'),
             ])
             ->navigationItems([
+                NavigationItem::make('Quotations')
+                    ->label(__('Quotations'))
+                    ->url(fn () => QuotationResource::getUrl('index',['activeTab' => 'new']))
+                    ->isActiveWhen(fn (): bool => strpos(url()->current(), QuotationResource::getUrl('index')) !== false)
+                    ->icon('heroicon-o-clipboard')
+                    ->group('Billing')
+                    ->sort(1)
+                    ->badge(fn () => Quotation::whereBelongsTo(Filament::getTenant(), 'teams')->where('quote_status', 'new')->count()),
+                NavigationItem::make('Invoices')
+                    ->label(__('Invoices'))
+                    ->url(fn () => InvoiceResource::getUrl('index',['activeTab' => 'new']))
+                    ->isActiveWhen(fn (): bool => strpos(url()->current(), InvoiceResource::getUrl('index')) !== false)
+                    ->icon('heroicon-o-newspaper')
+                    ->group('Billing')
+                    ->sort(2)
+                    ->badge(fn () => Invoice::whereBelongsTo(Filament::getTenant(), 'teams')->where('invoice_status', 'new')->count()),
+                NavigationItem::make('Payments')
+                    ->label(__('Payments'))
+                    ->url(fn () => PaymentResource::getUrl('index',['activeTab' => 'pending_payment']))
+                    ->isActiveWhen(fn (): bool => strpos(url()->current(), PaymentResource::getUrl('index')) !== false)
+                    ->icon('heroicon-o-credit-card')
+                    ->group('Billing')
+                    ->sort(7)
+                    ->badge(fn () => Payment::whereBelongsTo(Filament::getTenant(), 'teams')->where('status', 'pending_payment')->count()),
                 NavigationItem::make('Organization')
                     ->label(__('Organization'))
+                    ->isActiveWhen(fn (): bool => url()->current() == Filament::getUrl().'/profile')
                     ->url(fn () => Filament::getUrl().'/profile')
                     ->icon('heroicon-o-presentation-chart-line')
                     ->group('Setting')

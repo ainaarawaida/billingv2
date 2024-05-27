@@ -2,6 +2,7 @@
 
 namespace App\Filament\App\Resources;
 
+use Closure;
 use stdClass;
 use Filament\Forms;
 use App\Models\Item;
@@ -19,8 +20,8 @@ use App\Livewire\NoteTable;
 use App\Models\TeamSetting;
 use App\Mail\QuotationEmail;
 use Filament\Facades\Filament;
-use Barryvdh\DomPDF\Facade\Pdf;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Resources\Resource;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
@@ -57,6 +58,8 @@ class QuotationResource extends Resource
 
     protected static ?string $navigationGroup = 'Billing';
     protected static ?int $navigationSort = 4;
+    protected static bool $shouldRegisterNavigation = false;
+
 
     public static function form(Form $form): Form
     {
@@ -862,7 +865,7 @@ class QuotationResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::whereBelongsTo(Filament::getTenant(), 'teams')->count();
+        return static::getModel()::whereBelongsTo(Filament::getTenant(), 'teams')->where('quote_status', 'new')->count();
         
     }
 

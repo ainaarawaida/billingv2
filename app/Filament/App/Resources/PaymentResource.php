@@ -29,6 +29,7 @@ class PaymentResource extends Resource
     protected static ?string $navigationGroup = 'Billing';
     protected static ?int $navigationSort = 7;
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function form(Form $form): Form
     {
@@ -71,7 +72,7 @@ class PaymentResource extends Resource
                                     'processing ' => 'Processing ',
                                     'completed' => 'Completed',
                                     'failed' => 'Failed',
-                                    'canceled' => 'Canceled',
+                                    'cancelled' => 'Cancelled',
                                     'refunded' => 'Refunded',
                                 ])
                                 ->default('draft')
@@ -250,7 +251,8 @@ class PaymentResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::whereBelongsTo(Filament::getTenant(), 'teams')->count();
+        return static::getModel()::whereBelongsTo(Filament::getTenant(), 'teams')
+        ->where('status', 'pending_payment')->count();
         
     }
 }

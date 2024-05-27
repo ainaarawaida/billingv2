@@ -37,19 +37,21 @@ class ListInvoices extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => Tab::make()
-            ->badge(Invoice::query()->whereBelongsTo(Filament::getTenant(), 'teams')->count()),
-            'Draft' => Tab::make()
+            'all' => Tab::make(),
+            // ->badge(Invoice::query()->whereBelongsTo(Filament::getTenant(), 'teams')->count()),
+            'draft' => Tab::make()
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('invoice_status', 'draft')),
-            'New' => Tab::make()
+            'new' => Tab::make()
+                ->badge(Invoice::query()->where('team_id', Filament::getTenant()->id)
+                ->where('invoice_status', 'new')->count())
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('invoice_status', 'new')),
-            'Process' => Tab::make()
+            'process' => Tab::make()
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('invoice_status', 'process')),
-            'Done' => Tab::make()
+            'done' => Tab::make()
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('invoice_status', 'done')),
-            'Expired' => Tab::make()
+            'expired' => Tab::make()
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('invoice_status', 'expired')),
-            'Cancelled' => Tab::make()
+            'cancelled' => Tab::make()
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('invoice_status', 'cancelled')),
                
         ];

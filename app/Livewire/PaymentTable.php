@@ -205,7 +205,7 @@ class PaymentTable extends BaseWidget
                                 'processing ' => 'Processing ',
                                 'completed' => 'Completed',
                                 'failed' => 'Failed',
-                                'canceled' => 'Canceled',
+                                'cancelled' => 'Cancelled',
                                 'refunded' => 'Refunded',
                             ])
                             ->default($this->record->balance < 0 ? 'refunded' : 'completed')

@@ -24,7 +24,7 @@ class PaymentMethodSeeder extends Seeder
             $payment_method = PaymentMethod::create([
                 'team_id' =>  $val->id,
                 'type' =>  'manual',
-                'name' =>  $faker->randomElement([
+                'bank_name' =>  $faker->randomElement([
                     'Maybank',
                     'CIMB Group',
                     'Public Bank',
@@ -32,6 +32,7 @@ class PaymentMethodSeeder extends Seeder
                     'Hong Leong Bank',
                     'AmBank',
                 ]),
+                'account_name' =>  $faker->name,
                 'bank_account' =>  sprintf("%04d", $faker->randomNumber()).'-'.sprintf("%04d", $faker->randomNumber()).'-'.sprintf("%04d", $faker->randomNumber()).'-'.sprintf("%04d", $faker->randomNumber()),
                 'payment_gateway_id' =>  null,
                 'status' =>  true,

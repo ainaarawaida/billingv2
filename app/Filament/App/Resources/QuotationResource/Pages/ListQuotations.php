@@ -38,19 +38,31 @@ class ListQuotations extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => Tab::make()
-            ->badge(Quotation::query()->whereBelongsTo(Filament::getTenant(), 'teams')->count()),
-            'Draft' => Tab::make()
+            'all' => Tab::make(),
+            // ->badge(Quotation::query()->whereBelongsTo(Filament::getTenant(), 'teams')->count()),
+            'draft' => Tab::make()
+                // ->badge(Quotation::query()->where('team_id', Filament::getTenant()->id)
+                // ->where('quote_status', 'draft')->count())
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('quote_status', 'draft')),
-            'New' => Tab::make()
+            'new' => Tab::make()
+                ->badge(Quotation::query()->where('team_id', Filament::getTenant()->id)
+                ->where('quote_status', 'new')->count())
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('quote_status', 'new')),
-            'Process' => Tab::make()
+            'process' => Tab::make()
+                // ->badge(Quotation::query()->where('team_id', Filament::getTenant()->id)
+                // ->where('quote_status', 'process')->count())
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('quote_status', 'process')),
-            'Done' => Tab::make()
+            'done' => Tab::make()
+                // ->badge(Quotation::query()->where('team_id', Filament::getTenant()->id)
+                // ->where('quote_status', 'done')->count())
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('quote_status', 'done')),
-            'Expired' => Tab::make()
+            'expired' => Tab::make()
+                // ->badge(Quotation::query()->where('team_id', Filament::getTenant()->id)
+                // ->where('quote_status', 'expired')->count())
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('quote_status', 'expired')),
-            'Cancelled' => Tab::make()
+            'cancelled' => Tab::make()
+                // ->badge(Quotation::query()->where('team_id', Filament::getTenant()->id)
+                // ->where('quote_status', 'cancelled')->count())
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('quote_status', 'cancelled')),
                
         ];

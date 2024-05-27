@@ -936,7 +936,7 @@ class InvoicesRelationManager extends RelationManager
                                 'processing ' => 'Processing ',
                                 'completed' => 'Completed',
                                 'failed' => 'Failed',
-                                'canceled' => 'Canceled',
+                                'cancelled' => 'Cancelled',
                                 'refunded' => 'Refunded',
                             ])
                             ->default(fn(Model $record) => $record->balance < 0 ? 'refunded' : 'completed')

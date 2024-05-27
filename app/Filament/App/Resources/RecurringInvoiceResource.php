@@ -553,9 +553,9 @@ class RecurringInvoiceResource extends Resource
             ]);
     }
 
-    public static function getNavigationBadge(): ?string
-    {
-        return static::getModel()::whereBelongsTo(Filament::getTenant(), 'teams')->count();
+    // public static function getNavigationBadge(): ?string
+    // {
+    //     return static::getModel()::whereBelongsTo(Filament::getTenant(), 'teams')->count();
         
-    }
+    // }
 }
