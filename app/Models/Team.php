@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Models\Post;
+use App\Models\Role;
 use App\Models\Product;
 use App\Models\Customer;
 use App\Models\Quotation;
+use App\Models\Permission;
 use App\Models\CustomMedia;
 use App\Models\PaymentMethod;
 use Illuminate\Database\Eloquent\Model;
@@ -79,6 +81,16 @@ class Team extends Model implements HasAvatar
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function roles(): HasMany
+    {
+        return $this->hasMany(Role::class);
+    }
+
+    public function permissions(): HasMany
+    {
+        return $this->hasMany(Permission::class);
     }
 
    

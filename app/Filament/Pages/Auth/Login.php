@@ -50,7 +50,7 @@ class Login extends BaseAuth
 
     protected function getPasswordFormComponent(): Component
     {
-        parent::getPasswordFormComponent();
+        // parent::getPasswordFormComponent();
         return TextInput::make('password')
             ->label(__('filament-panels::pages/auth/login.form.password.label'))
             ->hint(filament()->hasPasswordReset() ? new HtmlString(Blade::render('<x-filament::link :href="filament()->getRequestPasswordResetUrl()"> {{ __(\'filament-panels::pages/auth/login.actions.request_password_reset.label\') }}</x-filament::link>')) : null)

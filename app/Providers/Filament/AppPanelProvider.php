@@ -20,6 +20,7 @@ use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\View\View;
 use App\Filament\App\Pages\Dashboard;
+use App\Filament\Pages\Auth\Register;
 use Illuminate\Support\Facades\Blade;
 use Filament\Navigation\NavigationItem;
 use App\Filament\Pages\Auth\EditProfile;
@@ -46,10 +47,12 @@ use App\Filament\App\Resources\PaymentResource\Pages\ListPayments;
 use App\Filament\App\Resources\InvoiceResource\Pages\CreateInvoice;
 use App\Filament\App\Resources\PaymentResource\Widgets\PaymentChart;
 use App\Filament\App\Resources\QuotationResource\Pages\ListQuotations;
+use Althinect\FilamentSpatieRolesPermissions\FilamentSpatieRolesPermissionsPlugin;
 use App\Filament\App\Resources\RecurringInvoiceResource\Pages\EditRecurringInvoice;
 use App\Filament\App\Resources\RecurringInvoiceResource\Pages\ListRecurringInvoices;
 use App\Filament\App\Resources\RecurringInvoiceResource\Pages\CreateRecurringInvoice;
-
+use Althinect\FilamentSpatieRolesPermissions\Middleware\SyncSpatiePermissionsWithFilamentTenants;
+ 
 class AppPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
@@ -122,7 +125,7 @@ class AppPanelProvider extends PanelProvider
             ->tenant(Team::class, ownershipRelationship: 'teams', slugAttribute: 'slug')
             ->tenantMenu(isset(request()->segments()[2]) && request()->segments()[2] == 'choose-company' ? false : true)
             ->login(Login::class)
-            ->registration()
+            ->registration(Register::class)
             ->passwordReset()
             ->emailVerification()
             // ->profile()
@@ -197,11 +200,12 @@ class AppPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->tenantMiddleware([
-                \Hasnayeen\Themes\Http\Middleware\SetTheme::class
+                \Hasnayeen\Themes\Http\Middleware\SetTheme::class,
+                // SyncSpatiePermissionsWithFilamentTenants::class,
             ])
-            ->plugin(
-                \Hasnayeen\Themes\ThemesPlugin::make()
-            )
-            ;
+            ->plugins([
+                \Hasnayeen\Themes\ThemesPlugin::make(),
+                FilamentSpatieRolesPermissionsPlugin::make()
+            ]);
     }
 }

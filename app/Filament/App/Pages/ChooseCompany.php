@@ -11,6 +11,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Tables\Columns\ImageColumn;
+use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Pages\Tenancy\RegisterTeam;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -26,6 +27,13 @@ class ChooseCompany extends Page implements HasForms, HasTable
     protected static string $view = 'filament.app.pages.choose-company';
     protected static bool $shouldRegisterNavigation = false;
 
+    public function getTableQueryForExport(): Builder
+    {
+        return Team::query()->whereHas('members', function($q) {
+            $q->where('users.id', auth()->user()->id);
+        }); // Or customize the query as needed
+    }
+    
     public function table(Table $table): Table
     {
       

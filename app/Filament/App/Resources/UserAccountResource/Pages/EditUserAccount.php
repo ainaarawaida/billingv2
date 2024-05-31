@@ -1,14 +1,16 @@
 <?php
 
-namespace App\Filament\App\Resources\ProductResource\Pages;
+namespace App\Filament\App\Resources\UserAccountResource\Pages;
 
-use App\Filament\App\Resources\ProductResource;
 use Filament\Actions;
+use Filament\Facades\Filament;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Resources\Pages\EditRecord;
+use App\Filament\App\Resources\UserAccountResource;
 
-class EditProduct extends EditRecord
+class EditUserAccount extends EditRecord
 {
-    protected static string $resource = ProductResource::class;
+    protected static string $resource = UserAccountResource::class;
 
     protected function getHeaderActions(): array
     {
@@ -22,4 +24,5 @@ class EditProduct extends EditRecord
         $resource = static::getResource();
         return $resource::getUrl('index');
     }
+
 }

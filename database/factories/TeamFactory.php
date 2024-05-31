@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,10 +17,12 @@ class TeamFactory extends Factory
      */
     public function definition(): array
     {
+
+        $name = $this->faker->company ;
         return [
             //
-            'name' => $this->faker->company,
-            'slug' => $this->faker->unique()->slug, // Generate a unique slug
+            'name' => $name,
+            'slug' => Str::slug($name), // Generate a unique slug
             'email' => $this->faker->unique()->safeEmail,
             'phone' => str_pad("03" . $this->faker->numerify('########'), 10, '0', STR_PAD_LEFT),
             'ssm' => $this->faker->randomNumber(7, true), // Assuming SSM is a 7-digit number

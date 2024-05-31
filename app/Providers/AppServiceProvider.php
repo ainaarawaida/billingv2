@@ -11,6 +11,9 @@ use BezhanSalleh\FilamentLanguageSwitch\LanguageSwitch;
 use BezhanSalleh\FilamentLanguageSwitch\Enums\Placement;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 
+use App\Http\Responses\LogoutResponse;
+use Filament\Http\Responses\Auth\Contracts\LogoutResponse as LogoutResponseContract;
+ 
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,6 +31,8 @@ class AppServiceProvider extends ServiceProvider
             LoginResponse::class,
             \App\Http\Responses\Auth\LoginResponse::class
         );
+
+        $this->app->bind(LogoutResponseContract::class, LogoutResponse::class);
 
     }
 
@@ -61,6 +66,8 @@ class AppServiceProvider extends ServiceProvider
             'panels::sidebar.collapse-button' => 'heroicon-o-chevron-double-left',
             // 'panels::sidebar.group.collapse-button' => view('icons.chevron-up'),
         ]);
+
+
 
 
     }

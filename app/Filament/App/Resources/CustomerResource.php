@@ -3,15 +3,24 @@
 namespace App\Filament\App\Resources;
 
 use Filament\Forms;
+use App\Models\User;
 use Filament\Tables;
+use Livewire\Component;
 use App\Models\Customer;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Illuminate\Support\HtmlString;
+use Spatie\Permission\Models\Role;
 use Filament\Forms\Components\Group;
+use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Section;
+use Filament\Support\Enums\ActionSize;
+use Illuminate\Database\Eloquent\Model;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\App\Resources\CustomerResource\Pages;
 use App\Filament\App\Resources\CustomerResource\RelationManagers;
@@ -167,11 +176,87 @@ class CustomerResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('upgrate_as_user')
+                        ->label(__('Upgrade as User'))
+                        ->icon('heroicon-m-square-2-stack')
+                        ->color('info')
+                        ->fillForm(fn ($record): array => [
+                            'roles' => Role::where('name', 'customer')->pluck('id')->toArray(),
+                            'name' => $record->name,
+                            'email' => $record->email,
+
+                        ])
+                        ->form([
+                                Forms\Components\Section::make()
+                                    ->model(User::class)
+                                    ->schema([
+                                        Forms\Components\Select::make('roles')
+                                            ->relationship('roles', 'name')
+                                            ->saveRelationshipsUsing(function (Model $record, $state) {
+                                                dd($record, $state);
+                                                $record->teams()->sync(Filament::getTenant()->id);
+                                                // return $record ;
+                                                $record->assignRole(Role::whereIn('id', $state)->get());
+                                           })
+                                            ->dehydrated(true)
+                                            ->multiple()
+                                            ->preload()
+                                            ->searchable(),
+                                        Forms\Components\TextInput::make('name')
+                                            ->required()
+                                            ->maxLength(255),
+                                        Forms\Components\TextInput::make('email')
+                                            ->email()
+                                            ->required()
+                                            ->unique(ignoreRecord: true)
+                                            ->maxLength(255),
+                                        Forms\Components\TextInput::make('password')
+                                            ->dehydrateStateUsing(fn (string $state): string => Hash::make($state))
+                                            ->required(true)
+                                            ->password()
+                                            ->confirmed()
+                                            ->revealable()
+                                            ->maxLength(255)
+                                            ->rule(Password::default()),
+                                        Forms\Components\TextInput::make('password_confirmation')
+                                            ->label('Confirm password')
+                                            ->dehydrated(false)
+                                            ->password()
+                                            ->revealable()
+                                            ->required(fn (string $operation): bool => $operation === 'create')
+                                    ])->columns(2)
+                          
+                       
+                        ])
+                        ->action(function (Model $record, $data, Component $livewire) {
+                            $user = User::create($data);
+                            $user->teams()->sync(Filament::getTenant()->id);
+                            $user->assignRole(Role::whereIn('id', $data['roles'])->get());
+
+                            Notification::make()
+                            ->title('Create as User successfully!')
+                            ->success()
+                            ->send();
+                        })
+                        ->visible(fn($record) => $record->email != User::where('email', $record->email)->first()?->email),
+                    Tables\Actions\Action::make('view_user')
+                        ->label(__('View User'))
+                        ->icon('heroicon-m-pencil')
+                        ->color('info')
+                        ->action(function (Model $record, $data, Component $livewire) {
+                            $livewire->redirect(UserAccountResource::getUrl('edit', ['record' => User::where('email', $record->email)->first()?->id]), navigate:true);
+                        })
+                        ->visible(fn($record) => $record->email == User::where('email', $record->email)->first()?->email),
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\DeleteAction::make(),
                     Tables\Actions\ViewAction::make(),
                   
                 ])
+                ->label('More actions')
+                ->icon('heroicon-m-ellipsis-vertical')
+                ->size(ActionSize::Small)
+                ->color('primary')
+                ->button(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -179,7 +264,11 @@ class CustomerResource extends Resource
                     Tables\Actions\ForceDeleteBulkAction::make(),
                     Tables\Actions\RestoreBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->recordUrl(
+                fn (Model $record): string => CustomerResource::getUrl('edit', ['record' => $record->id])
+            )
+            ->defaultSort('updated_at', 'desc');
     }
 
     public static function getRelations(): array

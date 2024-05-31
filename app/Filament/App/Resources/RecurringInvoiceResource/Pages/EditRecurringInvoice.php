@@ -32,5 +32,11 @@ class EditRecurringInvoice extends EditRecord
             });
     }
 
+    protected function getRedirectUrl(): string
+    {
+        $resource = static::getResource();
+        return $resource::getUrl('index');
+    }
+
     
 }

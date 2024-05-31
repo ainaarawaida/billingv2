@@ -2,6 +2,11 @@
 
 return [
 
+    'resources' => [
+        'PermissionResource' => \Althinect\FilamentSpatieRolesPermissions\Resources\PermissionResource::class,
+        'RoleResource' => \Althinect\FilamentSpatieRolesPermissions\Resources\RoleResource::class,
+    ],
+
     'preload_roles' => true,
 
     'preload_permissions' => true,
@@ -10,12 +15,37 @@ return [
 
     'team_model' => \App\Models\Team::class,
 
+    'scope_to_tenant' => false,
+
     /*
      * Set as false to remove from navigation.
      */
     'should_register_on_navigation' => [
-        'permissions' => true,
-        'roles' => true,
+        'permissions' => false,
+        'roles' => false,
+    ],
+
+    /**
+     * Set to true to redirect to the resource index instead of the view
+     */
+    'should_redirect_to_index' => [
+        'permissions' => [
+            'after_create' => false,
+            'after_edit' => false
+        ],
+        'roles' => [
+            'after_create' => false,
+            'after_edit' => false
+        ],
+    ],
+
+    /*
+     * If you want to place the Resource in a Cluster, then set the required Cluster class.
+     * Eg. \App\Filament\Clusters\Cluster::class
+     */
+    'clusters' => [
+        'permissions' => null,
+        'roles' => null,
     ],
 
     'guard_names' => [
@@ -33,6 +63,9 @@ return [
     ],
 
     'default_guard_name' => null,
+
+    // if false guard option will not be show on screen. You should set a default_guard_name in this case
+    'should_show_guard' => true,
 
     'model_filter_key' => 'return \'%\'.$value;', // Eg: 'return \'%\'.$key.'\%\';'
 

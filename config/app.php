@@ -170,7 +170,9 @@ return [
         App\Providers\AdminPanelProvider::class,
         App\Providers\Filament\AppPanelProvider::class,
         App\Providers\Filament\HomePanelProvider::class,
+        App\Providers\Filament\ClientPanelProvider::class,
         App\Providers\RouteServiceProvider::class,
+        Spatie\Permission\PermissionServiceProvider::class,
     ])->toArray(),
 
     /*

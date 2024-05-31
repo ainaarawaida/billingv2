@@ -6,7 +6,6 @@
     <h1 class="text-3xl font-bold text-center">Streamline Your Billing</h1>
     <p class="text-lg mt-2 text-center">Effortless management for your finances.</p>
     <p class="p-5 text-center">Introducing an online e-billing system specially developed for individual and small business use. The system is simply designed to make it easy for you to use to generate invoices, quotes, and even receive payments from customers.</p>
-
   </header>
 
   <div class="flex flex-col md:flex-row gap-2">
