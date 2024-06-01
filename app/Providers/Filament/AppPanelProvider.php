@@ -34,6 +34,7 @@ use Illuminate\Session\Middleware\StartSession;
 use App\Filament\Pages\Tenancy\EditTeamProfile2;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use App\Filament\App\Resources\QuotationResource;
+use App\Filament\Pages\Auth\RequestPasswordReset;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -126,7 +127,7 @@ class AppPanelProvider extends PanelProvider
             ->tenantMenu(isset(request()->segments()[2]) && request()->segments()[2] == 'choose-company' ? false : true)
             ->login(Login::class)
             ->registration(Register::class)
-            ->passwordReset()
+            ->passwordReset(RequestPasswordReset::class)
             ->emailVerification()
             // ->profile()
             ->profile(EditProfile::class)

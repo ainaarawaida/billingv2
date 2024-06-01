@@ -58,6 +58,7 @@ class UserAccountResource extends Resource
                                 ->required()
                                 ->unique(ignoreRecord: true)
                                 ->maxLength(255),
+                            Forms\Components\DatePicker::make('email_verified_at'),
                             Forms\Components\TextInput::make('password')
                                 ->dehydrateStateUsing(fn (string $state): string => Hash::make($state))
                                 ->dehydrated(fn (?string $state): bool => filled($state))
@@ -109,6 +110,8 @@ class UserAccountResource extends Resource
                     ->badge()
                     ->sortable()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('email_verified_at')
+                    ->dateTime('d/m/Y H:i:s'),
                 Tables\Columns\TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()

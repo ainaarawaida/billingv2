@@ -13,12 +13,13 @@ use Illuminate\Notifications\Notifiable;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable;
 
-class User extends Authenticatable implements FilamentUser, HasTenants, HasAvatar
+class User extends Authenticatable implements FilamentUser, HasTenants, HasAvatar, MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable, TwoFactorAuthenticatable, HasRoles;
     use SoftDeletes;
@@ -31,6 +32,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAvata
         'name',
         'email',
         'password',
+        'email_verified_at',
     ];
 
     /**
@@ -57,7 +59,12 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAvata
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        if($panel->getId() == 'app' && $this->hasRole('admin')){
+            return true;
+        }elseif($panel->getId() == 'client' && $this->hasRole('customer')){
+            return true;
+        }
+        return false;
     }
 
     /**

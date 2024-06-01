@@ -21,7 +21,6 @@ class LoginResponse implements LoginResponseContract
             if(Session::get('current_company')){
                 $team_slug = Team::where('id', Session::get('current_company'))->first()->slug ?? '';
                 return redirect()->intended(url('client/'.$team_slug));
-
             }
         }
 

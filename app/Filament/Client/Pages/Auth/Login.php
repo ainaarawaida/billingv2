@@ -10,6 +10,7 @@ use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Actions\ActionGroup;
 use Illuminate\Support\HtmlString;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -26,8 +27,8 @@ use Illuminate\Contracts\Support\Htmlable;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Validation\ValidationException;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
+use DominionSolutions\FilamentCaptcha\Forms\Components\Captcha;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
-use Illuminate\Contracts\View\View;
 
 class Login extends BaseAuth
 {
@@ -53,8 +54,8 @@ class Login extends BaseAuth
 
         $this->form->fill([
             'team_id' => $this->data['team_id'] ?? '',
-            'username' => 'admin@admin.test',
-            'password' => 'admin'
+            'username' => '',
+            'password' => ''
         ]);
     }
 
@@ -72,6 +73,13 @@ class Login extends BaseAuth
                 $this->getUsernameFormComponent(),
                 $this->getPasswordFormComponent(),
                 $this->getRememberFormComponent(),
+                Captcha::make('captcha')
+                    ->rules(['captcha'])
+                    ->required()
+                    ->dehydrated(false)
+                    ->validationMessages([
+                        'captcha'  =>  __('Captcha does not match the image'),
+                    ]),
             ])
             ->statePath('data');
     }
