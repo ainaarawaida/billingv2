@@ -10,6 +10,7 @@ use Filament\Support\Facades\FilamentAsset;
 use BezhanSalleh\FilamentLanguageSwitch\LanguageSwitch;
 use BezhanSalleh\FilamentLanguageSwitch\Enums\Placement;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
+use Illuminate\Support\Facades\URL;
 
 use App\Http\Responses\LogoutResponse;
 use Filament\Http\Responses\Auth\Contracts\LogoutResponse as LogoutResponseContract;
@@ -44,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
         //
         // dd(env('APP_ENV'));
         If (env('APP_ENV') !== 'local') {
+            // URL::forceScheme('https');
             $this->app['request']->server->set('HTTPS', true);
         }
 
